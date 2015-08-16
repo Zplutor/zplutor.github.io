@@ -122,7 +122,6 @@
 <p>在第七秒时，速率是这样算的：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(total7 - total3) / (time7 - time3)</span><br></pre></td></tr></table></figure>
 <p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
-<p>了解了速率的计算方式之后，可以发现其实CURLOPT_LOW_SPEED_TIME指定的时间并不是精确的。继续上面的例子，把CURLOPT_LOW_SPEED_LIMIT设成1，把CURLOPT_LOW_SPEED_TIME设成10。假设连接在第一秒传输了100字节的数据，从第二秒开始就没有传输任何数据了。在这种情况下，前五秒的速率都是大于1字节/秒的。从第六秒开始，速率才变成0字节/秒，这时候才开始计算超时时间，到了超时的时候，已经过了十六秒；而理论上在十二秒的时候就应该超时了。也就是说，实际的超时时间可能会多出四秒。</p>
 
       
     </div>
