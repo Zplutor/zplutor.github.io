@@ -1,67 +1,26 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <meta charset="utf-8">
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title><![CDATA[Zplutor's]]></title>
   
-  <title>Zplutor&#39;s</title>
-  <meta name="author" content="Zplutor">
+  <link href="/atom.xml" rel="self"/>
+  <link href="http://zplutor.github.io/"/>
+  <updated>2015-08-14T06:30:32.000Z</updated>
+  <id>http://zplutor.github.io/</id>
   
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
-  
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
-
-  
-    <meta property="og:image" content="undefined"/>
-  
-
-  <link href="/favicon.png" rel="icon">
-  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
-  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
-  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-  
-
-</head>
-
-
-<body>
-  <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">Zplutor&#39;s</a></h1>
-  <h2><a href="/"></a></h2>
-</div>
-<nav id="main-nav" class="alignright">
-  <ul>
+  <author>
+    <name><![CDATA[Zplutor]]></name>
     
-      <li><a href="/">Home</a></li>
-    
-      <li><a href="/archives">Archives</a></li>
-    
-      <li><a href="/atom.xml">Feed</a></li>
-    
-  </ul>
-  <div class="clearfix"></div>
-</nav>
-<div class="clearfix"></div></header>
-  <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper">
-  <article class="post">
+  </author>
   
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2015-08-14T06:18:32.000Z"><a href="/2015/08/14/fast-way-to-concatenate-sql-in-cpp/">2015-08-14</a></time>
-      
-      
+  <generator uri="http://hexo.io/">Hexo</generator>
   
-    <h1 class="title"><a href="/2015/08/14/fast-way-to-concatenate-sql-in-cpp/">C++拼接SQL语句的高效方法</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
+  <entry>
+    <title><![CDATA[C++拼接SQL语句的高效方法]]></title>
+    <link href="http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/"/>
+    <id>http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/</id>
+    <published>2015-08-14T06:18:32.000Z</published>
+    <updated>2015-08-14T06:30:32.000Z</updated>
+    <content type="html"><![CDATA[<p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> sql = boost::str(boost::format(<span class="string">"select %1%, %2%, %3%, %4% from %5% where %1% = ?;"</span>)</span><br><span class="line">                             % kUserIdColumnName</span><br><span class="line">                             % kUserNameColumnName</span><br><span class="line">                             % kUserEmailColumnName</span><br><span class="line">                             % kUserPhoneColumnName</span><br><span class="line">                             % kUserTableName);</span><br></pre></td></tr></table></figure>
 <p>上面的例子构造了一条从用户信息表获取用户信息的SQL语句，这并没有什么问题。但仔细想想，在运行时构造SQL语句是毫无必要的，因为这种SQL语句基本上不会在程序运行的时候改变。假如每次查询都要进行这样的拼接过程，那么这部分的性能就白白浪费掉了。另一种做法是把sql变量定义成局部静态变量，这样只需要拼接一次就可以了。不过要是这段代码运行在并发环境中，还需要考虑线程安全的问题，这会带来一些额外的工作。</p>
 <p>当然啦，这种重复构造字符串本身的开销是非常小的，一般不会造成性能问题。但如果你是完美主义者，希望榨干最后一滴性能，那么可以考虑一下下面介绍的方法。</p>
@@ -76,39 +35,21 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* sql = <span class="string">"select "</span></span><br><span class="line">                  kUserIdColumnName <span class="string">", "</span></span><br><span class="line">                  kUserNameColumnName <span class="string">", "</span></span><br><span class="line">                  kUserEmailColumnName <span class="string">", "</span></span><br><span class="line">                  kUserEmailColumnName <span class="string">", "</span></span><br><span class="line">                  kUserPhoneColumnName</span><br><span class="line">                  <span class="string">" from "</span> kUserTableName</span><br><span class="line">                  <span class="string">" where "</span> kUserIdColumnName <span class="string">" = ?;"</span>;</span><br></pre></td></tr></table></figure>    
 <p>这样一来，sql相当于一个常量，不需要初始化，完全不消耗运行时的性能。另外，这么做也有一个好处，就是使得SQL语句的可读性有了一定提高。使用format的方法经常要手工一个个地去匹配参数列表，很繁琐也容易出错。特别是那些有一串长长的参数列表的复杂语句，看起来很恐怖。现在这种方法则好得多，参数直接放在了它所在的位置，一目了然。</p>
 <p>使用宏来定义表名和列名可能会令人感到不安。但我觉得这是宏的合理使用，不会带来什么不良后果，因为表名和列名基本上只会用于SQL语句拼接的场景。有时候为了追求性能或者其他方面的目标，的确要牺牲一些代码的“观赏性”。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span]]>
+    </summary>
+    
+  </entry>
   
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2015-05-22T08:53:03.000Z"><a href="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/">2015-05-22</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/">如何设置libcurl的动态超时值</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。</p>
+  <entry>
+    <title><![CDATA[如何设置libcurl的动态超时值]]></title>
+    <link href="http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/"/>
+    <id>http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/</id>
+    <published>2015-05-22T08:53:03.000Z</published>
+    <updated>2015-08-16T08:32:21.000Z</updated>
+    <content type="html"><![CDATA[<p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。</p>
 <p>所谓动态超时值，指的是允许连接空闲的最大时间值，也就是说，只有当连接没有数据传输的时候才开始计算超时时间。这也是平常说的超时的含义。正如上文所说，libcurl对超时的定义是允许连接执行的时间，这个定义在实际应用中会带来问题。例如，每个连接要传输的数据量是不一样的，为了让所有连接都能够正常执行，需要在执行之前计算出确切的超时值。然而这几乎不可能做到，因为网络环境时刻在变化，前一刻计算出来的超时值很快就不合适了。虽然固定超时值也有它特有的用途，但在绝大部分情况下它都不是我们想要的。</p>
 <p>好在libcurl提供了很高的灵活性，我们可以借助另外两个设置选项，变通地实现动态超时值。这两个设置选项是CURLOPT_LOW_SPEED_LIMIT和CURLOPT_LOW_SPEED_TIME，它们的含义是：当连接以低于CURLOPT_LOW_SPEED_LIMIT的速率执行了CURLOPT_LOW_SPEED_TIME的时间时，它就会被终止。一个微妙的地方是，当连接由于这个原因被终止时，它的错误码是CURLE_OPERATION_TIMEOUT。与其说是巧合，倒不如说这是libcurl特意为动态超时值提供的一个更灵活的接口。</p>
 <p>通过这两个设置选项，可以这样来设置动态超时值：</p>
@@ -124,41 +65,11 @@
 <p>在第七秒时，速率是这样算的：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(total7 - total3) / (time7 - time3)</span><br></pre></td></tr></table></figure>
 <p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-<nav id="pagination">
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。l]]>
+    </summary>
+    
+  </entry>
   
-  
-  <div class="clearfix"></div>
-</nav></div></div>
-    <aside id="sidebar" class="alignright">
-  
-
-  
-</aside>
-    <div class="clearfix"></div>
-  </div>
-  <footer id="footer" class="inner"><div class="alignleft">
-  
-  &copy; 2015 Zplutor
-  
-</div>
-<div class="clearfix"></div></footer>
-  
-</body>
-</html>
+</feed>
