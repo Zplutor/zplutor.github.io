@@ -52,6 +52,42 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2015-09-28T04:00:51.000Z"><a href="/2015/09/28/use-precompiled-header-to-speed-up-compilation/">2015-09-28</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/09/28/use-precompiled-header-to-speed-up-compilation/">使用预编译头提高编译速度</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="什么是预编译头">什么是预编译头</h2><p>在介绍预编译头之前，有必要了解一下C/C++的编译方式。C/C++的编译单元是源文件（带有.c、.cc、.cpp等扩展名的文件），在编译一个源文件之前，预处理器会把这个源文件中所有通过#include指令包含进来的头文件递归地展开，也就是把所有直接或间接包含的头文件原封不动地插入进来。当这个过程结束之后，才开始编译。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2015/09/28/use-precompiled-header-to-speed-up-compilation/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2015-08-29T12:50:54.000Z"><a href="/2015/08/29/write-debug-log-streamly/">2015-08-29</a></time>
       
       
@@ -63,35 +99,14 @@
     <div class="entry">
       
         <p>日志是一种有效的调试手段。但是日志写得太频繁会降低程序性能，所以一般采取的策略是，大部分日志只在调试版的程序中输出，少量重要的日志才在发行版的程序中输出。为了控制调试日志的输出，通常会使用下面的简便方法：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">ifdef</span> DEBUG</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> DLOG(format, ...) printf(format, __VA_ARGS__)</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">else</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> DLOG(format, ...)</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
-<p>上面的代码定义了一个DLOG宏，当处于调试模式时，DLOG会展开成对printf函数（或者类似函数）的调用；否则什么也不做。使用这个宏之后，调试日志对发行版程序没有任何影响。</p>
-<p>但是，由于printf固有的特点，使用这种方式写日志存在一些缺陷。最主要的是，格式化字符串中的形参与实参的个数和类型必须一致，否则，要么输出的信息不正确，要么程序直接崩溃。这种问题只有在真正执行的时候才显现出来，假如错误的DLOG调用位于深层次的条件语句中，那么它很可能会一直隐藏在那里。</p>
-<p>不要觉得这种低级错误不会发生。根据实际经验来看，写了一句日志导致程序崩溃的尴尬情况还是挺常见的。</p>
-<p>C++标准库使用的流式输出解决了上述缺陷。所谓流式输出，就像下面这样：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Today is "</span> &lt;&lt; <span class="number">2015</span> &lt;&lt; <span class="string">'-'</span> &lt;&lt; <span class="number">8</span> &lt;&lt; <span class="string">'-'</span> &lt;&lt; <span class="number">29</span> &lt;&lt; <span class="string">'.'</span>;</span><br></pre></td></tr></table></figure>
-<p>这种方式不需要事先定义格式字符串，不必再担心实参个数和类型的匹配问题。更重要的是，如果实参不能被输出，在编译阶段就会出错，而不是等到运行的时候才出错。流式输出使用上更简便，安全性更高，假如能使用这种方式来写日志，无疑会提高开发效率。</p>
-<p>流式输出的使用方式与printf截然不同，显然不能再使用可变参数宏来定义DLOG了。所以接下来的问题是，如何定义DLOG以支持流式输出。要是不能做到在发行版程序中完全消除调试日志的影响，那么它也只是一个不实用的花瓶。</p>
-<p>这个问题看起来似乎很难，实际上并非如此。早已有人找到了解决方法——在Chromium中就是使用流式输出写日志的。Chromium是开源项目，可以直接从它的代码中寻找答案。不过它的相关代码中封装了太多功能，理解起来并不容易。在经过一番抽丝剥茧之后，这里还原出它的核心思想。</p>
-<p>首先，根据是否处于调试模式定义ENABLE_DEBUG_LOG宏，这个宏仅仅是布尔值的简单替换。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">ifdef</span> DEBUG</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> ENABLE_DEBUG_LOG true</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">else</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> ENABLE_DEBUG_LOG false</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
-<p>接下来，把DLOG宏定义成一个问号表达式，为了便于理解，把这个定义分成多行。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">define</span> DLOG()                 \</span><br><span class="line">    ! ENABLE_DEBUG_LOG  ?      \</span><br><span class="line">        (void)<span class="number">0</span>         :      \</span><br><span class="line">        Vodify() &amp; std::cout</span></span><br></pre></td></tr></table></figure>
-<p>问号表达式首先判断一下是否启用调试日志。如果不启用，则执行第一个分支，把0转换成void，也就是什么都不做。这是一种罕见的语法，可以把任意表达式转型为void。如果启用，则执行第二个分支，创建一个Vodify对象，并调用它的&amp;操作符。下面是Vodify类的定义：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> Vodify &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">operator</span>&amp;(<span class="keyword">const</span> <span class="built_in">std</span>::ostream&amp;) &#123; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>Vodify类是一个辅助类，它只有一个空的operator&amp;方法，其作用仅仅是为了使问号表达式两个分支的返回值相同。由于前面一个分支的返回值是void，第二个分支的返回值也必须是void，否则编译不通过。</p>
-<p>一个提供了&lt;&lt;操作符的输出流对象必须放在最后面，这是为了接收后面的输出参数。在这里简单使用了std::cout对象。Vodify的operator&amp;方法必须能够接收这个对象的引用。</p>
-<p>现在，可以这样来使用DLOG：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DLOG() &lt;&lt; <span class="string">"Today is "</span> &lt;&lt; <span class="number">2015</span> &lt;&lt; <span class="string">'-'</span> &lt;&lt; <span class="number">8</span> &lt;&lt; <span class="string">'-'</span> &lt;&lt; <span class="number">29</span> &lt;&lt; <span class="string">'.'</span>;</span><br></pre></td></tr></table></figure>
-<p>这句代码展开之后变成了下面这样：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">! ENABLE_DEBUG_LOG  ?</span><br><span class="line">    (<span class="keyword">void</span>)<span class="number">0</span>         :</span><br><span class="line">    Vodify() &amp; <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Today is "</span> &lt;&lt; <span class="number">2015</span> &lt;&lt; <span class="string">'-'</span> &lt;&lt; <span class="number">8</span> &lt;&lt; <span class="string">'-'</span> &lt;&lt; <span class="number">29</span> &lt;&lt; <span class="string">'.'</span>;</span><br></pre></td></tr></table></figure>
-<p>如果ENABLE_DEBUG_LOG为true，那么第二个分支会执行。&lt;&lt;操作符的优先级比&amp;操作符高，后面的一串&lt;&lt;调用会先执行，最后再调用Vodify对象的&amp;操作符，使整个表达式的返回值为void。</p>
-<p>如果ENABLE_DEBUG_LOG为false，那么第二个分支永远都不会执行，无论它有多复杂。这是在编译期间就可以确定的，在发行版的程序中这部分代码完全可以优化掉，也就达到了调试日志不影响发行版程序的目的。</p>
-<p>基于以上的核心思想，可以衍变出各种不同的版本来支持更丰富的功能，例如日志等级、日志分类等。C++中有很多小技巧，使用得当的话对程序开发有很大帮助。</p>
-
       
     </div>
     <footer>
       
+        
+          <div class="alignleft">
+            <a href="/2015/08/29/write-debug-log-streamly/#more" class="more-link">阅读全文</a>
+          </div>
         
         
       
@@ -120,25 +135,14 @@
     <div class="entry">
       
         <p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> sql = boost::str(boost::format(<span class="string">"select %1%, %2%, %3%, %4% from %5% where %1% = ?;"</span>)</span><br><span class="line">                             % kUserIdColumnName</span><br><span class="line">                             % kUserNameColumnName</span><br><span class="line">                             % kUserEmailColumnName</span><br><span class="line">                             % kUserPhoneColumnName</span><br><span class="line">                             % kUserTableName);</span><br></pre></td></tr></table></figure>
-<p>上面的例子构造了一条从用户信息表获取用户信息的SQL语句，这并没有什么问题。但仔细想想，在运行时构造SQL语句是毫无必要的，因为这种SQL语句基本上不会在程序运行的时候改变。假如每次查询都要进行这样的拼接过程，那么这部分的性能就白白浪费掉了。另一种做法是把sql变量定义成局部静态变量，这样只需要拼接一次就可以了。不过要是这段代码运行在并发环境中，还需要考虑线程安全的问题，这会带来一些额外的工作。</p>
-<p>当然啦，这种重复构造字符串本身的开销是非常小的，一般不会造成性能问题。但如果你是完美主义者，希望榨干最后一滴性能，那么可以考虑一下下面介绍的方法。</p>
-<p>这种方法基于C++的字符串语法糖：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* <span class="built_in">string</span> = <span class="string">"Curlion is "</span> <span class="string">"a C++ wrapper"</span></span><br><span class="line">                     <span class="string">" for libcurl’s "</span>            <span class="string">"multi socket "</span></span><br><span class="line">                     <span class="string">"interface."</span>;</span><br></pre></td></tr></table></figure>
-<p>上述语句等效于：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* <span class="built_in">string</span> = <span class="string">"Curlion is a C++ wrapper for libcurl’s multi socket interface."</span>;</span><br></pre></td></tr></table></figure>
-<p>也就是说，如果两个字符串字面量之间只包含空白字符，那么它们会被合并成一个。这个合并发生在编译时，不消耗运行时时间。</p>
-<p>为了使用这种拼接方式，我们首先要把表名和列名变量修改成用宏来定义：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserTableName <span class="string">"user"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserIdColumnName <span class="string">"id"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserNameColumnName <span class="string">"name"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserEmailColumnName <span class="string">"email"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserPhoneColumnName <span class="string">"phone"</span></span></span><br></pre></td></tr></table></figure>    
-<p>然后就可以修改拼接方式了：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* sql = <span class="string">"select "</span></span><br><span class="line">                  kUserIdColumnName <span class="string">", "</span></span><br><span class="line">                  kUserNameColumnName <span class="string">", "</span></span><br><span class="line">                  kUserEmailColumnName <span class="string">", "</span></span><br><span class="line">                  kUserEmailColumnName <span class="string">", "</span></span><br><span class="line">                  kUserPhoneColumnName</span><br><span class="line">                  <span class="string">" from "</span> kUserTableName</span><br><span class="line">                  <span class="string">" where "</span> kUserIdColumnName <span class="string">" = ?;"</span>;</span><br></pre></td></tr></table></figure>    
-<p>这样一来，sql相当于一个常量，不需要初始化，完全不消耗运行时的性能。另外，这么做也有一个好处，就是使得SQL语句的可读性有了一定提高。使用format的方法经常要手工一个个地去匹配参数列表，很繁琐也容易出错。特别是那些有一串长长的参数列表的复杂语句，看起来很恐怖。现在这种方法则好得多，参数直接放在了它所在的位置，一目了然。</p>
-<p>使用宏来定义表名和列名可能会令人感到不安。但我觉得这是宏的合理使用，不会带来什么不良后果，因为表名和列名基本上只会用于SQL语句拼接的场景。有时候为了追求性能或者其他方面的目标，的确要牺牲一些代码的“观赏性”。</p>
-
       
     </div>
     <footer>
       
+        
+          <div class="alignleft">
+            <a href="/2015/08/14/fast-way-to-concatenate-sql-in-cpp/#more" class="more-link">阅读全文</a>
+          </div>
         
         
       
@@ -167,26 +171,14 @@
     <div class="entry">
       
         <p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。</p>
-<p>所谓动态超时值，指的是允许连接空闲的最大时间值，也就是说，只有当连接没有数据传输的时候才开始计算超时时间。这也是平常说的超时的含义。正如上文所说，libcurl对超时的定义是允许连接执行的时间，这个定义在实际应用中会带来问题。例如，每个连接要传输的数据量是不一样的，为了让所有连接都能够正常执行，需要在执行之前计算出确切的超时值。然而这几乎不可能做到，因为网络环境时刻在变化，前一刻计算出来的超时值很快就不合适了。虽然固定超时值也有它特有的用途，但在绝大部分情况下它都不是我们想要的。</p>
-<p>好在libcurl提供了很高的灵活性，我们可以借助另外两个设置选项，变通地实现动态超时值。这两个设置选项是CURLOPT_LOW_SPEED_LIMIT和CURLOPT_LOW_SPEED_TIME，它们的含义是：当连接以低于CURLOPT_LOW_SPEED_LIMIT的速率执行了CURLOPT_LOW_SPEED_TIME的时间时，它就会被终止。一个微妙的地方是，当连接由于这个原因被终止时，它的错误码是CURLE_OPERATION_TIMEOUT。与其说是巧合，倒不如说这是libcurl特意为动态超时值提供的一个更灵活的接口。</p>
-<p>通过这两个设置选项，可以这样来设置动态超时值：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_LIMIT, <span class="number">1</span>);</span><br><span class="line">curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_TIME, <span class="number">10</span>);</span><br></pre></td></tr></table></figure>
-<p>要注意的是，CURLOPT_LOW_SPEED_LIMIT的单位是字节/秒，CURLOPT_LOW_SPEED_TIME的单位是秒。这样一来，若在10秒内连接的速率都是低于1字节/秒（也就是无数据传输），它就被认为超时了。</p>
-<p>如何设置动态超时值的问题到这里就结束了。但是显然还有另一个问题值得深究：连接的速率是怎么计算的呢？官方文档并没有解释清楚，不过既然libcurl是开源的，那么可以从它的源代码中寻找答案。检查速率的代码位于speedcheck.c的Curl_speedcheck函数中；计算速率的代码位于progress.c的Curl_pgrsUpdate函数中。下面简单解释一下计算速率的过程。</p>
-<p>libcurl使用一个长度为5的循环数组来记录速率信息，速率信息包含了当前时间以及当前总数据量，总数据量取的是总下载数据量和总上传数据量的最大值。每隔一秒钟libcurl就会记录当前的速率信息；由于使用了循环数组，最旧的信息会被丢弃。例如，在第四秒时候，循环数组里的内容是这样的：</p>
-<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/1.png" alt="1.png" title="">
-<p>第七秒的时候，循环数组里的内容是这样的：</p>
-<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/2.png" alt="2.png" title="">
-<p>以此类推。接下来，会使用最新的速率信息和最旧的速率信息来计算速率。例如，在第四秒时，速率是这样算的：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(total4 - total1) / (time4 - time1)</span><br></pre></td></tr></table></figure>
-<p>在第七秒时，速率是这样算的：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(total7 - total3) / (time7 - time3)</span><br></pre></td></tr></table></figure>
-<p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
-
       
     </div>
     <footer>
       
+        
+          <div class="alignleft">
+            <a href="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/#more" class="more-link">阅读全文</a>
+          </div>
         
         
       
@@ -208,6 +200,33 @@
   
 
   
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串拼接/">字符串拼接</a><small>1</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>1</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
 </aside>
     <div class="clearfix"></div>
   </div>

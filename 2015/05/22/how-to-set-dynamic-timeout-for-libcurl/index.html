@@ -7,7 +7,7 @@
   <title>如何设置libcurl的动态超时值 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
   
-  <meta name="description" content="针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超">
+  <meta name="description" content="针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -64,6 +64,7 @@
     <div class="entry">
       
         <p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。</p>
+<a id="more"></a>
 <p>所谓动态超时值，指的是允许连接空闲的最大时间值，也就是说，只有当连接没有数据传输的时候才开始计算超时时间。这也是平常说的超时的含义。正如上文所说，libcurl对超时的定义是允许连接执行的时间，这个定义在实际应用中会带来问题。例如，每个连接要传输的数据量是不一样的，为了让所有连接都能够正常执行，需要在执行之前计算出确切的超时值。然而这几乎不可能做到，因为网络环境时刻在变化，前一刻计算出来的超时值很快就不合适了。虽然固定超时值也有它特有的用途，但在绝大部分情况下它都不是我们想要的。</p>
 <p>好在libcurl提供了很高的灵活性，我们可以借助另外两个设置选项，变通地实现动态超时值。这两个设置选项是CURLOPT_LOW_SPEED_LIMIT和CURLOPT_LOW_SPEED_TIME，它们的含义是：当连接以低于CURLOPT_LOW_SPEED_LIMIT的速率执行了CURLOPT_LOW_SPEED_TIME的时间时，它就会被终止。一个微妙的地方是，当连接由于这个原因被终止时，它的错误码是CURLE_OPERATION_TIMEOUT。与其说是巧合，倒不如说这是libcurl特意为动态超时值提供的一个更灵活的接口。</p>
 <p>通过这两个设置选项，可以这样来设置动态超时值：</p>
@@ -86,6 +87,11 @@
       
         
         
+  
+  <div class="tags">
+    <a href="/tags/libcurl/">libcurl</a>, <a href="/tags/超时/">超时</a>
+  </div>
+
         
       
       <div class="clearfix"></div>
@@ -117,6 +123,33 @@
   
 
   
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串拼接/">字符串拼接</a><small>1</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>1</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
 </aside>
     <div class="clearfix"></div>
   </div>

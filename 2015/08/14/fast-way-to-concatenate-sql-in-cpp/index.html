@@ -7,8 +7,7 @@
   <title>C++拼接SQL语句的高效方法 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
   
-  <meta name="description" content="访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：
-123456std::string sql = boost::str(boost::format(&quot;select %1%, %2%, %3%, %4% from %5% wh">
+  <meta name="description" content="访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -65,6 +64,7 @@
     <div class="entry">
       
         <p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
+<a id="more"></a>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> sql = boost::str(boost::format(<span class="string">"select %1%, %2%, %3%, %4% from %5% where %1% = ?;"</span>)</span><br><span class="line">                             % kUserIdColumnName</span><br><span class="line">                             % kUserNameColumnName</span><br><span class="line">                             % kUserEmailColumnName</span><br><span class="line">                             % kUserPhoneColumnName</span><br><span class="line">                             % kUserTableName);</span><br></pre></td></tr></table></figure>
 <p>上面的例子构造了一条从用户信息表获取用户信息的SQL语句，这并没有什么问题。但仔细想想，在运行时构造SQL语句是毫无必要的，因为这种SQL语句基本上不会在程序运行的时候改变。假如每次查询都要进行这样的拼接过程，那么这部分的性能就白白浪费掉了。另一种做法是把sql变量定义成局部静态变量，这样只需要拼接一次就可以了。不过要是这段代码运行在并发环境中，还需要考虑线程安全的问题，这会带来一些额外的工作。</p>
 <p>当然啦，这种重复构造字符串本身的开销是非常小的，一般不会造成性能问题。但如果你是完美主义者，希望榨干最后一滴性能，那么可以考虑一下下面介绍的方法。</p>
@@ -86,6 +86,11 @@
       
         
         
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>, <a href="/tags/SQL/">SQL</a>, <a href="/tags/字符串拼接/">字符串拼接</a>
+  </div>
+
         
       
       <div class="clearfix"></div>
@@ -117,6 +122,33 @@
   
 
   
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串拼接/">字符串拼接</a><small>1</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>1</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
 </aside>
     <div class="clearfix"></div>
   </div>

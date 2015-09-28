@@ -7,8 +7,7 @@
   <title>使用流式输出写调试日志 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
   
-  <meta name="description" content="日志是一种有效的调试手段。但是日志写得太频繁会降低程序性能，所以一般采取的策略是，大部分日志只在调试版的程序中输出，少量重要的日志才在发行版的程序中输出。为了控制调试日志的输出，通常会使用下面的简便方法：
-12345#ifdef DEBUG#define DLOG(format, ...) prin">
+  <meta name="description" content="日志是一种有效的调试手段。但是日志写得太频繁会降低程序性能，所以一般采取的策略是，大部分日志只在调试版的程序中输出，少量重要的日志才在发行版的程序中输出。为了控制调试日志的输出，通常会使用下面的简便方法：">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -65,6 +64,7 @@
     <div class="entry">
       
         <p>日志是一种有效的调试手段。但是日志写得太频繁会降低程序性能，所以一般采取的策略是，大部分日志只在调试版的程序中输出，少量重要的日志才在发行版的程序中输出。为了控制调试日志的输出，通常会使用下面的简便方法：</p>
+<a id="more"></a>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">ifdef</span> DEBUG</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> DLOG(format, ...) printf(format, __VA_ARGS__)</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">else</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> DLOG(format, ...)</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
 <p>上面的代码定义了一个DLOG宏，当处于调试模式时，DLOG会展开成对printf函数（或者类似函数）的调用；否则什么也不做。使用这个宏之后，调试日志对发行版程序没有任何影响。</p>
 <p>但是，由于printf固有的特点，使用这种方式写日志存在一些缺陷。最主要的是，格式化字符串中的形参与实参的个数和类型必须一致，否则，要么输出的信息不正确，要么程序直接崩溃。这种问题只有在真正执行的时候才显现出来，假如错误的DLOG调用位于深层次的条件语句中，那么它很可能会一直隐藏在那里。</p>
@@ -96,6 +96,11 @@
       
         
         
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>, <a href="/tags/日志/">日志</a>, <a href="/tags/流式输出/">流式输出</a>, <a href="/tags/调试/">调试</a>
+  </div>
+
         
       
       <div class="clearfix"></div>
@@ -127,6 +132,33 @@
   
 
   
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串拼接/">字符串拼接</a><small>1</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>1</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
 </aside>
     <div class="clearfix"></div>
   </div>

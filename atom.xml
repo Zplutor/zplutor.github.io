@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://zplutor.github.io/"/>
-  <updated>2015-08-29T13:06:06.000Z</updated>
+  <updated>2015-09-28T05:37:02.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -15,12 +15,66 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[使用预编译头提高编译速度]]></title>
+    <link href="http://zplutor.github.io/2015/09/28/use-precompiled-header-to-speed-up-compilation/"/>
+    <id>http://zplutor.github.io/2015/09/28/use-precompiled-header-to-speed-up-compilation/</id>
+    <published>2015-09-28T04:00:51.000Z</published>
+    <updated>2015-09-28T05:37:02.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="什么是预编译头">什么是预编译头</h2><p>在介绍预编译头之前，有必要了解一下C/C++的编译方式。C/C++的编译单元是源文件（带有.c、.cc、.cpp等扩展名的文件），在编译一个源文件之前，预处理器会把这个源文件中所有通过#include指令包含进来的头文件递归地展开，也就是把所有直接或间接包含的头文件原封不动地插入进来。当这个过程结束之后，才开始编译。</p>
+<a id="more"></a>
+<p>这种编译方式的缺点是会使头文件被重复编译。假如有一百个源文件都包含了Windows.h，那么这个头文件会在一百个源文件中展开，它里面的代码会被重复编译了一百次，尽管每次编译的结果都相同。对于具有成千上万个源文件的大型项目来说，重复编译是难以接受的，会浪费大量的编译时间。</p>
+<p>为了解决这个问题，预编译头应运而生。顾名思义，预编译头就是预先把头文件编译好，在编译源文件的时候直接取用这些编译结果，避免对头文件重复编译。这项技术能大幅提高C++的编译速度。</p>
+<p>Visual C++生成的扩展名为.pch的文件即是预编译头生成的结果。</p>
+<h2 id="如何使用预编译头">如何使用预编译头</h2><p>Visual C++对预编译头的设置并不直观，容易造成误解。在这里详细介绍一下如何启用预编译头。以下操作是在Visual Studio 2013上进行的，不过Visual Studio各版本之间的差异不大，更早或更新的版本也适用。</p>
+<p>首先要做的，是在项目中添加一个头文件以及源文件，这两个文件是给预编译头这个机制使用的。它们的名称并没有限制，这里把它们命名为precompiled.h和precompiled.cpp（Visual C++使用的默认名字是StdAfx.h和StdAfx.cpp）。</p>
+<p>precompiled.h将被指定成预编译头文件，所有在这个头文件中的代码都会被预编译。可以把任意代码添加到这个文件，一般的做法是把常用的头文件包含进来，例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;Windows.h&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;algorithm&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;cstdint&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;functional&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;list&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;map&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;set&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;string&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;boost/filesystem.hpp&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;boost/format.hpp&gt;</span></span></span><br></pre></td></tr></table></figure>
+<p>precompiled.cpp则为precompiled.h提供了编译的载体，因为C/C++只能对源文件编译，而不能对头文件编译。precompiled.cpp只需要包含precompiled.h即可（由于示例项目的需要，包含语句中包含了相对路径）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">"win/precompiled.h"</span></span></span><br></pre></td></tr></table></figure>
+<p>接下来，指定通过precompiled.cpp来生成预编译结果。在“解决方案资源管理器中”，右击precompiled.cpp文件，在弹出的菜单中点击“属性”，打开该文件的属性页窗口。</p>
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/1.png" alt="1.png" title="">
+<p>在属性页窗口中，打开“预编译头”配置页，设置“预编译头”选项的值为“创建（/Yc）”，设置“预编译头文件”选项的值为“win/precompiled.h”。如下图所示：</p>
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/2.png" alt="2.png" title="">
+<p>点击确定完成设置。如此一来，在编译precompiled.cpp的时候就会生成预编译结果，也就是.pch文件。</p>
+<p>设置了生成预编译结果之后，还需要设置使用预编译结果。在“解决方案资源管理器中”，右击项目节点，在弹出的菜单中点击“属性”，打开项目的属性页窗口。</p>
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/3.png" alt="3.png" title="">
+<p>同样地，在属性页窗口中打开“预编译头”配置页，设置“预编译头”选项的值为“使用（/Yu）”，设置“预编译头文件”选项的值为“win/precompiled.h”。要注意“预编译头”选项的值跟之前的不同。如下图所示：</p>
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/4.png" alt="4.png" title="">
+<p>最后，需要在所有的源文件中包含预编译头文件，并且该文件必须是第一个包含的。这是使用预编译头的硬性规定，假如不遵守这个规定，编译会失败。重复地在所有源文件中添加预编译头文件很繁琐，所幸的是Visual C++提供了强制在所有源文件中包含指定头文件的选项。同样在项目的属性页窗口中，打开“C/C++”分类下的“高级”配置页，在“强制包含文件”的选项中，添加“win/precompiled.h”即可，如下图所示：</p>
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/5.png" alt="5.png" title="">
+<p>至此，预编译头的设置就完成了。注意，在预编译头文件之后再重复包含该文件内已包含的头文件并不会有问题，所以不必特意去掉那些重复的包含语句。</p>
+<h2 id="预编译头性能实测">预编译头性能实测</h2><p>预编译头对编译性能有多大的提升呢？这里用一个实际的项目进行测试。该项目共有1006个头文件和源文件，分别在关闭和打开预编译头的情况下重新生成整个项目两次，记录下生成的开始时间和结束时间。最终得到的数据如下：</p>
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/6.png" alt="6.png" title="">
+<p>可以看到，使用了预编译头之后，编译性能有了30%以上的提升，节省了不少时间。当然，这里的数据只是一个参考值，实际的提升程度得视项目的具体情况而定。一般来说，预编译头文件中包含的头文件被使用得越多，性能提升越明显。</p>
+<h2 id="使用预编译头的注意事项">使用预编译头的注意事项</h2><p>既然预编译头有这样的好处，那么是不是加入预编译的头文件越多越好呢？答案是否定的。上文已经提到，使用预编译头的时候必须在所有源文件中包含预编译头文件，由此造成的影响是，一旦其中的头文件发生了变化，不论这个变化有多细微，整个项目都要重新编译。把一个会被频繁修改的头文件包含到预编译头文件中是非常不明智的做法，因此，理想的选择是下列几乎不会修改的头文件：</p>
+<ul>
+<li>操作系统API头文件，例如Windows.h。</li>
+<li>C/C++标准库头文件，例如string。</li>
+<li>第三方库头文件，例如boost/filesystem.hpp。</li>
+</ul>
+<p>另外一个要注意的是，C++的预编译头是不能用在C上的，反之亦然。也就是说，假如预编译头是通过.cpp源文件生成的，那么在.c源文件中使用了这个预编译头就会导致编译出错。有方法可以分别为这两种语言生成和使用不同的预编译头，不过这样做稍显复杂，最简单的做法是把源文件的扩展名改成.cpp，统一使用C++即可，这在大部分情况下都是可行的。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="什么是预编译头">什么是预编译头</h2><p>在介绍预编译头之前，有必要了解一下C/C++的编译方式。C/C++的编译单元是源文件（带有.c、.cc、.cpp等扩展名的文件），在编译一个源文件之前，预处理器会把这个源文件中所有通过#include指令包含进来的头文件递归地展开，也就是把所有直接或间接包含的头文件原封不动地插入进来。当这个过程结束之后，才开始编译。</p>]]>
+    
+    </summary>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="编译" scheme="http://zplutor.github.io/tags/%E7%BC%96%E8%AF%91/"/>
+    
+      <category term="预编译头" scheme="http://zplutor.github.io/tags/%E9%A2%84%E7%BC%96%E8%AF%91%E5%A4%B4/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[使用流式输出写调试日志]]></title>
     <link href="http://zplutor.github.io/2015/08/29/write-debug-log-streamly/"/>
     <id>http://zplutor.github.io/2015/08/29/write-debug-log-streamly/</id>
     <published>2015-08-29T12:50:54.000Z</published>
-    <updated>2015-08-29T13:06:06.000Z</updated>
+    <updated>2015-09-28T05:42:21.000Z</updated>
     <content type="html"><![CDATA[<p>日志是一种有效的调试手段。但是日志写得太频繁会降低程序性能，所以一般采取的策略是，大部分日志只在调试版的程序中输出，少量重要的日志才在发行版的程序中输出。为了控制调试日志的输出，通常会使用下面的简便方法：</p>
+<a id="more"></a>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">ifdef</span> DEBUG</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> DLOG(format, ...) printf(format, __VA_ARGS__)</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">else</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> DLOG(format, ...)</span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
 <p>上面的代码定义了一个DLOG宏，当处于调试模式时，DLOG会展开成对printf函数（或者类似函数）的调用；否则什么也不做。使用这个宏之后，调试日志对发行版程序没有任何影响。</p>
 <p>但是，由于printf固有的特点，使用这种方式写日志存在一些缺陷。最主要的是，格式化字符串中的形参与实参的个数和类型必须一致，否则，要么输出的信息不正确，要么程序直接崩溃。这种问题只有在真正执行的时候才显现出来，假如错误的DLOG调用位于深层次的条件语句中，那么它很可能会一直隐藏在那里。</p>
@@ -47,9 +101,17 @@
 <p>基于以上的核心思想，可以衍变出各种不同的版本来支持更丰富的功能，例如日志等级、日志分类等。C++中有很多小技巧，使用得当的话对程序开发有很大帮助。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>日志是一种有效的调试手段。但是日志写得太频繁会降低程序性能，所以一般采取的策略是，大部分日志只在调试版的程序中输出，少量重要的日志才在发行版的程序中输出。为了控制调试日志的输出，通常会使用下面的简便方法：</p>
-<figure class="highlight cpp">]]>
+    <![CDATA[<p>日志是一种有效的调试手段。但是日志写得太频繁会降低程序性能，所以一般采取的策略是，大部分日志只在调试版的程序中输出，少量重要的日志才在发行版的程序中输出。为了控制调试日志的输出，通常会使用下面的简便方法：</p>]]>
+    
     </summary>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="日志" scheme="http://zplutor.github.io/tags/%E6%97%A5%E5%BF%97/"/>
+    
+      <category term="流式输出" scheme="http://zplutor.github.io/tags/%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/"/>
+    
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
   </entry>
   
@@ -58,8 +120,9 @@
     <link href="http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/"/>
     <id>http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/</id>
     <published>2015-08-14T06:18:32.000Z</published>
-    <updated>2015-08-14T06:30:32.000Z</updated>
+    <updated>2015-09-28T05:41:17.000Z</updated>
     <content type="html"><![CDATA[<p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
+<a id="more"></a>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> sql = boost::str(boost::format(<span class="string">"select %1%, %2%, %3%, %4% from %5% where %1% = ?;"</span>)</span><br><span class="line">                             % kUserIdColumnName</span><br><span class="line">                             % kUserNameColumnName</span><br><span class="line">                             % kUserEmailColumnName</span><br><span class="line">                             % kUserPhoneColumnName</span><br><span class="line">                             % kUserTableName);</span><br></pre></td></tr></table></figure>
 <p>上面的例子构造了一条从用户信息表获取用户信息的SQL语句，这并没有什么问题。但仔细想想，在运行时构造SQL语句是毫无必要的，因为这种SQL语句基本上不会在程序运行的时候改变。假如每次查询都要进行这样的拼接过程，那么这部分的性能就白白浪费掉了。另一种做法是把sql变量定义成局部静态变量，这样只需要拼接一次就可以了。不过要是这段代码运行在并发环境中，还需要考虑线程安全的问题，这会带来一些额外的工作。</p>
 <p>当然啦，这种重复构造字符串本身的开销是非常小的，一般不会造成性能问题。但如果你是完美主义者，希望榨干最后一滴性能，那么可以考虑一下下面介绍的方法。</p>
@@ -76,9 +139,15 @@
 <p>使用宏来定义表名和列名可能会令人感到不安。但我觉得这是宏的合理使用，不会带来什么不良后果，因为表名和列名基本上只会用于SQL语句拼接的场景。有时候为了追求性能或者其他方面的目标，的确要牺牲一些代码的“观赏性”。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span]]>
+    <![CDATA[<p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>]]>
+    
     </summary>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="SQL" scheme="http://zplutor.github.io/tags/SQL/"/>
+    
+      <category term="字符串拼接" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%8B%BC%E6%8E%A5/"/>
     
   </entry>
   
@@ -87,8 +156,9 @@
     <link href="http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/"/>
     <id>http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/</id>
     <published>2015-05-22T08:53:03.000Z</published>
-    <updated>2015-08-16T08:32:21.000Z</updated>
+    <updated>2015-09-28T05:41:47.000Z</updated>
     <content type="html"><![CDATA[<p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。</p>
+<a id="more"></a>
 <p>所谓动态超时值，指的是允许连接空闲的最大时间值，也就是说，只有当连接没有数据传输的时候才开始计算超时时间。这也是平常说的超时的含义。正如上文所说，libcurl对超时的定义是允许连接执行的时间，这个定义在实际应用中会带来问题。例如，每个连接要传输的数据量是不一样的，为了让所有连接都能够正常执行，需要在执行之前计算出确切的超时值。然而这几乎不可能做到，因为网络环境时刻在变化，前一刻计算出来的超时值很快就不合适了。虽然固定超时值也有它特有的用途，但在绝大部分情况下它都不是我们想要的。</p>
 <p>好在libcurl提供了很高的灵活性，我们可以借助另外两个设置选项，变通地实现动态超时值。这两个设置选项是CURLOPT_LOW_SPEED_LIMIT和CURLOPT_LOW_SPEED_TIME，它们的含义是：当连接以低于CURLOPT_LOW_SPEED_LIMIT的速率执行了CURLOPT_LOW_SPEED_TIME的时间时，它就会被终止。一个微妙的地方是，当连接由于这个原因被终止时，它的错误码是CURLE_OPERATION_TIMEOUT。与其说是巧合，倒不如说这是libcurl特意为动态超时值提供的一个更灵活的接口。</p>
 <p>通过这两个设置选项，可以这样来设置动态超时值：</p>
@@ -106,8 +176,13 @@
 <p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。l]]>
+    <![CDATA[<p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。</p>]]>
+    
     </summary>
+    
+      <category term="libcurl" scheme="http://zplutor.github.io/tags/libcurl/"/>
+    
+      <category term="超时" scheme="http://zplutor.github.io/tags/%E8%B6%85%E6%97%B6/"/>
     
   </entry>
   

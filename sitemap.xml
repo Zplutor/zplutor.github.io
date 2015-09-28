@@ -3,17 +3,22 @@
   
   <url>
     <loc>http://zplutor.github.io/2015/08/29/write-debug-log-streamly/</loc>
-    <lastmod>2015-08-29T13:06:06.000Z</lastmod>
+    <lastmod>2015-09-28T05:42:21.000Z</lastmod>
   </url>
   
   <url>
     <loc>http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/</loc>
-    <lastmod>2015-08-16T08:32:21.000Z</lastmod>
+    <lastmod>2015-09-28T05:41:47.000Z</lastmod>
   </url>
   
   <url>
     <loc>http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/</loc>
-    <lastmod>2015-08-14T06:30:32.000Z</lastmod>
+    <lastmod>2015-09-28T05:41:17.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://zplutor.github.io/2015/09/28/use-precompiled-header-to-speed-up-compilation/</loc>
+    <lastmod>2015-09-28T05:37:02.000Z</lastmod>
   </url>
   
 </urlset>
