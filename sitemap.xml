@@ -2,8 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zplutor.github.io/2015/10/31/how-to-maintain-iunknown-object-in-shared-ptr/</loc>
+    <lastmod>2015-11-01T03:07:29.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://zplutor.github.io/2015/10/11/how-to-debug-cpp-exception-thrown-within-std-thread/</loc>
-    <lastmod>2015-10-13T05:27:22.000Z</lastmod>
+    <lastmod>2015-10-31T03:41:40.000Z</lastmod>
   </url>
   
   <url>

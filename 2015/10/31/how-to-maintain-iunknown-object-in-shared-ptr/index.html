@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>如何让std::shared_ptr持有IUnknown对象 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="C++11新增的智能指针std::shared_ptr使用引用计数来管理对象的生命周期，而COM提供的IUnknown接口也使用引用计数来管理自身的生命周期。理论上来说，在同一个环境中不应该同时使用两套引用计数方案，不然会造成混乱，带来很多麻烦。然而实际上，需要同时使用这两种方案的情况并不少见，有时的确需要用std::shared_ptr来持有COM对象。虽然这种做法看上去丑陋，并且是可以用别的方法来避免的，但本文不讨论这些方面，只聚焦于问题的本身。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="如何让std::shared_ptr持有IUnknown对象"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-10-31T03:26:46.000Z"><a href="/2015/10/31/how-to-maintain-iunknown-object-in-shared-ptr/">2015-10-31</a></time>
+      
+      
+  
+    <h1 class="title">如何让std::shared_ptr持有IUnknown对象</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>C++11新增的智能指针std::shared_ptr使用引用计数来管理对象的生命周期，而COM提供的IUnknown接口也使用引用计数来管理自身的生命周期。理论上来说，在同一个环境中不应该同时使用两套引用计数方案，不然会造成混乱，带来很多麻烦。然而实际上，需要同时使用这两种方案的情况并不少见，有时的确需要用std::shared_ptr来持有COM对象。虽然这种做法看上去丑陋，并且是可以用别的方法来避免的，但本文不讨论这些方面，只聚焦于问题的本身。</p>
+<a id="more"></a>
+<p>得益于std::shared_ptr提供的灵活性，持有COM对象是十分简单的。在默认情况下，当std::shared_ptr的引用计数达到0时，它会调用delete操作符来销毁持有的对象。然而在构造std::shared_ptr的时候，可以传入一个自定义的删除器，来改变它默认的删除行为。删除器可以是函数、仿函数或者lambda表达式等可调用的函数对象。例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;memory&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> deletor = [](<span class="keyword">int</span>* p) &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"deleting "</span> &lt;&lt; p &lt;&lt; <span class="built_in">std</span>::endl;</span><br><span class="line">        <span class="keyword">delete</span> p;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;<span class="keyword">int</span>&gt; i1(<span class="keyword">new</span> <span class="keyword">int</span>(), deletor);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;<span class="keyword">int</span>&gt; i2 = i1;</span><br><span class="line">    i1.reset();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码用一个lambda表达式作为变量<code>i1</code>的删除器，该删除器在销毁int之前会打印出一行消息。删除器会随着std::shared_ptr一同拷贝或赋值，所以不必担心删除器会丢失。在上面的代码中，变量<code>i2</code>接管了删除器，在程序退出之前依然会打印出那条消息。</p>
+<p>显然，对于COM对象来说，只要在删除器里调用Release方法来替换delete操作符即可。下面是将IUnknown对象转成std::shared_ptr的函数：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IUnknown&gt; ConvertToSharedPtr(IUnknown* unknown) &#123;</span><br><span class="line"></span><br><span class="line">    unknown-&gt;AddRef();</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IUnknown&gt;(unknown, [](IUnknown* p) &#123; p-&gt;Release(); &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在将COM对象传递给std::shared_ptr之前务必要调用AddRef方法增加它的引用计数。这样一来，在同一个对象上存在着两个引用计数：IUnknown的引用计数是主要的，只有当这个引用计数达到0时，对象才会被销毁；std::shared_ptr的引用计数是次要的，当这个引用计数达到0时，只会把IUnknown的引用计数减一。两者和谐共存，不会相互影响。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>, <a href="/tags/COM/">COM</a>, <a href="/tags/IUnknown/">IUnknown</a>, <a href="/tags/std-shared-ptr/">std::shared_ptr</a>, <a href="/tags/引用计数/">引用计数</a>, <a href="/tags/智能指针/">智能指针</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2015/10/31/how-to-maintain-iunknown-object-in-shared-ptr/" data-title="如何让std::shared_ptr持有IUnknown对象" data-url="http://zplutor.github.io/2015/10/31/how-to-maintain-iunknown-object-in-shared-ptr/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>5</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>1</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串拼接/">字符串拼接</a><small>1</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>1</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>2</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
