@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>WM_TIMER消息是否会在消息队列中堆积 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="在Windows界面开发中，启动定时器的最常用方法是使用SetTimer这个API。通过这个API启动的定时器会持续不断地往窗口消息队列中投递WM_TIMER消息，直到调用了KillTimer来停止。一个有趣的问题是，假如定时器的消息程序处理不过来，即处理WM_TIMER的时间比定时器的间隔时间长，会发生什么事情呢？消息队列中是否会堆积越来越多的WM_TIMER消息？官方文档中并没有指出这个问题，只能通过实践来找出答案。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="WM_TIMER消息是否会在消息队列中堆积"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-11-09T15:29:31.000Z"><a href="/2015/11/09/whether-WM-TIMER-message-would-accumulate-in-message-queue/">2015-11-09</a></time>
+      
+      
+  
+    <h1 class="title">WM_TIMER消息是否会在消息队列中堆积</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在Windows界面开发中，启动定时器的最常用方法是使用SetTimer这个API。通过这个API启动的定时器会持续不断地往窗口消息队列中投递WM_TIMER消息，直到调用了KillTimer来停止。一个有趣的问题是，假如定时器的消息程序处理不过来，即处理WM_TIMER的时间比定时器的间隔时间长，会发生什么事情呢？消息队列中是否会堆积越来越多的WM_TIMER消息？官方文档中并没有指出这个问题，只能通过实践来找出答案。</p>
+<a id="more"></a>
+<p>定时器有多种使用场景，下面针对每种场景分别进行试验。</p>
+<h2 id="一个窗口一个定时器">一个窗口一个定时器</h2><p>首先是最简单的使用场景，在一个窗口中启动一个定时器。使用下面的代码生成一个Windows应用程序（为了便于阅读，省略了注册窗口类和创建窗口的代码）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;Windows.h&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;sstream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">LRESULT CALLBACK <span class="title">WindowProcedure</span><span class="params">(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)</span></span>;</span><br><span class="line"></span><br><span class="line">DWORD g_begin_tick_count = <span class="number">0</span>;</span><br><span class="line">DWORD g_counter = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">int</span> kTimerId = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> WINAPI <span class="title">WinMain</span><span class="params">(HINSTANCE, HINSTANCE, <span class="keyword">char</span>*, <span class="keyword">int</span>)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    RegisterClassEx(...);</span><br><span class="line">    HWND window_handle = CreateWindowEx(...);</span><br><span class="line"></span><br><span class="line">    g_begin_tick_count = GetTickCount();</span><br><span class="line">    SetTimer(window_handle, kTimerId, <span class="number">1000</span>, <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    MSG msg;</span><br><span class="line">    <span class="keyword">while</span> (GetMessage(&amp;msg, <span class="literal">nullptr</span>, <span class="number">0</span>, <span class="number">0</span>)) &#123;</span><br><span class="line">        TranslateMessage(&amp;msg);</span><br><span class="line">        DispatchMessage(&amp;msg);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">LRESULT CALLBACK <span class="title">WindowProcedure</span><span class="params">(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (message) &#123;</span><br><span class="line">    <span class="keyword">case</span> WM_TIMER: &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::wstringstream stream;</span><br><span class="line">        stream &lt;&lt; <span class="string">L"Process WM_TIMER. "</span> </span><br><span class="line">            &lt;&lt; <span class="string">L"TimerId: "</span> &lt;&lt; wParam &lt;&lt; <span class="string">". "</span></span><br><span class="line">            &lt;&lt; <span class="string">L"Counter: "</span> &lt;&lt; ++g_counter &lt;&lt; <span class="string">", "</span></span><br><span class="line">            &lt;&lt; <span class="string">L"Time: "</span> &lt;&lt; GetTickCount() - g_begin_tick_count &lt;&lt; <span class="string">'.'</span> &lt;&lt; <span class="built_in">std</span>::endl;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::wstring <span class="built_in">string</span> = stream.str();</span><br><span class="line">        OutputDebugString(<span class="built_in">string</span>.c_str());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (g_counter &lt; <span class="number">5</span>) &#123;</span><br><span class="line">            Sleep(<span class="number">5000</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">return</span> CallWindowProc(DefWindowProc, hwnd, message, wParam, lParam);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码创建了一个间隔时间为1秒的定时器，在处理WM_TIMER的时候，输出定时器ID，消息个数以及当前时间。<code>g_counter</code>全局变量记录处理过的WM_TIMER消息的数量；时间的计算使用GetTickCount函数，单位是毫秒。在处理前面4个WM_TIMER的时候，使用Sleep函数使程序挂起5秒，模拟处理时间过长的情景。</p>
+<p>程序总的挂起时间是<code>4*5=20</code>秒，在这段时间内，定时器理应触发20次，即投递20个WM_TIMER消息，但是程序只能处理其中的3个（第一个不算）。假如WM_TIMER消息会堆积，那么从第5个开始，由于不再挂起程序，这些堆积的消息可以一口气处理完。观察程序是否会在短时间内连续输出，即可验证这个假设。</p>
+<p>启动程序，静置一段时间之后，输出如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Process WM_TIMER. TimerId: 1. Counter: 1, Time: 1014.&#10;Process WM_TIMER. TimerId: 1. Counter: 2, Time: 6022.&#10;Process WM_TIMER. TimerId: 1. Counter: 3, Time: 11029.&#10;Process WM_TIMER. TimerId: 1. Counter: 4, Time: 16037.&#10;Process WM_TIMER. TimerId: 1. Counter: 5, Time: 21045.&#10;Process WM_TIMER. TimerId: 1. Counter: 6, Time: 21294.&#10;Process WM_TIMER. TimerId: 1. Counter: 7, Time: 22308.&#10;Process WM_TIMER. TimerId: 1. Counter: 8, Time: 23322.&#10;Process WM_TIMER. TimerId: 1. Counter: 9, Time: 24336.&#10;Process WM_TIMER. TimerId: 1. Counter: 10, Time: 25350.</span><br></pre></td></tr></table></figure>
+<p>可以看到，在处理了第5个WM_TIMER消息之后，紧接着就处理了第6个，接下来每隔1秒处理一个，并没有一口气处理了一批。也就是说，WM_TIMER消息并不会堆积。</p>
+<h2 id="一个窗口多个定时器">一个窗口多个定时器</h2><p>如果一个窗口中多有个定时器，其中某个定时器处理不过来，对其它的定时器有什么影响呢？继续进行试验，把上面的代码稍作修改，如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;Windows.h&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;sstream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">LRESULT CALLBACK <span class="title">WindowProcedure</span><span class="params">(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)</span></span>;</span><br><span class="line"></span><br><span class="line">DWORD g_begin_tick_count = <span class="number">0</span>;</span><br><span class="line">DWORD g_counter1 = <span class="number">0</span>;</span><br><span class="line">DWORD g_counter2 = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">int</span> kTimerId1 = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">int</span> kTimerId2 = <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> WINAPI <span class="title">WinMain</span><span class="params">(HINSTANCE, HINSTANCE, <span class="keyword">char</span>*, <span class="keyword">int</span>)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    RegisterClassEx(...);</span><br><span class="line">    HWND window_handle = CreateWindowEx(...);</span><br><span class="line"></span><br><span class="line">    g_begin_tick_count = GetTickCount();</span><br><span class="line">    SetTimer(window_handle, kTimerId1, <span class="number">1000</span>, <span class="literal">nullptr</span>);</span><br><span class="line">    SetTimer(window_handle, kTimerId2, <span class="number">1000</span>, <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    MSG msg;</span><br><span class="line">    <span class="keyword">while</span> (GetMessage(&amp;msg, <span class="literal">nullptr</span>, <span class="number">0</span>, <span class="number">0</span>)) &#123;</span><br><span class="line">        TranslateMessage(&amp;msg);</span><br><span class="line">        DispatchMessage(&amp;msg);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">LRESULT CALLBACK <span class="title">WindowProcedure</span><span class="params">(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (message) &#123;</span><br><span class="line">    <span class="keyword">case</span> WM_TIMER: &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::wstringstream stream;</span><br><span class="line">        stream &lt;&lt; <span class="string">L"Process WM_TIMER. "</span> </span><br><span class="line">            &lt;&lt; <span class="string">L"TimerId: "</span> &lt;&lt; wParam &lt;&lt; <span class="string">". "</span></span><br><span class="line">            &lt;&lt; <span class="string">L"Counter: "</span> &lt;&lt; (wParam == kTimerId1 ? ++g_counter1 : ++g_counter2) &lt;&lt; <span class="string">", "</span></span><br><span class="line">            &lt;&lt; <span class="string">L"Time: "</span> &lt;&lt; GetTickCount() - g_begin_tick_count &lt;&lt; <span class="string">'.'</span> &lt;&lt; <span class="built_in">std</span>::endl;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::wstring <span class="built_in">string</span> = stream.str();</span><br><span class="line">        OutputDebugString(<span class="built_in">string</span>.c_str());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((wParam == kTimerId1) &amp;&amp; (g_counter1 &lt; <span class="number">5</span>)) &#123;</span><br><span class="line">            Sleep(<span class="number">5000</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">return</span> CallWindowProc(DefWindowProc, hwnd, message, wParam, lParam);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码创建了两个间隔都是1秒的定时器，分别用<code>g_counter1</code>和<code>g_counter2</code>两个全局变量来记录它们处理过的WM_TIMER消息的数量。同样地，在处理第一个定时器的前4个WM_TIMER消息时，调用Sleep函数挂起程序5秒。第二个定时器的WM_TIMER消息不做特殊处理。</p>
+<p>启动程序，静置一段时间之后，输出如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Process WM_TIMER. TimerId: 2. Counter: 1, Time: 1014.&#10;Process WM_TIMER. TimerId: 1. Counter: 1, Time: 1014.&#10;Process WM_TIMER. TimerId: 2. Counter: 2, Time: 6022.&#10;Process WM_TIMER. TimerId: 1. Counter: 2, Time: 6022.&#10;Process WM_TIMER. TimerId: 2. Counter: 3, Time: 11030.&#10;Process WM_TIMER. TimerId: 1. Counter: 3, Time: 11030.&#10;Process WM_TIMER. TimerId: 2. Counter: 4, Time: 16037.&#10;Process WM_TIMER. TimerId: 1. Counter: 4, Time: 16037.&#10;Process WM_TIMER. TimerId: 2. Counter: 5, Time: 21045.&#10;Process WM_TIMER. TimerId: 1. Counter: 5, Time: 21045.&#10;Process WM_TIMER. TimerId: 2. Counter: 6, Time: 21295.&#10;Process WM_TIMER. TimerId: 1. Counter: 6, Time: 21295.&#10;Process WM_TIMER. TimerId: 2. Counter: 7, Time: 22309.&#10;Process WM_TIMER. TimerId: 1. Counter: 7, Time: 22309.&#10;Process WM_TIMER. TimerId: 2. Counter: 8, Time: 23323.&#10;Process WM_TIMER. TimerId: 1. Counter: 8, Time: 23323.&#10;Process WM_TIMER. TimerId: 2. Counter: 9, Time: 24337.&#10;Process WM_TIMER. TimerId: 1. Counter: 9, Time: 24337.&#10;Process WM_TIMER. TimerId: 2. Counter: 10, Time: 25351.&#10;Process WM_TIMER. TimerId: 1. Counter: 10, Time: 25351.</span><br></pre></td></tr></table></figure>
+<p>两个定时器的行为基本一致，而且跟上一个场景一样，在连续处理了第5个和第6个WM_TIMER消息之后，还是每隔1秒处理一个。可见，第一个定时器处理不过来，会影响到第二个定时器，但是它们的WM_TIMER消息都不会堆积。</p>
+<h2 id="多个窗口多个定时器">多个窗口多个定时器</h2><p>最后再看看在不同窗口中启动多个定时器的场景。修改上一个场景的代码，在另一个窗口中创建第二个定时器，如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> WINAPI <span class="title">WinMain</span><span class="params">(HINSTANCE, HINSTANCE, <span class="keyword">char</span>*, <span class="keyword">int</span>)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    RegisterClassEx(...);</span><br><span class="line">    HWND window_handle1 = CreateWindowEx(...);</span><br><span class="line">    HWND window_handle2 = CreateWindowEx(...);</span><br><span class="line"></span><br><span class="line">    g_begin_tick_count = GetTickCount();</span><br><span class="line">    SetTimer(window_handle1, kTimerId1, <span class="number">1000</span>, <span class="literal">nullptr</span>);</span><br><span class="line">    SetTimer(window_handle2, kTimerId2, <span class="number">1000</span>, <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    MSG msg;</span><br><span class="line">    <span class="keyword">while</span> (GetMessage(&amp;msg, <span class="literal">nullptr</span>, <span class="number">0</span>, <span class="number">0</span>)) &#123;</span><br><span class="line">        TranslateMessage(&amp;msg);</span><br><span class="line">        DispatchMessage(&amp;msg);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其余的代码保持不变。</p>
+<p>启动程序，静置一段时间之后，输出如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Process WM_TIMER. TimerId: 2. Counter: 1, Time: 1014.&#10;Process WM_TIMER. TimerId: 1. Counter: 1, Time: 1014.&#10;Process WM_TIMER. TimerId: 2. Counter: 2, Time: 6022.&#10;Process WM_TIMER. TimerId: 1. Counter: 2, Time: 6022.&#10;Process WM_TIMER. TimerId: 2. Counter: 3, Time: 11030.&#10;Process WM_TIMER. TimerId: 1. Counter: 3, Time: 11030.&#10;Process WM_TIMER. TimerId: 2. Counter: 4, Time: 16037.&#10;Process WM_TIMER. TimerId: 1. Counter: 4, Time: 16037.&#10;Process WM_TIMER. TimerId: 2. Counter: 5, Time: 21045.&#10;Process WM_TIMER. TimerId: 1. Counter: 5, Time: 21045.&#10;Process WM_TIMER. TimerId: 2. Counter: 6, Time: 21295.&#10;Process WM_TIMER. TimerId: 1. Counter: 6, Time: 21295.&#10;Process WM_TIMER. TimerId: 2. Counter: 7, Time: 22309.&#10;Process WM_TIMER. TimerId: 1. Counter: 7, Time: 22309.&#10;Process WM_TIMER. TimerId: 2. Counter: 8, Time: 23323.&#10;Process WM_TIMER. TimerId: 1. Counter: 8, Time: 23323.&#10;Process WM_TIMER. TimerId: 2. Counter: 9, Time: 24337.&#10;Process WM_TIMER. TimerId: 1. Counter: 9, Time: 24337.&#10;Process WM_TIMER. TimerId: 2. Counter: 10, Time: 25351.&#10;Process WM_TIMER. TimerId: 1. Counter: 10, Time: 25351.</span><br></pre></td></tr></table></figure>
+<p>结果跟第二个场景一模一样，可见即使是不同窗口中的定时器，WM_TIMER消息也不会堆积。</p>
+<h2 id="总结">总结</h2><p>经过以上三个场景的试验，可以得出这个结论：同一个定时器的WM_TIMER消息在消息队列中至多存在一个，不会堆积。</p>
+<p>要注意的是，即使WM_TIMER消息不会堆积，在使用定时器时仍然要小心避免处理时间比间隔时间长的情况。由试验结果可以看到，一旦出现这种情况，消息队列中总会存在一个WM_TIMER消息等待处理，程序会忙于处理这些WM_TIMER消息，一刻都不停歇，就像陷入了一个循环，这对程序有严重的影响。</p>
+<p>由于各种因素的影响，对于同样的处理逻辑，每次执行所用的时间很可能都不一样。所以，如果担心处理时间过长，可以通过更安全的方式来使用定时器，即：在开始处理WM_TIMER消息的时候，调用KillTimer停止定时器；处理完成之后，再调用SetTimer重新开启定时器。例如，把第一个场景中处理WM_TIMER的代码改成以下的安全方式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">LRESULT CALLBACK <span class="title">WindowProcedure</span><span class="params">(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (message) &#123;</span><br><span class="line">    <span class="keyword">case</span> WM_TIMER: &#123;</span><br><span class="line"></span><br><span class="line">        KillTimer(hwnd, kTimerId);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::wstringstream stream;</span><br><span class="line">        stream &lt;&lt; <span class="string">L"Process WM_TIMER. "</span> </span><br><span class="line">            &lt;&lt; <span class="string">L"TimerId: "</span> &lt;&lt; wParam &lt;&lt; <span class="string">". "</span></span><br><span class="line">            &lt;&lt; <span class="string">L"Counter: "</span> &lt;&lt; ++g_counter &lt;&lt; <span class="string">", "</span></span><br><span class="line">            &lt;&lt; <span class="string">L"Time: "</span> &lt;&lt; GetTickCount() - g_begin_tick_count &lt;&lt; <span class="string">'.'</span> &lt;&lt; <span class="built_in">std</span>::endl;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::wstring <span class="built_in">string</span> = stream.str();</span><br><span class="line">        OutputDebugString(<span class="built_in">string</span>.c_str());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (g_counter &lt; <span class="number">5</span>) &#123;</span><br><span class="line">            Sleep(<span class="number">5000</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        SetTimer(hwnd, kTimerId, <span class="number">1000</span>, <span class="literal">nullptr</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">return</span> CallWindowProc(DefWindowProc, hwnd, message, wParam, lParam);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>启动程序，静置一段时间之后，输出如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Process WM_TIMER. TimerId: 1. Counter: 1, Time: 1014.&#10;Process WM_TIMER. TimerId: 1. Counter: 2, Time: 7036.&#10;Process WM_TIMER. TimerId: 1. Counter: 3, Time: 13058.&#10;Process WM_TIMER. TimerId: 1. Counter: 4, Time: 19079.&#10;Process WM_TIMER. TimerId: 1. Counter: 5, Time: 25101.&#10;Process WM_TIMER. TimerId: 1. Counter: 6, Time: 26115.&#10;Process WM_TIMER. TimerId: 1. Counter: 7, Time: 27129.&#10;Process WM_TIMER. TimerId: 1. Counter: 8, Time: 28143.&#10;Process WM_TIMER. TimerId: 1. Counter: 9, Time: 29157.&#10;Process WM_TIMER. TimerId: 1. Counter: 10, Time: 30171.&#10;Process WM_TIMER. TimerId: 1. Counter: 11, Time: 31185.</span><br></pre></td></tr></table></figure>
+<p>通过这种方式，不管处理时间有多长，在处理完一个WM_TIMER消息之后，总会真正等待1秒才处理下一个，避免了程序长时间处于繁忙状态的情况。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/WM-TIMER/">WM_TIMER</a>, <a href="/tags/定时器/">定时器</a>, <a href="/tags/消息队列/">消息队列</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2015/11/09/whether-WM-TIMER-message-would-accumulate-in-message-queue/" data-title="WM_TIMER消息是否会在消息队列中堆积" data-url="http://zplutor.github.io/2015/11/09/whether-WM-TIMER-message-would-accumulate-in-message-queue/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>5</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>1</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串拼接/">字符串拼接</a><small>1</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>1</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>1</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>2</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
