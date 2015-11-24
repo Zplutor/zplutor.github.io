@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://zplutor.github.io/"/>
-  <updated>2015-11-24T16:39:24.000Z</updated>
+  <updated>2015-11-24T16:45:44.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -19,12 +19,12 @@
     <link href="http://zplutor.github.io/2015/11/25/RAND-poll-function-s-issues-on-Windows/"/>
     <id>http://zplutor.github.io/2015/11/25/RAND-poll-function-s-issues-on-Windows/</id>
     <published>2015-11-24T16:26:09.000Z</published>
-    <updated>2015-11-24T16:39:24.000Z</updated>
+    <updated>2015-11-24T16:45:44.000Z</updated>
     <content type="html"><![CDATA[<p>RAND_poll函数是OpenSSL中用于初始化伪随机数生成器的函数，当首次调用诸如RAND_bytes等需要生成随机数的函数时，会先调用该函数进行初始化。在实际使用中发现，RAND_poll函数在Windows下存在一些问题，需要小心提放，否则可能会对程序造成不良影响。</p>
 <a id="more"></a>
 <h2 id="慢">慢</h2><p>RAND_poll的第一个问题是慢。早在2009年就有人反映这个问题，说这个函数居然要耗费超过一分钟的时间。要明白为什么RAND_poll这么慢，就要了解它的实现原理。为了保证伪随机数的不可预见性，需要用尽可能多的随机信息去初始化生成器，因此RAND_poll尝试收集程序运行时的各种环境信息。其中包括当前进程的内存信息，这是通过枚举每一个堆中已分配的前80个内存块来得到的。即使对于单个堆的数量有限制，总的枚举的次数仍然可能很多，况且用于枚举的API本身性能并不好，导致整体上耗费了大量时间。</p>
 <p>这个问题在2009年之后的OpenSSL版本中得到了缓解。之所以说“缓解”，是因为RAND_poll的算法并没有改变，它仍然要枚举每个堆的内存块，只不过在枚举的过程中加上了时间检测，如果发现已经超过一秒就不再继续枚举了。因此，该函数最多耗时一秒多一点，这个时间对于某些场景来说仍然是比较慢的。</p>
-<p>关于这个问题的讨论，可以参考 <a href="https://rt.openssl.org/Ticket/Display.html?id=2100" target="_blank" rel="external">https://rt.openssl.org/Ticket/Display.html?id=2100</a> 。</p>
+<p>关于这个问题的讨论，可以参考 <a href="https://rt.openssl.org/Ticket/Display.html?id=2100&amp;user=guest&amp;pass=guest" target="_blank" rel="external">https://rt.openssl.org/Ticket/Display.html?id=2100&amp;user=guest&amp;pass=guest</a> 。</p>
 <h2 id="死锁">死锁</h2><p>RAND_poll的第二个问题是它有一定几率导致死锁。原因还是在于枚举堆内存块——用于枚举的API会把进程所有的堆逐个加锁，在这个过程中，假如有其它线程也在操作堆，那么很有可能导致死锁。</p>
 <p>按道理来说，死锁这么严重的问题应该尽早解决，然而奇怪的是，这个问题一直留存至今。综合网上的各种讨论来看，原因或许是这样的：OpenSSL认为这是Windows的问题，一个公开的系统API绝不应该导致程序死锁；而微软则声称这个API仅用于调试目的，不应该在正常的场合下使用。双方都认为这是对方的责任，因此谁都不愿意去修改。</p>
 <p>关于这个问题的分析，可以参考 <a href="http://0cch.com/debugging/2015/09/08/foxmail-hung.html" target="_blank" rel="external">http://0cch.com/debugging/2015/09/08/foxmail-hung.html</a> 。</p>
