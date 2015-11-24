@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>RAND_poll函数在Windows下存在的问题 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="RAND_poll函数是OpenSSL中用于初始化伪随机数生成器的函数，当首次调用诸如RAND_bytes等需要生成随机数的函数时，会先调用该函数进行初始化。在实际使用中发现，RAND_poll函数在Windows下存在一些问题，需要小心提放，否则可能会对程序造成不良影响。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="RAND_poll函数在Windows下存在的问题"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-11-24T16:26:09.000Z"><a href="/2015/11/25/RAND-poll-function-s-issues-on-Windows/">2015-11-25</a></time>
+      
+      
+  
+    <h1 class="title">RAND_poll函数在Windows下存在的问题</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>RAND_poll函数是OpenSSL中用于初始化伪随机数生成器的函数，当首次调用诸如RAND_bytes等需要生成随机数的函数时，会先调用该函数进行初始化。在实际使用中发现，RAND_poll函数在Windows下存在一些问题，需要小心提放，否则可能会对程序造成不良影响。</p>
+<a id="more"></a>
+<h2 id="慢">慢</h2><p>RAND_poll的第一个问题是慢。早在2009年就有人反映这个问题，说这个函数居然要耗费超过一分钟的时间。要明白为什么RAND_poll这么慢，就要了解它的实现原理。为了保证伪随机数的不可预见性，需要用尽可能多的随机信息去初始化生成器，因此RAND_poll尝试收集程序运行时的各种环境信息。其中包括当前进程的内存信息，这是通过枚举每一个堆中已分配的前80个内存块来得到的。即使对于单个堆的数量有限制，总的枚举的次数仍然可能很多，况且用于枚举的API本身性能并不好，导致整体上耗费了大量时间。</p>
+<p>这个问题在2009年之后的OpenSSL版本中得到了缓解。之所以说“缓解”，是因为RAND_poll的算法并没有改变，它仍然要枚举每个堆的内存块，只不过在枚举的过程中加上了时间检测，如果发现已经超过一秒就不再继续枚举了。因此，该函数最多耗时一秒多一点，这个时间对于某些场景来说仍然是比较慢的。</p>
+<p>关于这个问题的讨论，可以参考 <a href="https://rt.openssl.org/Ticket/Display.html?id=2100" target="_blank" rel="external">https://rt.openssl.org/Ticket/Display.html?id=2100</a> 。</p>
+<h2 id="死锁">死锁</h2><p>RAND_poll的第二个问题是它有一定几率导致死锁。原因还是在于枚举堆内存块——用于枚举的API会把进程所有的堆逐个加锁，在这个过程中，假如有其它线程也在操作堆，那么很有可能导致死锁。</p>
+<p>按道理来说，死锁这么严重的问题应该尽早解决，然而奇怪的是，这个问题一直留存至今。综合网上的各种讨论来看，原因或许是这样的：OpenSSL认为这是Windows的问题，一个公开的系统API绝不应该导致程序死锁；而微软则声称这个API仅用于调试目的，不应该在正常的场合下使用。双方都认为这是对方的责任，因此谁都不愿意去修改。</p>
+<p>关于这个问题的分析，可以参考 <a href="http://0cch.com/debugging/2015/09/08/foxmail-hung.html" target="_blank" rel="external">http://0cch.com/debugging/2015/09/08/foxmail-hung.html</a> 。</p>
+<h2 id="对策">对策</h2><p>综上所述，RAND_poll的两个问题对程序的性能和稳定性都有影响。那么应该如何避免呢？很简单，只需要在程序入口点调用一下RAND_bytes，让它初始化伪随机数生成器即可。之所以在这个时间点来初始化，一是因为这时候堆的数量以及分配的内存块还很少，不会耗费太多时间去枚举；二是因为这时候只有一个主线程，不会有其它线程来同时操作堆，也就不会出现死锁。测试结果显示，在这个时间点调用RAND_poll只用了不到100毫秒的时间。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/OpenSSL/">OpenSSL</a>, <a href="/tags/RAND-bytes/">RAND_bytes</a>, <a href="/tags/RAND-poll/">RAND_poll</a>, <a href="/tags/Windows/">Windows</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2015/11/25/RAND-poll-function-s-issues-on-Windows/" data-title="RAND_poll函数在Windows下存在的问题" data-url="http://zplutor.github.io/2015/11/25/RAND-poll-function-s-issues-on-Windows/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>5</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>1</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>1</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>1</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>1</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>6</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串拼接/">字符串拼接</a><small>1</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>1</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>1</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>2</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
