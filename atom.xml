@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://zplutor.github.io/"/>
-  <updated>2015-11-24T16:47:52.000Z</updated>
+  <updated>2015-12-01T16:56:35.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -13,6 +13,39 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[KeyWindow 0.1.2]]></title>
+    <link href="http://zplutor.github.io/2015/11/28/keywindow-0-1-2/"/>
+    <id>http://zplutor.github.io/2015/11/28/keywindow-0-1-2/</id>
+    <published>2015-11-28T05:20:30.000Z</published>
+    <updated>2015-12-01T16:56:35.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="介绍">介绍</h2><p>KeyWindow是一个通过快捷键快速调整窗口布局的工具。</p>
+<a id="more"></a>
+<p>OS X的窗口管理是个麻烦的事情。当需要同时使用多个窗口的时候，我们希望能够在同一个屏幕上平铺这些窗口。例如，把浏览器窗口充满屏幕左半边，把文本编辑器窗口充满屏幕右半边。为了达到这个目的，必须拖动这些窗口并且调整它们的大小，效率很低下。虽然OS X 10.11新增了SplitView功能，但它仍然需要拖动窗口，不够快捷。</p>
+<p>那么，最快捷的方式是什么呢？当然是通过键盘快捷键。OS X不支持通过快捷键改变窗口的布局，但是KeyWindow带来了这个功能。</p>
+<h2 id="示例">示例</h2><p>在KeyWindow中配置窗口的布局以及对应的快捷键。</p>
+<img src="/2015/11/28/keywindow-0-1-2/1.jpg" alt="1.jpg" title="">
+<p>通过快捷键调整窗口布局。</p>
+<img src="/2015/11/28/keywindow-0-1-2/2.jpg" alt="2.jpg" title="">
+<h2 id="程序信息">程序信息</h2><ul>
+<li>系统要求：OS X 10.10及以上。</li>
+<li>支持语言：简体中文；英文。</li>
+<li>下载地址：<a href="https://github.com/Zplutor/KeyWindow/releases/download/v0.1.2/KeyWindow.0.1.2.dmg" target="_blank" rel="external">https://github.com/Zplutor/KeyWindow/releases/download/v0.1.2/KeyWindow.0.1.2.dmg</a></li>
+<li>项目地址：<a href="https://github.com/Zplutor/KeyWindow" target="_blank" rel="external">https://github.com/Zplutor/KeyWindow</a></li>
+</ul>
+<h2 id="备注">备注</h2><p>KeyWindow是一个开源项目，如果你也喜欢这个小工具，欢迎来为它添砖加瓦。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="介绍">介绍</h2><p>KeyWindow是一个通过快捷键快速调整窗口布局的工具。</p>]]>
+    
+    </summary>
+    
+      <category term="KeyWindow" scheme="http://zplutor.github.io/tags/KeyWindow/"/>
+    
+      <category term="OS X" scheme="http://zplutor.github.io/tags/OS-X/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[RAND_poll函数在Windows下存在的问题]]></title>
