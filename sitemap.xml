@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zplutor.github.io/2015/12/06/implement-an-editable-windowless-richedit/</loc>
+    <lastmod>2015-12-06T13:45:53.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://zplutor.github.io/2015/11/28/keywindow-0-1-2/</loc>
     <lastmod>2015-12-01T16:56:35.000Z</lastmod>
   </url>
