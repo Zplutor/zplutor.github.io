@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://zplutor.github.io/"/>
-  <updated>2015-12-06T13:45:53.000Z</updated>
+  <updated>2016-01-02T13:05:13.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -13,6 +13,47 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[为什么std::tolower不能用于std::transform]]></title>
+    <link href="http://zplutor.github.io/2016/01/02/why-can-t-std-tolower-be-used-with-std-transform/"/>
+    <id>http://zplutor.github.io/2016/01/02/why-can-t-std-tolower-be-used-with-std-transform/</id>
+    <published>2016-01-02T04:13:36.000Z</published>
+    <updated>2016-01-02T13:05:13.000Z</updated>
+    <content type="html"><![CDATA[<p>在C++中，std::tolower和std::toupper函数（在本文中都用std::tolower指代两者）用于对一个字符进行大小写转换，将其与std::transform函数结合则可以对整个字符串进行大小写转换，如下所示：</p>
+<a id="more"></a>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="built_in">string</span> = <span class="string">"ABCDEF"</span>;</span><br><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">tolower</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>以上代码在Visual C++下能编译成功，但是在XCode下却编译失败，错误信息为<code>No matching function for call to &#39;transform&#39;</code>。这是因为std::tolower函数存在两个重载，第一个定义于头文件cctype，声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tolower</span><span class="params">(<span class="keyword">int</span> ch)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>第二个定义于头文件locale，声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> charT&gt;</span><br><span class="line"><span class="function">charT <span class="title">tolower</span><span class="params">(charT ch, <span class="keyword">const</span> locale&amp; loc)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>cctype和locale都是很基础的模块，会被其它头文件引用，因此这两个重载通常都会同时出现。XCode的编译器由于不知道该选择哪个重载而报错。</p>
+<p>然而，从理论上来说，编译器是可以知道如何选择的。std::transform在XCode中的源码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> _InputIterator, <span class="keyword">class</span> _OutputIterator, <span class="keyword">class</span> _UnaryOperation&gt;</span><br><span class="line"><span class="keyword">inline</span> _LIBCPP_INLINE_VISIBILITY</span><br><span class="line">_<span class="function">OutputIterator</span><br><span class="line"><span class="title">transform</span><span class="params">(_InputIterator __first, _InputIterator __last, _OutputIterator __result, _UnaryOperation __op)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (; __first != __last; ++__first, (<span class="keyword">void</span>) ++__result)</span><br><span class="line">        *__result = __op(*__first);</span><br><span class="line">    <span class="keyword">return</span> __result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在第七行，可以看到调用<code>__op</code>的时候只传了一个参数，因此无论如何只能选择std::tolower的第一个重载，编译器完全有能力做出这个推导。如果把上述std::transform的源码转移到Visual C++并且以同样的方式来调用，可以编译成功，可见这个推导是可行的。那为什么XCode的编译器没有这么做呢？一个可能的原因是效率问题，类型推导越精确会耗费越多编译时间。从这一点或许可以解释为什么Visual C++的编译速度这么慢。</p>
+<p>那么，应该如何解决这个问题呢？有两种方法，第一种方法是把std::tolower换成::tolower，如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    ::<span class="built_in">tolower</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>默认情况下，在全局名称空间中，tolower只有一种声明形式，因此没有问题。但前提是没有使用<code>using namespace</code>语句把std名称空间的内容导入全局名称空间——然而这种用法很常见，因此使用::tolower并不一定有效。</p>
+<p>第二种方法是显式指定使用std::tolower的第一个重载，如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="keyword">static_cast</span>&lt;<span class="keyword">int</span>(*)(<span class="keyword">int</span>)&gt;(<span class="built_in">std</span>::<span class="built_in">tolower</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>这种做法带来了编码负担，因为每次使用的时候都要回忆一下std::tolower的声明形式，并且要输入更多字符。所以最好用一个函数把它封装起来，一劳永逸。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>在C++中，std::tolower和std::toupper函数（在本文中都用std::tolower指代两者）用于对一个字符进行大小写转换，将其与std::transform函数结合则可以对整个字符串进行大小写转换，如下所示：</p>]]>
+    
+    </summary>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="std::tolower" scheme="http://zplutor.github.io/tags/std-tolower/"/>
+    
+      <category term="std::toupper" scheme="http://zplutor.github.io/tags/std-toupper/"/>
+    
+      <category term="std::transform" scheme="http://zplutor.github.io/tags/std-transform/"/>
+    
+      <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[实现一个可编辑的Windowless RichEdit]]></title>
@@ -475,7 +516,7 @@
     <link href="http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/"/>
     <id>http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/</id>
     <published>2015-08-14T06:18:32.000Z</published>
-    <updated>2015-09-28T05:41:17.000Z</updated>
+    <updated>2016-01-02T13:09:00.000Z</updated>
     <content type="html"><![CDATA[<p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
 <a id="more"></a>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> sql = boost::str(boost::format(<span class="string">"select %1%, %2%, %3%, %4% from %5% where %1% = ?;"</span>)</span><br><span class="line">                             % kUserIdColumnName</span><br><span class="line">                             % kUserNameColumnName</span><br><span class="line">                             % kUserEmailColumnName</span><br><span class="line">                             % kUserPhoneColumnName</span><br><span class="line">                             % kUserTableName);</span><br></pre></td></tr></table></figure>
@@ -502,7 +543,7 @@
     
       <category term="SQL" scheme="http://zplutor.github.io/tags/SQL/"/>
     
-      <category term="字符串拼接" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%8B%BC%E6%8E%A5/"/>
+      <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
     
   </entry>
   

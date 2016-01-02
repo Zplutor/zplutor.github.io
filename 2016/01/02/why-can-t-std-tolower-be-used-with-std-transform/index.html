@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>为什么std::tolower不能用于std::transform | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="在C++中，std::tolower和std::toupper函数（在本文中都用std::tolower指代两者）用于对一个字符进行大小写转换，将其与std::transform函数结合则可以对整个字符串进行大小写转换，如下所示：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="为什么std::tolower不能用于std::transform"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2016-01-02T04:13:36.000Z"><a href="/2016/01/02/why-can-t-std-tolower-be-used-with-std-transform/">2016-01-02</a></time>
+      
+      
+  
+    <h1 class="title">为什么std::tolower不能用于std::transform</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在C++中，std::tolower和std::toupper函数（在本文中都用std::tolower指代两者）用于对一个字符进行大小写转换，将其与std::transform函数结合则可以对整个字符串进行大小写转换，如下所示：</p>
+<a id="more"></a>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="built_in">string</span> = <span class="string">"ABCDEF"</span>;</span><br><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">tolower</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>以上代码在Visual C++下能编译成功，但是在XCode下却编译失败，错误信息为<code>No matching function for call to &#39;transform&#39;</code>。这是因为std::tolower函数存在两个重载，第一个定义于头文件cctype，声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tolower</span><span class="params">(<span class="keyword">int</span> ch)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>第二个定义于头文件locale，声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> charT&gt;</span><br><span class="line"><span class="function">charT <span class="title">tolower</span><span class="params">(charT ch, <span class="keyword">const</span> locale&amp; loc)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>cctype和locale都是很基础的模块，会被其它头文件引用，因此这两个重载通常都会同时出现。XCode的编译器由于不知道该选择哪个重载而报错。</p>
+<p>然而，从理论上来说，编译器是可以知道如何选择的。std::transform在XCode中的源码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> _InputIterator, <span class="keyword">class</span> _OutputIterator, <span class="keyword">class</span> _UnaryOperation&gt;</span><br><span class="line"><span class="keyword">inline</span> _LIBCPP_INLINE_VISIBILITY</span><br><span class="line">_<span class="function">OutputIterator</span><br><span class="line"><span class="title">transform</span><span class="params">(_InputIterator __first, _InputIterator __last, _OutputIterator __result, _UnaryOperation __op)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (; __first != __last; ++__first, (<span class="keyword">void</span>) ++__result)</span><br><span class="line">        *__result = __op(*__first);</span><br><span class="line">    <span class="keyword">return</span> __result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在第七行，可以看到调用<code>__op</code>的时候只传了一个参数，因此无论如何只能选择std::tolower的第一个重载，编译器完全有能力做出这个推导。如果把上述std::transform的源码转移到Visual C++并且以同样的方式来调用，可以编译成功，可见这个推导是可行的。那为什么XCode的编译器没有这么做呢？一个可能的原因是效率问题，类型推导越精确会耗费越多编译时间。从这一点或许可以解释为什么Visual C++的编译速度这么慢。</p>
+<p>那么，应该如何解决这个问题呢？有两种方法，第一种方法是把std::tolower换成::tolower，如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    ::<span class="built_in">tolower</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>默认情况下，在全局名称空间中，tolower只有一种声明形式，因此没有问题。但前提是没有使用<code>using namespace</code>语句把std名称空间的内容导入全局名称空间——然而这种用法很常见，因此使用::tolower并不一定有效。</p>
+<p>第二种方法是显式指定使用std::tolower的第一个重载，如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="keyword">static_cast</span>&lt;<span class="keyword">int</span>(*)(<span class="keyword">int</span>)&gt;(<span class="built_in">std</span>::<span class="built_in">tolower</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>这种做法带来了编码负担，因为每次使用的时候都要回忆一下std::tolower的声明形式，并且要输入更多字符。所以最好用一个函数把它封装起来，一劳永逸。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>, <a href="/tags/std-tolower/">std::tolower</a>, <a href="/tags/std-toupper/">std::toupper</a>, <a href="/tags/std-transform/">std::transform</a>, <a href="/tags/字符串/">字符串</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2016/01/02/why-can-t-std-tolower-be-used-with-std-transform/" data-title="为什么std::tolower不能用于std::transform" data-url="http://zplutor.github.io/2016/01/02/why-can-t-std-tolower-be-used-with-std-transform/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>6</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OS-X/">OS X</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>7</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>2</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>1</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>1</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>1</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>2</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2016 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>

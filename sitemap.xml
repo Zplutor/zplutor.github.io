@@ -2,6 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/</loc>
+    <lastmod>2016-01-02T13:09:00.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://zplutor.github.io/2016/01/02/why-can-t-std-tolower-be-used-with-std-transform/</loc>
+    <lastmod>2016-01-02T13:05:13.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://zplutor.github.io/2015/12/06/implement-an-editable-windowless-richedit/</loc>
     <lastmod>2015-12-06T13:45:53.000Z</lastmod>
   </url>
@@ -49,11 +59,6 @@
   <url>
     <loc>http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/</loc>
     <lastmod>2015-09-28T05:41:47.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/</loc>
-    <lastmod>2015-09-28T05:41:17.000Z</lastmod>
   </url>
   
 </urlset>
