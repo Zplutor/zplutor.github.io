@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://zplutor.github.io/"/>
-  <updated>2016-01-02T13:05:13.000Z</updated>
+  <updated>2016-02-04T13:55:58.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -13,6 +13,36 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[使用内核对象实现单例程序]]></title>
+    <link href="http://zplutor.github.io/2016/02/04/implement-singleton-application-with-kernal-object/"/>
+    <id>http://zplutor.github.io/2016/02/04/implement-singleton-application-with-kernal-object/</id>
+    <published>2016-02-04T13:51:05.000Z</published>
+    <updated>2016-02-04T13:55:58.000Z</updated>
+    <content type="html"><![CDATA[<p>对于有些程序来说，运行多个实例没有意义，甚至会出现异常，所以有必要把程序实现成单例。有多种方法可以做到这一点，比较好的方法是使用内核对象。</p>
+<a id="more"></a>
+<p>内核对象是指存在于系统内核中的对象，而不仅仅存在于程序内部，这样多个程序实例之间就可以共享这些对象了。使用内核对象的思路很简单：程序启动之后检查一下是否存在特定的内核对象，如果不存在，说明这是第一个实例，可以正常运行；如果已存在，说明已经有实例在运行了，当前的实例要退出。内核对象在这里只是作为一个标识，标识是否有实例正在运行，至于它是哪一种内核对象则不重要。习惯上会使用Mutex内核对象，主要是因为它的名称与这里的用途相吻合，而且它的用法也很简单。</p>
+<p>内核对象有具名和匿名之分。具名的内核对象与一个字符串关联，通过这个字符串可以找到对应的内核对象；匿名的内核对象则不具备这个特点。显然这里应该使用具名内核对象。</p>
+<p>可以在程序的入口点来检查内核对象。下面是检查Mutex内核对象的例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HANDLE mutex = CreateMutex(<span class="literal">NULL</span>, FALSE, <span class="string">L"SingletonApplication"</span>);</span><br><span class="line"><span class="keyword">if</span> ( (mutex == <span class="literal">NULL</span>) || (GetLastError() == ERROR_ALREADY_EXISTS) ) &#123;</span><br><span class="line"></span><br><span class="line">     <span class="comment">//退出程序</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//正常启动程序</span></span><br></pre></td></tr></table></figure>
+<p>CreateMutex同时提供了创建和打开Mutex内核对象的功能。第三个参数指明了内核对象的名称，如果名为<code>SingletonApplication</code>的Mutex内核对象不存在，那么CreateMutex会创建一个新的对象，并返回它的句柄；如果已经存在这个内核对象，那么CreateMutex会打开它，并返回它的句柄，同时GetLastError会返回<code>ERROR_ALREADY_EXISTS</code>。在实际的应用中，应该把<code>SingletonApplication</code>替换成尽量不会与其它程序冲突的名称。</p>
+<p>CreateMutex的第一个和第二个参数在这里的使用场景中并不重要，分别传入NULL和FALSE即可。CreateMutex如果失败会返回NULL，这种情况几乎不会发生，但基于完整性考虑这里还是要判断一下返回值是否为NULL。</p>
+<p>在程序的实例退出之前，理论上来说是需要调用CloseHandle把内核对象关闭的。但实即使不这么做也不会有问题，因为进程结束的时候操作系统会把这个进程所有的资源回收，该内核对象自然会被关闭。</p>
+<p>最后要注意的是，使用内核对象来实现单例程序是有风险的。因为内核对象全局可见，其它程序也能访问。例如WinObj工具可以查看系统中所有内核对象以及它们的名称。恶意程序完全可以抢先创建内核对象来阻止特定程序运行。所以如果安全性很重要的话，就要考虑更加安全的方式来实现单例程序了。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>对于有些程序来说，运行多个实例没有意义，甚至会出现异常，所以有必要把程序实现成单例。有多种方法可以做到这一点，比较好的方法是使用内核对象。</p>]]>
+    
+    </summary>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="内核对象" scheme="http://zplutor.github.io/tags/%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1/"/>
+    
+      <category term="单例" scheme="http://zplutor.github.io/tags/%E5%8D%95%E4%BE%8B/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[为什么std::tolower不能用于std::transform]]></title>
@@ -354,7 +384,7 @@
     <link href="http://zplutor.github.io/2015/10/11/how-to-debug-cpp-exception-thrown-within-std-thread/"/>
     <id>http://zplutor.github.io/2015/10/11/how-to-debug-cpp-exception-thrown-within-std-thread/</id>
     <published>2015-10-11T12:06:41.000Z</published>
-    <updated>2015-11-22T14:08:58.000Z</updated>
+    <updated>2016-01-16T06:04:20.000Z</updated>
     <content type="html"><![CDATA[<p>C++11标准库新增的std::thread类可以方便地开启子线程。然而有个奇怪的现象是，如果在这些子线程中抛出了未处理的C++异常而导致程序崩溃，那么在生成的dump文件中将还原不出异常发生时的调用栈。可以通过下面的方法来展示这个现象。</p>
 <a id="more"></a>
 <p>首先使用以下代码生成一个控制台程序：</p>

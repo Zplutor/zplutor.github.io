@@ -6,15 +6,15 @@
   <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
-  <title>RAND_poll函数在Windows下存在的问题 | Zplutor&#39;s</title>
+  <title>使用内核对象实现单例程序 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
   
-  <meta name="description" content="RAND_poll函数是OpenSSL中用于初始化伪随机数生成器的函数，当首次调用诸如RAND_bytes等需要生成随机数的函数时，会先调用该函数进行初始化。在实际使用中发现，RAND_poll函数在Windows下存在一些问题，需要小心提放，否则可能会对程序造成不良影响。">
+  <meta name="description" content="对于有些程序来说，运行多个实例没有意义，甚至会出现异常，所以有必要把程序实现成单例。有多种方法可以做到这一点，比较好的方法是使用内核对象。">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="RAND_poll函数在Windows下存在的问题"/>
+  <meta property="og:title" content="使用内核对象实现单例程序"/>
   <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
@@ -55,25 +55,26 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2015-11-24T16:26:09.000Z"><a href="/2015/11/25/RAND-poll-function-s-issues-on-Windows/">2015-11-25</a></time>
+        <time datetime="2016-02-04T13:51:05.000Z"><a href="/2016/02/04/implement-singleton-application-with-kernal-object/">2016-02-04</a></time>
       
       
   
-    <h1 class="title">RAND_poll函数在Windows下存在的问题</h1>
+    <h1 class="title">使用内核对象实现单例程序</h1>
   
 
     </header>
     <div class="entry">
       
-        <p>RAND_poll函数是OpenSSL中用于初始化伪随机数生成器的函数，当首次调用诸如RAND_bytes等需要生成随机数的函数时，会先调用该函数进行初始化。在实际使用中发现，RAND_poll函数在Windows下存在一些问题，需要小心提放，否则可能会对程序造成不良影响。</p>
+        <p>对于有些程序来说，运行多个实例没有意义，甚至会出现异常，所以有必要把程序实现成单例。有多种方法可以做到这一点，比较好的方法是使用内核对象。</p>
 <a id="more"></a>
-<h2 id="慢">慢</h2><p>RAND_poll的第一个问题是慢。早在2009年就有人反映这个问题，说这个函数居然要耗费超过一分钟的时间。要明白为什么RAND_poll这么慢，就要了解它的实现原理。为了保证伪随机数的不可预见性，需要用尽可能多的随机信息去初始化生成器，因此RAND_poll尝试收集程序运行时的各种环境信息。其中包括当前进程的内存信息，这是通过枚举每一个堆中已分配的前80个内存块来得到的。即使对于单个堆的数量有限制，总的枚举的次数仍然可能很多，况且用于枚举的API本身性能并不好，导致整体上耗费了大量时间。</p>
-<p>这个问题在2009年之后的OpenSSL版本中得到了缓解。之所以说“缓解”，是因为RAND_poll的算法并没有改变，它仍然要枚举每个堆的内存块，只不过在枚举的过程中加上了时间检测，如果发现已经超过一秒就不再继续枚举了。因此，该函数最多耗时一秒多一点，这个时间对于某些场景来说仍然是比较慢的。</p>
-<p>关于这个问题的讨论，可以参考 <a href="https://rt.openssl.org/Ticket/Display.html?id=2100&amp;user=guest&amp;pass=guest" target="_blank" rel="external">https://rt.openssl.org/Ticket/Display.html?id=2100&amp;user=guest&amp;pass=guest</a> 。</p>
-<h2 id="死锁">死锁</h2><p>RAND_poll的第二个问题是它有一定几率导致死锁。原因还是在于枚举堆内存块——用于枚举的API会把进程所有的堆逐个加锁，在这个过程中，假如有其它线程也在操作堆，那么很有可能导致死锁。</p>
-<p>按道理来说，死锁这么严重的问题应该尽早解决，然而奇怪的是，这个问题一直留存至今。综合网上的各种讨论来看，原因或许是这样的：OpenSSL认为这是Windows的问题，一个公开的系统API绝不应该导致程序死锁；而微软则声称这个API仅用于调试目的，不应该在正常的场合下使用。双方都认为这是对方的责任，因此谁都不愿意去修改。</p>
-<p>关于这个问题的分析，可以参考 <a href="http://0cch.com/debugging/2015/09/08/foxmail-hung.html" target="_blank" rel="external">http://0cch.com/debugging/2015/09/08/foxmail-hung.html</a> 。</p>
-<h2 id="对策">对策</h2><p>综上所述，RAND_poll的两个问题对程序的性能和稳定性都有影响。那么应该如何避免呢？很简单，只需要在程序入口点调用一下RAND_bytes，让它初始化伪随机数生成器即可。之所以在这个时间点来初始化，一是因为这时候堆的数量以及分配的内存块还很少，不会耗费太多时间去枚举；二是因为这时候只有一个主线程，不会有其它线程来同时操作堆，也就不会出现死锁。测试结果显示，在这个时间点调用RAND_poll只用了不到100毫秒的时间。</p>
+<p>内核对象是指存在于系统内核中的对象，而不仅仅存在于程序内部，这样多个程序实例之间就可以共享这些对象了。使用内核对象的思路很简单：程序启动之后检查一下是否存在特定的内核对象，如果不存在，说明这是第一个实例，可以正常运行；如果已存在，说明已经有实例在运行了，当前的实例要退出。内核对象在这里只是作为一个标识，标识是否有实例正在运行，至于它是哪一种内核对象则不重要。习惯上会使用Mutex内核对象，主要是因为它的名称与这里的用途相吻合，而且它的用法也很简单。</p>
+<p>内核对象有具名和匿名之分。具名的内核对象与一个字符串关联，通过这个字符串可以找到对应的内核对象；匿名的内核对象则不具备这个特点。显然这里应该使用具名内核对象。</p>
+<p>可以在程序的入口点来检查内核对象。下面是检查Mutex内核对象的例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HANDLE mutex = CreateMutex(<span class="literal">NULL</span>, FALSE, <span class="string">L"SingletonApplication"</span>);</span><br><span class="line"><span class="keyword">if</span> ( (mutex == <span class="literal">NULL</span>) || (GetLastError() == ERROR_ALREADY_EXISTS) ) &#123;</span><br><span class="line"></span><br><span class="line">     <span class="comment">//退出程序</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//正常启动程序</span></span><br></pre></td></tr></table></figure>
+<p>CreateMutex同时提供了创建和打开Mutex内核对象的功能。第三个参数指明了内核对象的名称，如果名为<code>SingletonApplication</code>的Mutex内核对象不存在，那么CreateMutex会创建一个新的对象，并返回它的句柄；如果已经存在这个内核对象，那么CreateMutex会打开它，并返回它的句柄，同时GetLastError会返回<code>ERROR_ALREADY_EXISTS</code>。在实际的应用中，应该把<code>SingletonApplication</code>替换成尽量不会与其它程序冲突的名称。</p>
+<p>CreateMutex的第一个和第二个参数在这里的使用场景中并不重要，分别传入NULL和FALSE即可。CreateMutex如果失败会返回NULL，这种情况几乎不会发生，但基于完整性考虑这里还是要判断一下返回值是否为NULL。</p>
+<p>在程序的实例退出之前，理论上来说是需要调用CloseHandle把内核对象关闭的。但实即使不这么做也不会有问题，因为进程结束的时候操作系统会把这个进程所有的资源回收，该内核对象自然会被关闭。</p>
+<p>最后要注意的是，使用内核对象来实现单例程序是有风险的。因为内核对象全局可见，其它程序也能访问。例如WinObj工具可以查看系统中所有内核对象以及它们的名称。恶意程序完全可以抢先创建内核对象来阻止特定程序运行。所以如果安全性很重要的话，就要考虑更加安全的方式来实现单例程序了。</p>
 
       
     </div>
@@ -83,7 +84,7 @@
         
   
   <div class="tags">
-    <a href="/tags/OpenSSL/">OpenSSL</a>, <a href="/tags/RAND-bytes/">RAND_bytes</a>, <a href="/tags/RAND-poll/">RAND_poll</a>, <a href="/tags/Windows/">Windows</a>, <a href="/tags/性能/">性能</a>, <a href="/tags/死锁/">死锁</a>
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/内核对象/">内核对象</a>, <a href="/tags/单例/">单例</a>
   </div>
 
         
@@ -97,7 +98,7 @@
 <section id="comment">
   <h1 class="title">留言</h1>
 
-  <div class="ds-thread" data-thread-key="2015/11/25/RAND-poll-function-s-issues-on-Windows/" data-title="RAND_poll函数在Windows下存在的问题" data-url="http://zplutor.github.io/2015/11/25/RAND-poll-function-s-issues-on-Windows/"></div>
+  <div class="ds-thread" data-thread-key="2016/02/04/implement-singleton-application-with-kernal-object/" data-title="使用内核对象实现单例程序" data-url="http://zplutor.github.io/2016/02/04/implement-singleton-application-with-kernal-object/"></div>
 
   <script type="text/javascript">
     var duoshuoQuery = {short_name:"zplutor"};
