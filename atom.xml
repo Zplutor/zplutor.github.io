@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://zplutor.github.io/"/>
-  <updated>2016-02-23T15:42:22.000Z</updated>
+  <updated>2016-02-23T15:45:33.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -19,15 +19,14 @@
     <link href="http://zplutor.github.io/2016/02/23/boost-thread-specific-ptr-may-cause-memory-leak-under-Windows/"/>
     <id>http://zplutor.github.io/2016/02/23/boost-thread-specific-ptr-may-cause-memory-leak-under-Windows/</id>
     <published>2016-02-23T15:31:52.000Z</published>
-    <updated>2016-02-23T15:42:22.000Z</updated>
+    <updated>2016-02-23T15:45:33.000Z</updated>
     <content type="html"><![CDATA[<p>boost::thread_specific_ptr用于定义线程局部变量，根据这个类的定义，当一个线程结束的时候，与之相关的变量都会被释放。然而，这个规则并不是在所有情况下都适用。在boost::thread_specific_ptr的文档中有这么一句话：</p>
 <a id="more"></a>
 <blockquote>
 <p>Note: on some platforms, cleanup of thread-specific data is not performed for threads created with the platform’s native API. On those platforms such cleanup is only done for threads that are started with boost::thread unless boost::on_thread_exit() is called manually from that thread.</p>
 </blockquote>
 <p>这里的“some platforms”指的就是Windows（不明白为什么boost不在文档中明确说明，这样可以让Windows程序员少碰壁）。在这个平台下，只有通过boost::thread启动的线程才会在结束的时候释放boost::thread_specific_ptr中的变量，通过其它方式启动的线程则要主动调用boost::on_thread_exit函数才能释放这些变量。所以，如果非boost::thread线程访问了boost::thread_specific_ptr，又没有调用boost::on_thread_exit，就会造成内存泄露。</p>
-<p>避免这个问题的方法就是尽量使用boost::thread启动线程，这是最省事的方法。然而并不是所有情况都能使用boost::thread，这时就要按照文档说的主动去调用boost::on_thread_exit了。这是一个非公开的方法，它的声明位于以下文件：</p>
-<p><code>boost\thread\detail\tss_hooks.hpp</code></p>
+<p>避免这个问题的方法就是尽量使用boost::thread启动线程，这是最省事的方法。然而并不是所有情况都能使用boost::thread，这时就要按照文档说的主动去调用boost::on_thread_exit了。这是一个非公开的方法，它的声明位于<code>boost\thread\detail\tss_hooks.hpp</code>。</p>
 <p>最坏的情况是，线程是由第三方库启动的，并且无法修改这个库的源码，或者修改的代价很高。在这种情况下，只能避免让这些线程去访问boost::thread_specific_ptr。</p>
 ]]></content>
     <summary type="html">
