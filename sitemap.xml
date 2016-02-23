@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zplutor.github.io/2016/02/23/boost-thread-specific-ptr-may-cause-memory-leak-under-Windows/</loc>
+    <lastmod>2016-02-23T15:42:22.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://zplutor.github.io/2016/02/18/best-way-to-create-empty-std-string/</loc>
     <lastmod>2016-02-18T15:24:23.000Z</lastmod>
   </url>
