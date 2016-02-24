@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://zplutor.github.io/"/>
-  <updated>2016-02-23T15:45:33.000Z</updated>
+  <updated>2016-02-24T06:26:02.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -13,6 +13,35 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[C4250警告产生的原因及解决方法]]></title>
+    <link href="http://zplutor.github.io/2016/02/24/reason-and-solution-for-c4250-warning/"/>
+    <id>http://zplutor.github.io/2016/02/24/reason-and-solution-for-c4250-warning/</id>
+    <published>2016-02-24T06:20:46.000Z</published>
+    <updated>2016-02-24T06:26:02.000Z</updated>
+    <content type="html"><![CDATA[<p>使用MSVC编译以下代码会产生C4250警告：</p>
+<a id="more"></a>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Print</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"A::Print"</span> &lt;&lt; <span class="built_in">std</span>::endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> B : <span class="keyword">virtual</span> <span class="keyword">public</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> C : <span class="keyword">virtual</span> <span class="keyword">public</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Print</span><span class="params">()</span> override </span>&#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"C::Print"</span> &lt;&lt; <span class="built_in">std</span>::endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> D : <span class="keyword">public</span> B, <span class="keyword">public</span> C &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    D d;</span><br><span class="line">    d.Print();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>警告信息为<code>warning C4250: “D”: 通过域控制继承“C::C::Print”</code>。这样的警告信息并没有什么价值，我们需要自己来分析一下。</p>
+<p>上述代码塑造出了菱形继承关系，如下所示：</p>
+<img src="/2016/02/24/reason-and-solution-for-c4250-warning/1.png" alt="1.png" title="">
+<p>根基类A定义了一个虚方法Print，因此在子类B和C中存在继承而来的Print，其中C重写了该方法。D多重继承于B和C，因此它会同时继承B和C的Print。这时问题来了，当对D的实例调用Print时，它应该调用B::Print还是C::Print呢？这里编译器做出了选择，它调用的是在基类中被重写的版本，也就是C::Print。然而，这很有可能不是我们想要的结果，所以编译器发出警告，提醒我们这里可能存在问题。</p>
+<p>假如B也重写了Print，会怎么样呢？在这种情况下编译会失败，因为两个基类都重写了Print，编译器无法做出选择。</p>
+<p>解决的方法很简单，只要在D中也重写Print即可，这样可以明确地告诉编译器，我们要调用的就是D::Print，从而消除了编译器的疑虑。在实现D::Print的时候，可能需要调用基类版本，这时要根据具体情况来决定调用哪个版本。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>使用MSVC编译以下代码会产生C4250警告：</p>]]>
+    
+    </summary>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="继承" scheme="http://zplutor.github.io/tags/%E7%BB%A7%E6%89%BF/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[boost::thread_specific_ptr在Windows下可能导致内存泄露]]></title>

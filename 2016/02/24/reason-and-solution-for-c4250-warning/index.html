@@ -6,15 +6,15 @@
   <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
-  <title>如何设置libcurl的动态超时值 | Zplutor&#39;s</title>
+  <title>C4250警告产生的原因及解决方法 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
   
-  <meta name="description" content="针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。">
+  <meta name="description" content="使用MSVC编译以下代码会产生C4250警告：">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何设置libcurl的动态超时值"/>
+  <meta property="og:title" content="C4250警告产生的原因及解决方法"/>
   <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
@@ -55,33 +55,25 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2015-05-22T08:53:03.000Z"><a href="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/">2015-05-22</a></time>
+        <time datetime="2016-02-24T06:20:46.000Z"><a href="/2016/02/24/reason-and-solution-for-c4250-warning/">2016-02-24</a></time>
       
       
   
-    <h1 class="title">如何设置libcurl的动态超时值</h1>
+    <h1 class="title">C4250警告产生的原因及解决方法</h1>
   
 
     </header>
     <div class="entry">
       
-        <p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。</p>
+        <p>使用MSVC编译以下代码会产生C4250警告：</p>
 <a id="more"></a>
-<p>所谓动态超时值，指的是允许连接空闲的最大时间值，也就是说，只有当连接没有数据传输的时候才开始计算超时时间。这也是平常说的超时的含义。正如上文所说，libcurl对超时的定义是允许连接执行的时间，这个定义在实际应用中会带来问题。例如，每个连接要传输的数据量是不一样的，为了让所有连接都能够正常执行，需要在执行之前计算出确切的超时值。然而这几乎不可能做到，因为网络环境时刻在变化，前一刻计算出来的超时值很快就不合适了。虽然固定超时值也有它特有的用途，但在绝大部分情况下它都不是我们想要的。</p>
-<p>好在libcurl提供了很高的灵活性，我们可以借助另外两个设置选项，变通地实现动态超时值。这两个设置选项是CURLOPT_LOW_SPEED_LIMIT和CURLOPT_LOW_SPEED_TIME，它们的含义是：当连接以低于CURLOPT_LOW_SPEED_LIMIT的速率执行了CURLOPT_LOW_SPEED_TIME的时间时，它就会被终止。一个微妙的地方是，当连接由于这个原因被终止时，它的错误码是CURLE_OPERATION_TIMEOUT。与其说是巧合，倒不如说这是libcurl特意为动态超时值提供的一个更灵活的接口。</p>
-<p>通过这两个设置选项，可以这样来设置动态超时值：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_LIMIT, <span class="number">1</span>);</span><br><span class="line">curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_TIME, <span class="number">10</span>);</span><br></pre></td></tr></table></figure>
-<p>要注意的是，CURLOPT_LOW_SPEED_LIMIT的单位是字节/秒，CURLOPT_LOW_SPEED_TIME的单位是秒。这样一来，若在10秒内连接的速率都是低于1字节/秒（也就是无数据传输），它就被认为超时了。</p>
-<p>如何设置动态超时值的问题到这里就结束了。但是显然还有另一个问题值得深究：连接的速率是怎么计算的呢？官方文档并没有解释清楚，不过既然libcurl是开源的，那么可以从它的源代码中寻找答案。检查速率的代码位于speedcheck.c的Curl_speedcheck函数中；计算速率的代码位于progress.c的Curl_pgrsUpdate函数中。下面简单解释一下计算速率的过程。</p>
-<p>libcurl使用一个长度为5的循环数组来记录速率信息，速率信息包含了当前时间以及当前总数据量，总数据量取的是总下载数据量和总上传数据量的最大值。每隔一秒钟libcurl就会记录当前的速率信息；由于使用了循环数组，最旧的信息会被丢弃。例如，在第四秒时候，循环数组里的内容是这样的：</p>
-<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/1.png" alt="1.png" title="">
-<p>第七秒的时候，循环数组里的内容是这样的：</p>
-<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/2.png" alt="2.png" title="">
-<p>以此类推。接下来，会使用最新的速率信息和最旧的速率信息来计算速率。例如，在第四秒时，速率是这样算的：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(total4 - total1) / (time4 - time1)</span><br></pre></td></tr></table></figure>
-<p>在第七秒时，速率是这样算的：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(total7 - total3) / (time7 - time3)</span><br></pre></td></tr></table></figure>
-<p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Print</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"A::Print"</span> &lt;&lt; <span class="built_in">std</span>::endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> B : <span class="keyword">virtual</span> <span class="keyword">public</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> C : <span class="keyword">virtual</span> <span class="keyword">public</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Print</span><span class="params">()</span> override </span>&#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"C::Print"</span> &lt;&lt; <span class="built_in">std</span>::endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> D : <span class="keyword">public</span> B, <span class="keyword">public</span> C &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    D d;</span><br><span class="line">    d.Print();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>警告信息为<code>warning C4250: “D”: 通过域控制继承“C::C::Print”</code>。这样的警告信息并没有什么价值，我们需要自己来分析一下。</p>
+<p>上述代码塑造出了菱形继承关系，如下所示：</p>
+<img src="/2016/02/24/reason-and-solution-for-c4250-warning/1.png" alt="1.png" title="">
+<p>根基类A定义了一个虚方法Print，因此在子类B和C中存在继承而来的Print，其中C重写了该方法。D多重继承于B和C，因此它会同时继承B和C的Print。这时问题来了，当对D的实例调用Print时，它应该调用B::Print还是C::Print呢？这里编译器做出了选择，它调用的是在基类中被重写的版本，也就是C::Print。然而，这很有可能不是我们想要的结果，所以编译器发出警告，提醒我们这里可能存在问题。</p>
+<p>假如B也重写了Print，会怎么样呢？在这种情况下编译会失败，因为两个基类都重写了Print，编译器无法做出选择。</p>
+<p>解决的方法很简单，只要在D中也重写Print即可，这样可以明确地告诉编译器，我们要调用的就是D::Print，从而消除了编译器的疑虑。在实现D::Print的时候，可能需要调用基类版本，这时要根据具体情况来决定调用哪个版本。</p>
 
       
     </div>
@@ -91,7 +83,7 @@
         
   
   <div class="tags">
-    <a href="/tags/libcurl/">libcurl</a>, <a href="/tags/超时/">超时</a>
+    <a href="/tags/C/">C++</a>, <a href="/tags/Windows/">Windows</a>, <a href="/tags/继承/">继承</a>
   </div>
 
         
@@ -105,7 +97,7 @@
 <section id="comment">
   <h1 class="title">留言</h1>
 
-  <div class="ds-thread" data-thread-key="2015/05/22/how-to-set-dynamic-timeout-for-libcurl/" data-title="如何设置libcurl的动态超时值" data-url="http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/"></div>
+  <div class="ds-thread" data-thread-key="2016/02/24/reason-and-solution-for-c4250-warning/" data-title="C4250警告产生的原因及解决方法" data-url="http://zplutor.github.io/2016/02/24/reason-and-solution-for-c4250-warning/"></div>
 
   <script type="text/javascript">
     var duoshuoQuery = {short_name:"zplutor"};
