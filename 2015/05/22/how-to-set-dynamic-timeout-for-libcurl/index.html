@@ -38,16 +38,17 @@
 <nav id="main-nav" class="alignright">
   <ul>
     
-      <li><a href="/">Home</a></li>
+      <li><a href="//">Home</a></li>
     
-      <li><a href="/archives">Archives</a></li>
+      <li><a href="//archives">Archives</a></li>
     
-      <li><a href="/atom.xml">Feed</a></li>
+      <li><a href="//atom.xml">Feed</a></li>
     
   </ul>
   <div class="clearfix"></div>
 </nav>
-<div class="clearfix"></div></header>
+<div class="clearfix"></div>
+</header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
   
@@ -78,10 +79,10 @@
 <p>第七秒的时候，循环数组里的内容是这样的：</p>
 <img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/2.png" alt="2.png" title="">
 <p>以此类推。接下来，会使用最新的速率信息和最旧的速率信息来计算速率。例如，在第四秒时，速率是这样算的：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(total4 - total1) / (time4 - time1)</span><br></pre></td></tr></table></figure>
-<p>在第七秒时，速率是这样算的：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(total7 - total3) / (time7 - time3)</span><br></pre></td></tr></table></figure>
-<p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
+<pre><code>(total4 - total1) / (time4 - time1)
+</code></pre><p>在第七秒时，速率是这样算的：</p>
+<pre><code>(total7 - total3) / (time7 - time3)
+</code></pre><p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
 
       
     </div>
@@ -159,7 +160,9 @@
   
     <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>10</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>11</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
   
     <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
   
@@ -185,7 +188,7 @@
   
     <li><a href="/tags/字符串/">字符串</a><small>3</small></li>
   
-    <li><a href="/tags/定时器/">定时器</a><small>1</small></li>
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
   
     <li><a href="/tags/异常/">异常</a><small>1</small></li>
   

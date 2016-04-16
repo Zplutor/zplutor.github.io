@@ -38,16 +38,17 @@
 <nav id="main-nav" class="alignright">
   <ul>
     
-      <li><a href="/">Home</a></li>
+      <li><a href="//">Home</a></li>
     
-      <li><a href="/archives">Archives</a></li>
+      <li><a href="//archives">Archives</a></li>
     
-      <li><a href="/atom.xml">Feed</a></li>
+      <li><a href="//atom.xml">Feed</a></li>
     
   </ul>
   <div class="clearfix"></div>
 </nav>
-<div class="clearfix"></div></header>
+<div class="clearfix"></div>
+</header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
   
@@ -67,16 +68,16 @@
       
         <p>访问数据库的应用程序一般都通过字符串拼接的方式来构造SQL语句。例如，可以使用boost的format，或者类似的拼接方法：</p>
 <a id="more"></a>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> sql = boost::str(boost::format(<span class="string">"select %1%, %2%, %3%, %4% from %5% where %1% = ?;"</span>)</span><br><span class="line">                             % kUserIdColumnName</span><br><span class="line">                             % kUserNameColumnName</span><br><span class="line">                             % kUserEmailColumnName</span><br><span class="line">                             % kUserPhoneColumnName</span><br><span class="line">                             % kUserTableName);</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> sql = boost::str(boost::format(<span class="string">"select %1%, %2%, %3%, %4% from %5% where %1% = ?;"</span>)</span><br><span class="line">                             % kUserIdColumnName</span><br><span class="line">                             % kUserNameColumnName</span><br><span class="line">                             % kUserEmailColumnName</span><br><span class="line">                             % kUserPhoneColumnName</span><br><span class="line">                             % kUserTableName);         </span><br></pre></td></tr></table></figure>
 <p>上面的例子构造了一条从用户信息表获取用户信息的SQL语句，这并没有什么问题。但仔细想想，在运行时构造SQL语句是毫无必要的，因为这种SQL语句基本上不会在程序运行的时候改变。假如每次查询都要进行这样的拼接过程，那么这部分的性能就白白浪费掉了。另一种做法是把sql变量定义成局部静态变量，这样只需要拼接一次就可以了。不过要是这段代码运行在并发环境中，还需要考虑线程安全的问题，这会带来一些额外的工作。</p>
 <p>当然啦，这种重复构造字符串本身的开销是非常小的，一般不会造成性能问题。但如果你是完美主义者，希望榨干最后一滴性能，那么可以考虑一下下面介绍的方法。</p>
 <p>这种方法基于C++的字符串语法糖：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* <span class="built_in">string</span> = <span class="string">"Curlion is "</span> <span class="string">"a C++ wrapper"</span></span><br><span class="line">                     <span class="string">" for libcurl’s "</span>            <span class="string">"multi socket "</span></span><br><span class="line">                     <span class="string">"interface."</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* <span class="built_in">string</span> = <span class="string">"Curlion is "</span> <span class="string">"a C++ wrapper"</span></span><br><span class="line">                     <span class="string">" for libcurl’s "</span>            <span class="string">"multi socket "</span></span><br><span class="line">                     <span class="string">"interface."</span>; </span><br></pre></td></tr></table></figure>
 <p>上述语句等效于：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* <span class="built_in">string</span> = <span class="string">"Curlion is a C++ wrapper for libcurl’s multi socket interface."</span>;</span><br></pre></td></tr></table></figure>
 <p>也就是说，如果两个字符串字面量之间只包含空白字符，那么它们会被合并成一个。这个合并发生在编译时，不消耗运行时时间。</p>
 <p>为了使用这种拼接方式，我们首先要把表名和列名变量修改成用宏来定义：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserTableName <span class="string">"user"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserIdColumnName <span class="string">"id"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserNameColumnName <span class="string">"name"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserEmailColumnName <span class="string">"email"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">define</span> kUserPhoneColumnName <span class="string">"phone"</span></span></span><br></pre></td></tr></table></figure>    
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserTableName <span class="string">"user"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserIdColumnName <span class="string">"id"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserNameColumnName <span class="string">"name"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserEmailColumnName <span class="string">"email"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserPhoneColumnName <span class="string">"phone"</span></span></span><br></pre></td></tr></table></figure>    
 <p>然后就可以修改拼接方式了：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* sql = <span class="string">"select "</span></span><br><span class="line">                  kUserIdColumnName <span class="string">", "</span></span><br><span class="line">                  kUserNameColumnName <span class="string">", "</span></span><br><span class="line">                  kUserEmailColumnName <span class="string">", "</span></span><br><span class="line">                  kUserEmailColumnName <span class="string">", "</span></span><br><span class="line">                  kUserPhoneColumnName</span><br><span class="line">                  <span class="string">" from "</span> kUserTableName</span><br><span class="line">                  <span class="string">" where "</span> kUserIdColumnName <span class="string">" = ?;"</span>;</span><br></pre></td></tr></table></figure>    
 <p>这样一来，sql相当于一个常量，不需要初始化，完全不消耗运行时的性能。另外，这么做也有一个好处，就是使得SQL语句的可读性有了一定提高。使用format的方法经常要手工一个个地去匹配参数列表，很繁琐也容易出错。特别是那些有一串长长的参数列表的复杂语句，看起来很恐怖。现在这种方法则好得多，参数直接放在了它所在的位置，一目了然。</p>
@@ -90,7 +91,7 @@
         
   
   <div class="tags">
-    <a href="/tags/C/">C++</a>, <a href="/tags/SQL/">SQL</a>, <a href="/tags/字符串/">字符串</a>
+    <a href="/tags/C/">C++</a>, <a href="/tags/字符串/">字符串</a>, <a href="/tags/SQL/">SQL</a>
   </div>
 
         
@@ -158,7 +159,9 @@
   
     <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>10</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>11</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
   
     <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
   
@@ -184,7 +187,7 @@
   
     <li><a href="/tags/字符串/">字符串</a><small>3</small></li>
   
-    <li><a href="/tags/定时器/">定时器</a><small>1</small></li>
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
   
     <li><a href="/tags/异常/">异常</a><small>1</small></li>
   

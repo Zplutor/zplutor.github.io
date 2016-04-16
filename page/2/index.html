@@ -36,18 +36,55 @@
 <nav id="main-nav" class="alignright">
   <ul>
     
-      <li><a href="/">Home</a></li>
+      <li><a href="//">Home</a></li>
     
-      <li><a href="/archives">Archives</a></li>
+      <li><a href="//archives">Archives</a></li>
     
-      <li><a href="/atom.xml">Feed</a></li>
+      <li><a href="//atom.xml">Feed</a></li>
     
   </ul>
   <div class="clearfix"></div>
 </nav>
-<div class="clearfix"></div></header>
+<div class="clearfix"></div>
+</header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-11-09T15:29:31.000Z"><a href="/2015/11/09/whether-WM-TIMER-message-would-accumulate-in-message-queue/">2015-11-09</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/11/09/whether-WM-TIMER-message-would-accumulate-in-message-queue/">WM_TIMER消息是否会在消息队列中堆积</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在Windows界面开发中，启动定时器的最常用方法是使用SetTimer这个API。通过这个API启动的定时器会持续不断地往窗口消息队列中投递WM_TIMER消息，直到调用了KillTimer来停止。一个有趣的问题是，假如定时器的消息程序处理不过来，即处理WM_TIMER的时间比定时器的间隔时间长，会发生什么事情呢？消息队列中是否会堆积越来越多的WM_TIMER消息？官方文档中并没有指出这个问题，只能通过实践来找出答案。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2015/11/09/whether-WM-TIMER-message-would-accumulate-in-message-queue/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article class="post">
   
   <div class="post-content">
@@ -136,7 +173,7 @@
     </header>
     <div class="entry">
       
-        <h2 id="什么是预编译头">什么是预编译头</h2><p>在介绍预编译头之前，有必要了解一下C/C++的编译方式。C/C++的编译单元是源文件（带有.c、.cc、.cpp等扩展名的文件），在编译一个源文件之前，预处理器会把这个源文件中所有通过#include指令包含进来的头文件递归地展开，也就是把所有直接或间接包含的头文件原封不动地插入进来。当这个过程结束之后，才开始编译。</p>
+        <h2 id="什么是预编译头"><a href="#什么是预编译头" class="headerlink" title="什么是预编译头"></a>什么是预编译头</h2><p>在介绍预编译头之前，有必要了解一下C/C++的编译方式。C/C++的编译单元是源文件（带有.c、.cc、.cpp等扩展名的文件），在编译一个源文件之前，预处理器会把这个源文件中所有通过#include指令包含进来的头文件递归地展开，也就是把所有直接或间接包含的头文件原封不动地插入进来。当这个过程结束之后，才开始编译。</p>
       
     </div>
     <footer>
@@ -310,7 +347,9 @@
   
     <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>10</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>11</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
   
     <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
   
@@ -336,7 +375,7 @@
   
     <li><a href="/tags/字符串/">字符串</a><small>3</small></li>
   
-    <li><a href="/tags/定时器/">定时器</a><small>1</small></li>
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
   
     <li><a href="/tags/异常/">异常</a><small>1</small></li>
   

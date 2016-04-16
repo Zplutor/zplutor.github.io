@@ -38,16 +38,17 @@
 <nav id="main-nav" class="alignright">
   <ul>
     
-      <li><a href="/">Home</a></li>
+      <li><a href="//">Home</a></li>
     
-      <li><a href="/archives">Archives</a></li>
+      <li><a href="//archives">Archives</a></li>
     
-      <li><a href="/atom.xml">Feed</a></li>
+      <li><a href="//atom.xml">Feed</a></li>
     
   </ul>
   <div class="clearfix"></div>
 </nav>
-<div class="clearfix"></div></header>
+<div class="clearfix"></div>
+</header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
   
@@ -67,13 +68,13 @@
       
         <p>RAND_poll函数是OpenSSL中用于初始化伪随机数生成器的函数，当首次调用诸如RAND_bytes等需要生成随机数的函数时，会先调用该函数进行初始化。在实际使用中发现，RAND_poll函数在Windows下存在一些问题，需要小心提放，否则可能会对程序造成不良影响。</p>
 <a id="more"></a>
-<h2 id="慢">慢</h2><p>RAND_poll的第一个问题是慢。早在2009年就有人反映这个问题，说这个函数居然要耗费超过一分钟的时间。要明白为什么RAND_poll这么慢，就要了解它的实现原理。为了保证伪随机数的不可预见性，需要用尽可能多的随机信息去初始化生成器，因此RAND_poll尝试收集程序运行时的各种环境信息。其中包括当前进程的内存信息，这是通过枚举每一个堆中已分配的前80个内存块来得到的。即使对于单个堆的数量有限制，总的枚举的次数仍然可能很多，况且用于枚举的API本身性能并不好，导致整体上耗费了大量时间。</p>
+<h2 id="慢"><a href="#慢" class="headerlink" title="慢"></a>慢</h2><p>RAND_poll的第一个问题是慢。早在2009年就有人反映这个问题，说这个函数居然要耗费超过一分钟的时间。要明白为什么RAND_poll这么慢，就要了解它的实现原理。为了保证伪随机数的不可预见性，需要用尽可能多的随机信息去初始化生成器，因此RAND_poll尝试收集程序运行时的各种环境信息。其中包括当前进程的内存信息，这是通过枚举每一个堆中已分配的前80个内存块来得到的。即使对于单个堆的数量有限制，总的枚举的次数仍然可能很多，况且用于枚举的API本身性能并不好，导致整体上耗费了大量时间。</p>
 <p>这个问题在2009年之后的OpenSSL版本中得到了缓解。之所以说“缓解”，是因为RAND_poll的算法并没有改变，它仍然要枚举每个堆的内存块，只不过在枚举的过程中加上了时间检测，如果发现已经超过一秒就不再继续枚举了。因此，该函数最多耗时一秒多一点，这个时间对于某些场景来说仍然是比较慢的。</p>
 <p>关于这个问题的讨论，可以参考 <a href="https://rt.openssl.org/Ticket/Display.html?id=2100&amp;user=guest&amp;pass=guest" target="_blank" rel="external">https://rt.openssl.org/Ticket/Display.html?id=2100&amp;user=guest&amp;pass=guest</a> 。</p>
-<h2 id="死锁">死锁</h2><p>RAND_poll的第二个问题是它有一定几率导致死锁。原因还是在于枚举堆内存块——用于枚举的API会把进程所有的堆逐个加锁，在这个过程中，假如有其它线程也在操作堆，那么很有可能导致死锁。</p>
+<h2 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h2><p>RAND_poll的第二个问题是它有一定几率导致死锁。原因还是在于枚举堆内存块——用于枚举的API会把进程所有的堆逐个加锁，在这个过程中，假如有其它线程也在操作堆，那么很有可能导致死锁。</p>
 <p>按道理来说，死锁这么严重的问题应该尽早解决，然而奇怪的是，这个问题一直留存至今。综合网上的各种讨论来看，原因或许是这样的：OpenSSL认为这是Windows的问题，一个公开的系统API绝不应该导致程序死锁；而微软则声称这个API仅用于调试目的，不应该在正常的场合下使用。双方都认为这是对方的责任，因此谁都不愿意去修改。</p>
 <p>关于这个问题的分析，可以参考 <a href="http://0cch.com/debugging/2015/09/08/foxmail-hung.html" target="_blank" rel="external">http://0cch.com/debugging/2015/09/08/foxmail-hung.html</a> 。</p>
-<h2 id="对策">对策</h2><p>综上所述，RAND_poll的两个问题对程序的性能和稳定性都有影响。那么应该如何避免呢？很简单，只需要在程序入口点调用一下RAND_bytes，让它初始化伪随机数生成器即可。之所以在这个时间点来初始化，一是因为这时候堆的数量以及分配的内存块还很少，不会耗费太多时间去枚举；二是因为这时候只有一个主线程，不会有其它线程来同时操作堆，也就不会出现死锁。测试结果显示，在这个时间点调用RAND_poll只用了不到100毫秒的时间。</p>
+<h2 id="对策"><a href="#对策" class="headerlink" title="对策"></a>对策</h2><p>综上所述，RAND_poll的两个问题对程序的性能和稳定性都有影响。那么应该如何避免呢？很简单，只需要在程序入口点调用一下RAND_bytes，让它初始化伪随机数生成器即可。之所以在这个时间点来初始化，一是因为这时候堆的数量以及分配的内存块还很少，不会耗费太多时间去枚举；二是因为这时候只有一个主线程，不会有其它线程来同时操作堆，也就不会出现死锁。测试结果显示，在这个时间点调用RAND_poll只用了不到100毫秒的时间。</p>
 
       
     </div>
@@ -83,7 +84,7 @@
         
   
   <div class="tags">
-    <a href="/tags/OpenSSL/">OpenSSL</a>, <a href="/tags/RAND-bytes/">RAND_bytes</a>, <a href="/tags/RAND-poll/">RAND_poll</a>, <a href="/tags/Windows/">Windows</a>, <a href="/tags/性能/">性能</a>, <a href="/tags/死锁/">死锁</a>
+    <a href="/tags/RAND-poll/">RAND_poll</a>, <a href="/tags/RAND-bytes/">RAND_bytes</a>, <a href="/tags/OpenSSL/">OpenSSL</a>, <a href="/tags/Windows/">Windows</a>, <a href="/tags/性能/">性能</a>, <a href="/tags/死锁/">死锁</a>
   </div>
 
         
@@ -151,7 +152,9 @@
   
     <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>10</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>11</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
   
     <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
   
@@ -177,7 +180,7 @@
   
     <li><a href="/tags/字符串/">字符串</a><small>3</small></li>
   
-    <li><a href="/tags/定时器/">定时器</a><small>1</small></li>
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
   
     <li><a href="/tags/异常/">异常</a><small>1</small></li>
   

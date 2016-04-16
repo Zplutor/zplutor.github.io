@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>防止boost::asio::deadline_timer在修改系统时间后失效 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="boost::asio::deadline_timer使用的计量时间是系统时间，因此修改系统时间会影响deadline_timer的行为。例如，调用了expires_from_now设置1分钟超时后，立刻把系统时间改成一天前，那么要过一天时间才会超时。这个特性可能会影响程序功能的正常使用，因此我们通常想要的是一个不会受系统时间影响的定时器。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="防止boost::asio::deadline_timer在修改系统时间后失效"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="//">Home</a></li>
+    
+      <li><a href="//archives">Archives</a></li>
+    
+      <li><a href="//atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2016-04-16T12:28:45.000Z"><a href="/2016/04/16/prevent-boost-asio-deadline-timer-from-being-invalid-after-changing-system-time/">2016-04-16</a></time>
+      
+      
+  
+    <h1 class="title">防止boost::asio::deadline_timer在修改系统时间后失效</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>boost::asio::deadline_timer使用的计量时间是系统时间，因此修改系统时间会影响deadline_timer的行为。例如，调用了expires_from_now设置1分钟超时后，立刻把系统时间改成一天前，那么要过一天时间才会超时。这个特性可能会影响程序功能的正常使用，因此我们通常想要的是一个不会受系统时间影响的定时器。</p>
+<a id="more"></a>
+<p>事实上，boost::asio::steady_timer就是一个这样的定时器，它基于std::chrono::steady_clock实现。std::chrono::steady_clock是一个稳定的时钟，不随系统时间变化而变化。既然如此，直接用steady_timer代替deadline_timer不就可以了吗？理论上来说是可以的，但实际上，在Visual C++ 2013环境下，这是行不通的，因为Visual C++ 2013标准库中的std::chronno::steady_clock并不符合标准，它仍然会受系统时间影响！</p>
+<p>有三种方法可以解决这个问题。第一是升级到Visual C++ 2015，这个版本的std::chronno::steady_clock总算符合标准了；第二是修改boost的编译选项，定义BOOST_ASIO_DISABLE_STD_CHRONO宏，这样可以禁止boost使用std::chrono，转而使用boost::chrono；第三是本文要介绍的方法，即定制deadline_timer，让它变成稳定的定时器。</p>
+<p>deadline_timer实际上是basic_deadline_timer的特化版本，它的定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> basic_deadline_timer&lt;boost::posix_time::ptime&gt; deadline_timer;</span><br></pre></td></tr></table></figure>
+<p>basic_deadline_timer是一个模板类，它的定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;</span><br><span class="line">    <span class="keyword">typename</span> Time,</span><br><span class="line">    <span class="keyword">typename</span> TimeTraits = boost::asio::time_traits&lt;Time&gt;,</span><br><span class="line">    <span class="keyword">typename</span> TimerService = deadline_timer_service&lt;Time, TimeTraits&gt;&gt;</span><br><span class="line"><span class="keyword">class</span> basic_deadline_timer : <span class="keyword">public</span> basic_io_object&lt; TimerService &gt;</span><br></pre></td></tr></table></figure>
+<p>从以上定义的模板参数可以看出，basic_deadline_timer提供了灵活的可定制性。这里我们关注的重点是前面两个模板参数，其中第一个参数Time指定时间值的类型，第二个参数TimeTraits指定时间值的特性类，特性类用来对时间值进行各种操作。TimeTraits使用boost::asio::time_traits<time>作为默认值，而boost::asio::time_traits只有一个针对boost::posix_time::ptime（即deadline_timer使用的时间值类型）的特化版本，从这个特化版本的定义可以看到TimeTraits需要提供哪些接口，如下所示：</time></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// Time traits specialised for posix_time.</span></span><br><span class="line"><span class="keyword">template</span> &lt;&gt;</span><br><span class="line"><span class="keyword">struct</span> time_traits&lt;boost::posix_time::ptime&gt;</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/// The time type.</span></span><br><span class="line">  <span class="keyword">typedef</span> boost::posix_time::ptime time_type;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/// The duration type.</span></span><br><span class="line">  <span class="keyword">typedef</span> boost::posix_time::time_duration duration_type;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/// Get the current time.</span></span><br><span class="line">  <span class="function"><span class="keyword">static</span> time_type <span class="title">now</span><span class="params">()</span></span><br><span class="line">  </span>&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK)</span></span><br><span class="line">    <span class="keyword">return</span> boost::posix_time::microsec_clock::universal_time();</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span> <span class="comment">// defined(BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK)</span></span></span><br><span class="line">    <span class="keyword">return</span> boost::posix_time::second_clock::universal_time();</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">// defined(BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK)</span></span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/// Add a duration to a time.</span></span><br><span class="line">  <span class="function"><span class="keyword">static</span> time_type <span class="title">add</span><span class="params">(<span class="keyword">const</span> time_type&amp; t, <span class="keyword">const</span> duration_type&amp; d)</span></span><br><span class="line">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> t + d;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/// Subtract one time from another.</span></span><br><span class="line">  <span class="function"><span class="keyword">static</span> duration_type <span class="title">subtract</span><span class="params">(<span class="keyword">const</span> time_type&amp; t1, <span class="keyword">const</span> time_type&amp; t2)</span></span><br><span class="line">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> t1 - t2;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/// Test whether one time is less than another.</span></span><br><span class="line">  <span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">less_than</span><span class="params">(<span class="keyword">const</span> time_type&amp; t1, <span class="keyword">const</span> time_type&amp; t2)</span></span><br><span class="line">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> t1 &lt; t2;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/// Convert to POSIX duration type.</span></span><br><span class="line">  <span class="keyword">static</span> boost::posix_time::<span class="function">time_duration <span class="title">to_posix_duration</span><span class="params">(</span><br><span class="line">      <span class="keyword">const</span> duration_type&amp; d)</span></span><br><span class="line">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> d;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>可以看到，TimeTraits需要提供<code>time_type</code>和<code>duration_type</code>两种类型来分别表示一个时间点和一段时间；需要提供<code>now</code>方法来获取当前时间；需要提供<code>add</code>、<code>subtract</code>和<code>less_than</code>方法来计算和比较时间；最后还需要<code>to_posix_duration</code>方法把<code>duration_type</code>类型转换成<code>boost::posix_time::time_duration</code>类型。</p>
+<p>显然，对于定制的basic_deadline_timer，时间值类型Time可以是任意类型，并且它的含义并没有硬性规定，例如，它可以是以毫秒或纳秒为单位的时间，也可以是CPU时钟的周期数，只要提供了正确的TimeTraits特性类把这个定制的时间值转换成boost认识的时间值即可。</p>
+<p>接下来要选择一种与系统时间无关的时间值类型来定制basic_deadline_timer。在Windows平台下，很容易想到可以使用QueryPerformanceCounter和QueryPerformanceFrequency，这两个API提供了高精度的时间度量，与系统时间无关。QueryPerformanceCounter用来查询当前CPU时钟的周期数，是64位整数，这个是理想的时间值类型。要把CPU时钟周期数转换成具体的时间还需要调用QueryPerformanceFrequency查询CPU时钟的频率，即1秒内的CPU时钟周期数，然后通过简单的计算即可得到。</p>
+<p>下面的是使用QueryPerformanceCounter和QueryPerformanceFrequency定制的TimeTraits：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> TimeTraits &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">typedef</span> <span class="built_in">std</span>::<span class="keyword">int64_t</span> time_type;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">class</span> duration_type &#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        duration_type() : value(<span class="number">0</span>) &#123; &#125;</span><br><span class="line">        duration_type(<span class="built_in">std</span>::<span class="keyword">int64_t</span> value) : value(value) &#123; &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::<span class="keyword">int64_t</span> value;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Initialize</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        LARGE_INTEGER frequence_large_integer = &#123; <span class="number">0</span> &#125;;</span><br><span class="line">        QueryPerformanceFrequency(&amp;frequence_large_integer);</span><br><span class="line">        frequence = frequence_large_integer.QuadPart;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> duration_type <span class="title">GetMinutes</span><span class="params">(<span class="built_in">std</span>::int64_t minutes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> duration_type(minutes * <span class="number">60</span> * frequence);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> duration_type <span class="title">GetSeconds</span><span class="params">(<span class="built_in">std</span>::int64_t seconds)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> duration_type(seconds * frequence);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> duration_type <span class="title">GetMilliseconds</span><span class="params">(<span class="built_in">std</span>::int64_t milliseconds)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> duration_type(milliseconds * (frequence / <span class="number">1000</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> time_type <span class="title">now</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        LARGE_INTEGER counter = &#123; <span class="number">0</span> &#125;;</span><br><span class="line">        QueryPerformanceCounter(&amp;counter);</span><br><span class="line">        <span class="keyword">return</span> counter.QuadPart;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> time_type <span class="title">add</span><span class="params">(time_type time, duration_type duration)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> time + duration.value;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> duration_type <span class="title">subtract</span><span class="params">(time_type time1, time_type time2)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> duration_type(time1 - time2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">less_than</span><span class="params">(time_type time1, time_type time2)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> time1 &lt; time2;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> boost::posix_time::<span class="function">time_duration <span class="title">to_posix_duration</span><span class="params">(duration_type duration)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::<span class="keyword">int64_t</span> microseconds = (duration.value * <span class="number">1000</span> * <span class="number">1000</span>) / frequence;</span><br><span class="line">        <span class="keyword">return</span> boost::posix_time::microseconds(microseconds);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    TimeTraits();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">std</span>::<span class="keyword">int64_t</span> frequence;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>CPU时钟的频率是固定的，只需要调用QueryPerformanceFrequency查询一次即可，因此这里增加了<code>Initialize</code>方法来初始化CPU时钟频率，要在程序启动后的某个时机来调用该方法进行初始化。要注意的是<code>duration_type</code>不能跟<code>time_type</code>相同，这是TimeTraits的硬性规定，boost内部的代码依赖了这个规定，违反它会导致编译失败。所以要针对<code>duration_type</code>额外定义一个看似冗余的类型。</p>
+<p>另一个值得注意的地方是，上面的定义增加了<code>GetMinutes</code>、<code>GetSeconds</code>和<code>GetMilliseconds</code>方法，这几个方法用来将具体的时间转换成我们定制的时间值，即CPU时钟周期数。这是因为在调用定时器的expires_from_now等方法设置超时值的时候，必须使用TimeTraits的duration_type，提供这几个方法可以方便使用。</p>
+<p>最后，将这个定制的TimeTraits作为basic_deadline_timer的模板参数即可：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> boost::asio::basic_deadline_timer&lt;<span class="built_in">std</span>::<span class="keyword">int64_t</span>, TimeTraits&gt; Timer;</span><br></pre></td></tr></table></figure></p>
+<p>使用方法基本上与dealine_timer一样，如下所示：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//在某个时机初始化TimeTraits</span></span><br><span class="line">TimeTraits::Initialize();</span><br><span class="line"></span><br><span class="line"><span class="comment">//在某个地方定义io_service</span></span><br><span class="line">boost::asio::io_service io_service;</span><br><span class="line"></span><br><span class="line"><span class="comment">//使用定制的Timer</span></span><br><span class="line"><span class="function">Timer <span class="title">timer</span><span class="params">(io_service)</span></span>;</span><br><span class="line">timer.expires_from_now(TimeTraits::GetSecnods(<span class="number">10</span>));</span><br><span class="line">timer.wait();</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a>, <a href="/tags/定时器/">定时器</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2016/04/16/prevent-boost-asio-deadline-timer-from-being-invalid-after-changing-system-time/" data-title="防止boost::asio::deadline_timer在修改系统时间后失效" data-url="http://zplutor.github.io/2016/04/16/prevent-boost-asio-deadline-timer-from-being-invalid-after-changing-system-time/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>8</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OS-X/">OS X</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>11</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-string/">std::string</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>3</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>1</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>2</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2016 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
