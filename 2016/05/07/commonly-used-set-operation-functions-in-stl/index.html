@@ -1,0 +1,235 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>STL中常用的集合操作函数 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="在实际的编程工作中，经常需要对两个集合进行各种操作，例如取交集、取并集等。在C++中，完全不需要自己来实现这些操作，因为STL已经为我们准备好了这些常用的集合操作函数。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="STL中常用的集合操作函数"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2016-05-07T13:24:41.000Z"><a href="/2016/05/07/commonly-used-set-operation-functions-in-stl/">2016-05-07</a></time>
+      
+      
+  
+    <h1 class="title">STL中常用的集合操作函数</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在实际的编程工作中，经常需要对两个集合进行各种操作，例如取交集、取并集等。在C++中，完全不需要自己来实现这些操作，因为STL已经为我们准备好了这些常用的集合操作函数。</p>
+<a id="more"></a>
+<h2 id="排序"><a href="#排序" class="headerlink" title="排序"></a>排序</h2><p>STL的集合操作都基于排序区间，所以在调用这些函数之前要对集合排序。最常用的排序函数是<code>std::sort</code>，它的用法很简单，只要传入一对迭代器即可，如下所示：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="built_in">vector</span>&#123; <span class="number">8</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">9</span>, <span class="number">2</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::sort(<span class="built_in">vector</span>.begin(), <span class="built_in">vector</span>.end());</span><br><span class="line"><span class="comment">//vector的元素序列是 &#123; 2, 3, 5, 8, 9 &#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>std:sort默认使用<code>&lt;</code>操作符来比较元素，当然也可以使用自定义的比较函数来改变排序规则。例如，下面的例子使用<code>&gt;</code>操作符比较元素：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="built_in">vector</span>&#123; <span class="number">8</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">9</span>, <span class="number">2</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::sort(<span class="built_in">vector</span>.begin(), <span class="built_in">vector</span>.end(), [](<span class="keyword">int</span> v1, <span class="keyword">int</span> v2) &#123;</span><br><span class="line">    <span class="keyword">return</span> v1 &gt; v2;</span><br><span class="line">&#125;);</span><br><span class="line"><span class="comment">//vector的元素序列是 &#123; 9, 8, 5, 3, 2 &#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>与std::sort一样，下文介绍的所有集合操作函数默认都使用&lt;操作符来比较元素，而且都可以在最后一个参数指定自定义的比较函数，这一点不再提及。但要注意的是，排序和集合操作使用的比较函数必须要一致，否则会有问题。另外，由于集合操作函数的输入都基于排序区间，所以这些函数的输出结果也是有序的，这点也不再提及。</p>
+<p>STL保证std::sort的时间复杂度是<code>O(N·log(N))</code>，其中N为区间长度。</p>
+<h2 id="交集"><a href="#交集" class="headerlink" title="交集"></a>交集</h2><p>对两个集合取交集可以使用<code>std::set_intersection</code>，该函数需要两对迭代器，以及一个输出迭代器，如下所示：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; vector1&#123; <span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; vector2&#123; <span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; result;</span><br><span class="line"><span class="built_in">std</span>::set_intersection(</span><br><span class="line">    vector1.begin(), vector1.end(),  <span class="comment">//第一个区间</span></span><br><span class="line">    vector2.begin(), vector2.end(),  <span class="comment">//第二个区间</span></span><br><span class="line">    <span class="built_in">std</span>::back_inserter(result)</span><br><span class="line">);</span><br><span class="line"><span class="comment">//result的元素序列是 &#123; 4, 6, 9 &#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>两个输入区间内的元素不会被修改，操作结果通过输出迭代器复制到另一个集合中。STL集合操作函数的用法都高度一致，下文其它函数的用法也是这样，仅仅是语义上不同。</p>
+<p>STL保证std::set_intersection至多进行<code>2·(N1+N2-1)</code>次比较，其中N1是第一个区间的长度，N2是第二个区间的长度（N1和N2的定义下同）。</p>
+<h2 id="并集"><a href="#并集" class="headerlink" title="并集"></a>并集</h2><p>对两个集合取并集可以使用<code>std::set_union</code>，如下所示：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; vector1&#123; <span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; vector2&#123; <span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; result;</span><br><span class="line"><span class="built_in">std</span>::set_union(</span><br><span class="line">    vector1.begin(), vector1.end(),  <span class="comment">//第一个区间</span></span><br><span class="line">    vector2.begin(), vector2.end(),  <span class="comment">//第二个区间</span></span><br><span class="line">    <span class="built_in">std</span>::back_inserter(result)</span><br><span class="line">);</span><br><span class="line"><span class="comment">//result的元素序列是 &#123; 1, 2, 3, 4, 6, 8, 9 &#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>STL保证std::set_union至多进行<code>2·(N1+N2-1)</code>次比较。</p>
+<h2 id="差集"><a href="#差集" class="headerlink" title="差集"></a>差集</h2><p>对两个集合取差集可以使用<code>std::set_difference</code>，如下所示：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; vector1&#123; <span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; vector2&#123; <span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; result;</span><br><span class="line"><span class="built_in">std</span>::set_difference(</span><br><span class="line">    vector1.begin(), vector1.end(),  <span class="comment">//第一个区间</span></span><br><span class="line">    vector2.begin(), vector2.end(),  <span class="comment">//第二个区间</span></span><br><span class="line">    <span class="built_in">std</span>::back_inserter(result)</span><br><span class="line">);</span><br><span class="line"><span class="comment">//result的元素序列是 &#123; 1, 3 &#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>std::set_difference从第一个区间去除第二个区间的元素。</p>
+<p>STL保证std::set_difference至多进行<code>2·(N1+N2-1)</code>次比较。</p>
+<h2 id="合并"><a href="#合并" class="headerlink" title="合并"></a>合并</h2><p>合并两个集合可以使用<code>std::merge</code>，如下所示：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; vector1&#123; <span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; vector2&#123; <span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; result;</span><br><span class="line"><span class="built_in">std</span>::merge(</span><br><span class="line">     vector1.begin(), vector1.end(),    <span class="comment">//第一个区间</span></span><br><span class="line">     vector2.begin(), vector2.end(),       <span class="comment">//第二个区间</span></span><br><span class="line">     <span class="built_in">std</span>::back_inserter(result)</span><br><span class="line">);</span><br><span class="line"><span class="comment">//result的元素序列是 &#123; 1, 2, 3, 4, 4, 6, 6, 8, 9, 9 &#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>与std::set_union不同，std::merge不会去除重复的元素。</p>
+<p>STL保证std::merge至多进行<code>N1+N2-1</code>次比较。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2016/05/07/commonly-used-set-operation-functions-in-stl/" data-title="STL中常用的集合操作函数" data-url="http://zplutor.github.io/2016/05/07/commonly-used-set-operation-functions-in-stl/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>9</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OS-X/">OS X</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>11</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-string/">std::string</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>3</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>1</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>2</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2016 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
