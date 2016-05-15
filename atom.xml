@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2016-05-15T12:54:21.000Z</updated>
+  <updated>2016-05-15T12:55:12.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -20,23 +20,24 @@
     <link href="http://zplutor.github.io/2016/05/15/calling-boost-filesystem-unique-path-may-fail/"/>
     <id>http://zplutor.github.io/2016/05/15/calling-boost-filesystem-unique-path-may-fail/</id>
     <published>2016-05-15T12:48:57.000Z</published>
-    <updated>2016-05-15T12:54:21.000Z</updated>
+    <updated>2016-05-15T12:55:12.000Z</updated>
     
     <content type="html">&lt;p&gt;假如你的程序需要在指定目录下生成一个唯一的临时文件，而且恰好引入了boost库，那么你可能会选择使用boost::filesystem::unique_path来生成文件名，因为该函数似乎正是为了此目的而生的。但是要小心，该函数在某些环境下可能会失败，抛出“拒绝访问”的异常。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
 &lt;p&gt;这里失败的原因并不是由于访问文件系统导致的，而是由于访问了Windows中与密码学相关的API。查看unique_path的源码，可以发现它内部调用了CryptAcquireContext和CryptGenRandom来生成随机数据，然后基于这些随机数据来生成文件名。由于未知的原因，在某些Windows系统上需要管理员权限才能成功调用CryptAcquireContext（正常情况下并不需要管理员权限），从而导致了unique_path失败。&lt;/p&gt;
 &lt;p&gt;所以，为了避免不必要的麻烦，直接使用GUID或者其它唯一性强的标识作为临时文件名即可。只有在涉及安全问题的情况下才应该考虑使用unique_path——此时就需要弄清楚为什么需要管理员权限才能调用CryptAcquireContext了。&lt;/p&gt;
 </content>
     
     <summary type="html">
     
-      &lt;p&gt;假如你的程序需要在指定目录下生成一个唯一的临时文件，而且恰好引入了boost库，那么你可能会选择使用boost::filesystem::unique_path来生成文件名，因为该函数似乎正是为了此目的而生的。但是要小心，该函数在某些环境下可能会失败，抛出“拒绝访问”的异常
+      &lt;p&gt;假如你的程序需要在指定目录下生成一个唯一的临时文件，而且恰好引入了boost库，那么你可能会选择使用boost::filesystem::unique_path来生成文件名，因为该函数似乎正是为了此目的而生的。但是要小心，该函数在某些环境下可能会失败，抛出“拒绝访问”的异常。&lt;/p&gt;
     
     </summary>
     
     
-      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
-    
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="boost::filesystem::unique_path" scheme="http://zplutor.github.io/tags/boost-filesystem-unique-path/"/>
     
@@ -147,9 +148,9 @@
     </summary>
     
     
-      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
-    
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="继承" scheme="http://zplutor.github.io/tags/%E7%BB%A7%E6%89%BF/"/>
     
@@ -217,13 +218,13 @@
     </summary>
     
     
+      <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
+    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="std::string" scheme="http://zplutor.github.io/tags/std-string/"/>
     
       <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
-    
-      <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
     
   </entry>
   
@@ -446,15 +447,15 @@
     </summary>
     
     
-      <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
-    
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="RAND_poll" scheme="http://zplutor.github.io/tags/RAND-poll/"/>
     
       <category term="RAND_bytes" scheme="http://zplutor.github.io/tags/RAND-bytes/"/>
     
       <category term="OpenSSL" scheme="http://zplutor.github.io/tags/OpenSSL/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
     
       <category term="死锁" scheme="http://zplutor.github.io/tags/%E6%AD%BB%E9%94%81/"/>
     
@@ -608,9 +609,9 @@
     </summary>
     
     
-      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
-    
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
     
@@ -671,9 +672,9 @@
     </summary>
     
     
-      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
-    
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
@@ -736,9 +737,9 @@
     </summary>
     
     
-      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
-    
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="编译" scheme="http://zplutor.github.io/tags/%E7%BC%96%E8%AF%91/"/>
     
