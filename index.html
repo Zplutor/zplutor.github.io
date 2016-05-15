@@ -53,6 +53,41 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2016-05-15T12:48:57.000Z"><a href="/2016/05/15/calling-boost-filesystem-unique-path-may-fail/">2016-05-15</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2016/05/15/calling-boost-filesystem-unique-path-may-fail/">调用boost::filesystem::unique_path可能会失败</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>假如你的程序需要在指定目录下生成一个唯一的临时文件，而且恰好引入了boost库，那么你可能会选择使用boost::filesystem::unique_path来生成文件名，因为该函数似乎正是为了此目的而生的。但是要小心，该函数在某些环境下可能会失败，抛出“拒绝访问”的异常。</p>
+<p>这里失败的原因并不是由于访问文件系统导致的，而是由于访问了Windows中与密码学相关的API。查看unique_path的源码，可以发现它内部调用了CryptAcquireContext和CryptGenRandom来生成随机数据，然后基于这些随机数据来生成文件名。由于未知的原因，在某些Windows系统上需要管理员权限才能成功调用CryptAcquireContext（正常情况下并不需要管理员权限），从而导致了unique_path失败。</p>
+<p>所以，为了避免不必要的麻烦，直接使用GUID或者其它唯一性强的标识作为临时文件名即可。只有在涉及安全问题的情况下才应该考虑使用unique_path——此时就需要弄清楚为什么需要管理员权限才能调用CryptAcquireContext了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2016-05-07T13:24:41.000Z"><a href="/2016/05/07/commonly-used-set-operation-functions-in-stl/">2016-05-07</a></time>
       
       
@@ -371,42 +406,6 @@
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2015-11-24T16:26:09.000Z"><a href="/2015/11/25/RAND-poll-function-s-issues-on-Windows/">2015-11-25</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2015/11/25/RAND-poll-function-s-issues-on-Windows/">RAND_poll函数在Windows下存在的问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>RAND_poll函数是OpenSSL中用于初始化伪随机数生成器的函数，当首次调用诸如RAND_bytes等需要生成随机数的函数时，会先调用该函数进行初始化。在实际使用中发现，RAND_poll函数在Windows下存在一些问题，需要小心提放，否则可能会对程序造成不良影响。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2015/11/25/RAND-poll-function-s-issues-on-Windows/#more" class="more-link">阅读全文</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -423,7 +422,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>9</small></li>
+    <li><a href="/tags/C/">C++</a><small>10</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -453,9 +452,11 @@
   
     <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>11</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>12</small></li>
   
     <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-filesystem-unique-path/">boost::filesystem::unique_path</a><small>1</small></li>
   
     <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
   
