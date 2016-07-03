@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>使用std::wstring_convert进行字符编码转换 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="C++11新增的std::wstring_convert可以很方便地在std::string和std::wstring之间进行转换。例如，把一个std::wstring转换成以UTF-8编码的std::string：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="使用std::wstring_convert进行字符编码转换"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2016-07-03T06:00:49.000Z"><a href="/2016/07/03/convert-character-encoding-using-std-wstring-convert/">2016-07-03</a></time>
+      
+      
+  
+    <h1 class="title">使用std::wstring_convert进行字符编码转换</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>C++11新增的std::wstring_convert可以很方便地在std::string和std::wstring之间进行转换。例如，把一个std::wstring转换成以UTF-8编码的std::string：</p>
+<a id="more"></a>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::wstring_convert&lt;<span class="built_in">std</span>::codecvt_utf8&lt;<span class="keyword">wchar_t</span>&gt;&gt; converter;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="built_in">string</span> = converter.to_bytes(<span class="string">L"这是一个宽字符串"</span>);</span><br></pre></td></tr></table></figure>
+<p>反过来，把一个以UTF-8编码的std::string转换成std::wstring：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::wstring_convert&lt;<span class="built_in">std</span>::codecvt_utf8&lt;<span class="keyword">wchar_t</span>&gt;&gt; converter;</span><br><span class="line"><span class="built_in">std</span>::wstring wide_string = converter.from_bytes(<span class="string">"\xe5\xad\x97\xe7\xac\xa6\xe4\xb8\xb2”);  //字符串的内容为“字符串”</span></span><br></pre></td></tr></table></figure></p>
+<p>std::wstring_convert使用模板参数中指定的codecvt进行实际的转换工作，也就是说，std::string使用哪种字符编码由这个codecvt来决定。上面的例子用的是std::codecvt_utf8，即UTF-8编码。理论上，指定不同的codecvt，即可支持各种字符编码。但是，如何得到合适codecvt则是不小的问题。</p>
+<p>来看一下std::wstring_convert其中一个构造函数：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wstring_convert(codecvt* pcvt = <span class="keyword">new</span> codecvt);</span><br></pre></td></tr></table></figure></p>
+<p>在构造std::wstring_convert对象的时候需要传入一个codecvt对象的指针，如果没有传入，则默认使用<code>new codecvt</code>来创建。std::wstring_convert自行维护codecvt对象的生命周期，它的析构函数会调用delete操作符来删除该对象。这就限制了只能使用通过new操作符来创建的codecvt，而不能使用从std::locale中获取的codecvt。</p>
+<p>在C++标准提供的codecvt中，能够直接用于std::wstring_convert的只有三个：std::codecvt_utf8，std::codecvt_utf16以及std::codecvt_utf8_utf16。可见，标准只支持UTF族的字符编码。为了获取其它字符编码的codecvt，需要使用std::codecvt_byname，这个类可以通过字符编码的名称来创建一个codecvt。这看起来挺不错，但遗憾的是，字符编码的名称并没有统一的标准，各个平台的支持情况都不一样。例如，在Windows下可以使用“chs”来创建简体中文编码的codecvt，在Mac OS X下则要使用“zh_cn.gb2312”；甚至在Mac OS X下，即使成功创建了这个codecvt，它也不能正常地转换。</p>
+<p>下面以Windows为例，说明如何将std::codecvt_byname用于std::wstring_convert。由于历史原因，std::codecvt_byname的析构函数是protected的，std::wstring_convert不能对它调用delete，所以首先要自行定义一个类来继承std::codecvt_byname：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> chs_codecvt : <span class="keyword">public</span> <span class="built_in">std</span>::codecvt_byname&lt;<span class="keyword">wchar_t</span>, <span class="keyword">char</span>, <span class="built_in">std</span>::<span class="keyword">mbstate_t</span>&gt; &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    chs_codecvt() : codecvt_byname(<span class="string">"chs"</span>) &#123; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>chs_codecvt的默认析构函数是public的，从而让std::wstring_convert可以删除它。为方便起见，在chs_codecvt的构造函数中，直接把“chs”传给了std::codecvt_byname。</p>
+<p>接下来的用法跟本文开头的例子基本一致：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::wstring_convert&lt;chs_codecvt&gt; converter;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="built_in">string</span> = converter.to_bytes(<span class="string">L"你好"</span>);</span><br><span class="line"><span class="built_in">std</span>::wstring wide_string = converter.from_bytes(<span class="string">"\xc4\xe3\xba\xc3”);  //字符串的内容为“你好”</span></span><br></pre></td></tr></table></figure></p>
+<p>综上所述，只有UTF编码的转换是完全符合C++标准并且真正能够跨平台的，使用这些国际化的字符编码能够减少很多不必要的麻烦。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>, <a href="/tags/字符串/">字符串</a>, <a href="/tags/字符编码/">字符编码</a>, <a href="/tags/std-wstring-convert/">std::wstring_convert</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2016/07/03/convert-character-encoding-using-std-wstring-convert/" data-title="使用std::wstring_convert进行字符编码转换" data-url="http://zplutor.github.io/2016/07/03/convert-character-encoding-using-std-wstring-convert/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>11</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OS-X/">OS X</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>12</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-filesystem-unique-path/">boost::filesystem::unique_path</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-string/">std::string</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/std-wstring-convert/">std::wstring_convert</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>1</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>1</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>2</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2016 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
