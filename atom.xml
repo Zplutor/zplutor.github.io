@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2016-07-03T06:22:40.000Z</updated>
+  <updated>2016-08-15T14:09:31.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -14,6 +14,42 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>使用ProcDump捕获程序崩溃信息</title>
+    <link href="http://zplutor.github.io/2016/08/15/catch-application-crashing-information-with-procdump/"/>
+    <id>http://zplutor.github.io/2016/08/15/catch-application-crashing-information-with-procdump/</id>
+    <published>2016-08-15T14:04:57.000Z</published>
+    <updated>2016-08-15T14:09:31.000Z</updated>
+    
+    <content type="html">&lt;p&gt;当程序崩溃的时候，捕获崩溃信息并进行上报对提升产品质量有很大帮助，它能发现很多在开发和测试阶段发现不了的问题。Windows的WER（Windows Error Reporting）组件在系统级别上提供了捕获崩溃信息的能力，它能够在程序崩溃时生成一个内存转储文件（即dump文件），该文件包含了引发崩溃的异常信息。然而，这个功能仅在Windows Vista SP1及更高的版本中存在，而且它是可配置的，用户可以阻止WER生成dump文件。这意味着我们不能依赖系统来捕获崩溃信息，而是要通过别的途径。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;其中一个可选的方案是使用Sysinternals出品的ProcDump。ProcDump是一个命令行工具，它其中的一个功能就是用来捕获程序的崩溃信息。该方案的流程如下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在程序开始执行的时候，启动ProcDump，并且把自己的进程ID传递给它，让它一直监视该进程。&lt;/li&gt;
+&lt;li&gt;ProcDump一直在后台运行，直到程序正常退出，或者发生崩溃。在后一种情况下，ProcDump会在指定的目录生成dump文件。&lt;/li&gt;
+&lt;li&gt;程序下一次启动时，发现存在dump文件，进行上报。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;可见，这种方案非常简单，只要用正确的参数启动ProcDump即可。假设我们的程序安装在&lt;code&gt;C:\MyApp&lt;/code&gt;，进程ID是&lt;code&gt;10032&lt;/code&gt;，则启动ProcDump的命令行如下：&lt;br&gt;&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&amp;quot;C:\MyApp\bin\procdump.exe&amp;quot; -accepteula -e 10032 &amp;quot;C:\MyApp\dump&amp;quot;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;启动ProcDump时最好指定&lt;code&gt;procdump.exe&lt;/code&gt;的绝对路径，避免进程工作目录改变带来的问题。第一个参数&lt;code&gt;-accepteula&lt;/code&gt;表示接受Sysinternals的最终用户许可协议。Sysinternals的工具在首次使用的时候都会弹出最终用户许可协议对话框，使用这个参数可以防止对话框弹出。第二个参数&lt;code&gt;-e&lt;/code&gt;表示在进程发生未处理异常（也就是崩溃）时生成dump文件。第四个参数是进程ID，表示让ProcDump监视哪个进程。最后一个参数指定dump文件存放的文件夹路径，要注意的是，这个文件夹必须要预先创建，否则ProcDump会认为这是一个文件路径，并向这个路径写数据，导致异常行为。&lt;/p&gt;
+&lt;p&gt;最后，程序需要在启动的时候拼接好上述命令行，并调用&lt;code&gt;CreateProcess&lt;/code&gt;来启动该命令行。要记得在调用时给&lt;code&gt;dwCreationFlags&lt;/code&gt;参数传入&lt;code&gt;CREATE_NO_WINDOW&lt;/code&gt;，防止出现控制台窗口。&lt;/p&gt;
+&lt;p&gt;这个方案实现简单，学习成本低，即使不了解异常相关的机理也可以快速实现崩溃信息收集。但它有一个弊端：ProcDump是以调试器的的身份附加到指定进程上的，进程中发生的调试事件（例如线程的创建和销毁）会导致进程间通信开销，这会稍微影响程序的性能。如果这些性能开销不可接受，则要考虑其它的方案。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;当程序崩溃的时候，捕获崩溃信息并进行上报对提升产品质量有很大帮助，它能发现很多在开发和测试阶段发现不了的问题。Windows的WER（Windows Error Reporting）组件在系统级别上提供了捕获崩溃信息的能力，它能够在程序崩溃时生成一个内存转储文件（即dump文件），该文件包含了引发崩溃的异常信息。然而，这个功能仅在Windows Vista SP1及更高的版本中存在，而且它是可配置的，用户可以阻止WER生成dump文件。这意味着我们不能依赖系统来捕获崩溃信息，而是要通过别的途径。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="procdump" scheme="http://zplutor.github.io/tags/procdump/"/>
+    
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
+    
+  </entry>
   
   <entry>
     <title>使用std::wstring_convert进行字符编码转换</title>
@@ -218,13 +254,13 @@
     </summary>
     
     
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="boost::thread_specific_ptr" scheme="http://zplutor.github.io/tags/boost-thread-specific-ptr/"/>
     
       <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
       <category term="内存泄露" scheme="http://zplutor.github.io/tags/%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
   </entry>
   
@@ -485,13 +521,13 @@
     </summary>
     
     
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
       <category term="RAND_poll" scheme="http://zplutor.github.io/tags/RAND-poll/"/>
     
       <category term="RAND_bytes" scheme="http://zplutor.github.io/tags/RAND-bytes/"/>
     
       <category term="OpenSSL" scheme="http://zplutor.github.io/tags/OpenSSL/"/>
-    
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
       <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
     
@@ -710,19 +746,19 @@
     </summary>
     
     
+      <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
+    
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
-      <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
       <category term="WinDbg" scheme="http://zplutor.github.io/tags/WinDbg/"/>
     
       <category term="异常" scheme="http://zplutor.github.io/tags/%E5%BC%82%E5%B8%B8/"/>
     
       <category term="std::thread" scheme="http://zplutor.github.io/tags/std-thread/"/>
-    
-      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
   </entry>
   

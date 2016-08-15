@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zplutor.github.io/2016/08/15/catch-application-crashing-information-with-procdump/</loc>
+    
+    <lastmod>2016-08-15T14:09:31.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://zplutor.github.io/2016/07/03/convert-character-encoding-using-std-wstring-convert/</loc>
     
     <lastmod>2016-07-03T06:22:40.000Z</lastmod>

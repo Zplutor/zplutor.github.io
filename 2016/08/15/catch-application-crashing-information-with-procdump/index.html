@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>使用ProcDump捕获程序崩溃信息 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="当程序崩溃的时候，捕获崩溃信息并进行上报对提升产品质量有很大帮助，它能发现很多在开发和测试阶段发现不了的问题。Windows的WER（Windows Error Reporting）组件在系统级别上提供了捕获崩溃信息的能力，它能够在程序崩溃时生成一个内存转储文件（即dump文件），该文件包含了引发崩溃的异常信息。然而，这个功能仅在Windows Vista SP1及更高的版本中存在，而且它是可配置的，用户可以阻止WER生成dump文件。这意味着我们不能依赖系统来捕获崩溃信息，而是要通过别的途径。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="使用ProcDump捕获程序崩溃信息"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2016-08-15T14:04:57.000Z"><a href="/2016/08/15/catch-application-crashing-information-with-procdump/">2016-08-15</a></time>
+      
+      
+  
+    <h1 class="title">使用ProcDump捕获程序崩溃信息</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>当程序崩溃的时候，捕获崩溃信息并进行上报对提升产品质量有很大帮助，它能发现很多在开发和测试阶段发现不了的问题。Windows的WER（Windows Error Reporting）组件在系统级别上提供了捕获崩溃信息的能力，它能够在程序崩溃时生成一个内存转储文件（即dump文件），该文件包含了引发崩溃的异常信息。然而，这个功能仅在Windows Vista SP1及更高的版本中存在，而且它是可配置的，用户可以阻止WER生成dump文件。这意味着我们不能依赖系统来捕获崩溃信息，而是要通过别的途径。</p>
+<a id="more"></a>
+<p>其中一个可选的方案是使用Sysinternals出品的ProcDump。ProcDump是一个命令行工具，它其中的一个功能就是用来捕获程序的崩溃信息。该方案的流程如下：</p>
+<ul>
+<li>在程序开始执行的时候，启动ProcDump，并且把自己的进程ID传递给它，让它一直监视该进程。</li>
+<li>ProcDump一直在后台运行，直到程序正常退出，或者发生崩溃。在后一种情况下，ProcDump会在指定的目录生成dump文件。</li>
+<li>程序下一次启动时，发现存在dump文件，进行上报。</li>
+</ul>
+<p>可见，这种方案非常简单，只要用正确的参数启动ProcDump即可。假设我们的程序安装在<code>C:\MyApp</code>，进程ID是<code>10032</code>，则启动ProcDump的命令行如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;C:\MyApp\bin\procdump.exe&quot; -accepteula -e 10032 &quot;C:\MyApp\dump&quot;</span><br></pre></td></tr></table></figure></p>
+<p>启动ProcDump时最好指定<code>procdump.exe</code>的绝对路径，避免进程工作目录改变带来的问题。第一个参数<code>-accepteula</code>表示接受Sysinternals的最终用户许可协议。Sysinternals的工具在首次使用的时候都会弹出最终用户许可协议对话框，使用这个参数可以防止对话框弹出。第二个参数<code>-e</code>表示在进程发生未处理异常（也就是崩溃）时生成dump文件。第四个参数是进程ID，表示让ProcDump监视哪个进程。最后一个参数指定dump文件存放的文件夹路径，要注意的是，这个文件夹必须要预先创建，否则ProcDump会认为这是一个文件路径，并向这个路径写数据，导致异常行为。</p>
+<p>最后，程序需要在启动的时候拼接好上述命令行，并调用<code>CreateProcess</code>来启动该命令行。要记得在调用时给<code>dwCreationFlags</code>参数传入<code>CREATE_NO_WINDOW</code>，防止出现控制台窗口。</p>
+<p>这个方案实现简单，学习成本低，即使不了解异常相关的机理也可以快速实现崩溃信息收集。但它有一个弊端：ProcDump是以调试器的的身份附加到指定进程上的，进程中发生的调试事件（例如线程的创建和销毁）会导致进程间通信开销，这会稍微影响程序的性能。如果这些性能开销不可接受，则要考虑其它的方案。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/procdump/">procdump</a>, <a href="/tags/调试/">调试</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2016/08/15/catch-application-crashing-information-with-procdump/" data-title="使用ProcDump捕获程序崩溃信息" data-url="http://zplutor.github.io/2016/08/15/catch-application-crashing-information-with-procdump/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>11</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OS-X/">OS X</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>13</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-filesystem-unique-path/">boost::filesystem::unique_path</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-string/">std::string</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/std-wstring-convert/">std::wstring_convert</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>1</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>1</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>3</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2016 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
