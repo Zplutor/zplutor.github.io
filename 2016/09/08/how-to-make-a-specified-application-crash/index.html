@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>如何让指定的程序崩溃 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="为了验证程序崩溃信息的收集和上报机制，需要让程序崩溃。为了达到这个目的，一般的做法是临时在程序中加入引发异常的代码。这种做法只在开发人员自己编译的版本中有效，在正式版本中无法进行验证。另外一种方法是加入一个隐藏开关，但这样会在正式版本中带上调试代码，也不理想。最好的方法是在不修改任何代码的前提下，也能够让程序崩溃。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="如何让指定的程序崩溃"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2016-09-08T12:24:38.000Z"><a href="/2016/09/08/how-to-make-a-specified-application-crash/">2016-09-08</a></time>
+      
+      
+  
+    <h1 class="title">如何让指定的程序崩溃</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>为了验证程序崩溃信息的收集和上报机制，需要让程序崩溃。为了达到这个目的，一般的做法是临时在程序中加入引发异常的代码。这种做法只在开发人员自己编译的版本中有效，在正式版本中无法进行验证。另外一种方法是加入一个隐藏开关，但这样会在正式版本中带上调试代码，也不理想。最好的方法是在不修改任何代码的前提下，也能够让程序崩溃。</p>
+<a id="more"></a>
+<p>这看起来似乎不可能，但实际上是可行的，而且做法简单得让人惊讶。Windows API有一个<code>CreateRemoteThread</code>函数，这个函数可以在指定的进程中创建一个线程，并且能够让这个线程执行任意代码——DLL注入就是通过这种方式实现的。显然，只要用这个函数创建一个会产生异常的线程就可以了。先来看一下这个函数的原型：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">HANDLE WINAPI <span class="title">CreateRemoteThread</span><span class="params">(</span><br><span class="line">  _In_  HANDLE                 hProcess,</span><br><span class="line">  _In_  LPSECURITY_ATTRIBUTES  lpThreadAttributes,</span><br><span class="line">  _In_  SIZE_T                 dwStackSize,</span><br><span class="line">  _In_  LPTHREAD_START_ROUTINE lpStartAddress,</span><br><span class="line">  _In_  LPVOID                 lpParameter,</span><br><span class="line">  _In_  DWORD                  dwCreationFlags,</span><br><span class="line">  _Out_ LPDWORD                lpThreadId</span><br><span class="line">)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>值得关注的是<code>hProcess</code>和<code>lpStartAddress</code>参数，其它参数的含义可以参考MSDN文档，这里不再赘述。先来看<code>lpStartAddress</code>参数，这个参数指定线程的入口点地址，这个地址必须是在目标进程的地址空间中。在本文的特殊需求下，我们并不需要传一个实际可执行的地址，只需要传入<code>0</code>即可。这样的话，该线程会尝试从0地址执行，这毫无疑问会引发访问违规异常，导致程序崩溃——这就达到了我们的目的。</p>
+<p>再来看<code>hProcess</code>参数，这个参数表示目标进程的句柄，这个句柄必须具有以下访问权限：</p>
+<ul>
+<li>PROCESS_CREATE_THREAD</li>
+<li>PROCESS_QUERY_INFORMATION</li>
+<li>PROCESS_VM_OPERATION</li>
+<li>PROCESS_VM_WRITE</li>
+<li>PROCESS_VM_READ</li>
+</ul>
+<p>有了这些基础知识，我们就可以写一个简单的命令行程序来让指定的进程崩溃了。完整的代码如下：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;Windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (argc &lt; <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="built_in">std</span>::wcout &lt;&lt; <span class="string">L"A PID is needed."</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> pid = atoi(argv[<span class="number">1</span>]);</span><br><span class="line">    <span class="keyword">if</span> (pid &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">std</span>::wcout &lt;&lt; <span class="string">L"Invalid PID."</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    HANDLE process_handle = OpenProcess(</span><br><span class="line">        PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,</span><br><span class="line">        FALSE,</span><br><span class="line">        pid);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (process_handle == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="built_in">std</span>::wcout &lt;&lt; <span class="string">L"Open process failed. Error: "</span> &lt;&lt; GetLastError() &lt;&lt; <span class="string">'.'</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">3</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    HANDLE thread_handle = CreateRemoteThread(process_handle, <span class="literal">nullptr</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="literal">nullptr</span>, <span class="number">0</span>, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="keyword">if</span> (thread_handle == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="built_in">std</span>::wcout &lt;&lt; <span class="string">L"Create remote thread failed. Error: "</span> &lt;&lt; GetLastError() &lt;&lt; <span class="string">'.'</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">4</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::wcout &lt;&lt; <span class="string">L"Crashed. :)"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>假设这个命令行程序的名称是<code>crasher.exe</code>，目标进程的PID是<code>10032</code>，那么只要像下面这样调用就能让这个进程崩溃：</p>
+<pre><code>crasher.exe 10032
+</code></pre><p>如果你的目标进程是一个普通程序，那么本文到这里就结束了。但如果你的目标进程是一个服务程序，情况就有所不同了。CreateRemoteThread有一个限制，它不能跨会话来创建线程。例如，服务程序都在0号会话下运行，而制造崩溃的程序是在当前用户登录的会话下运行（必定不是0号会话），所以CreateRemoteThread的调用会失败。为了解决这个问题，需要让制造崩溃的程序转移到0号会话下运行。可以借助Sysinternals出品的<code>PsExec</code>工具来实现这个目的，只要执行下面的命令行即可：</p>
+<pre><code>PsExec.exe -accepteula -s crasher.exe 10032
+</code></pre><p><code>-accepteula</code>参数表示接受Sysinternals的最终用户许可协议。Sysinternals的工具在首次使用的时候都会弹出最终用户许可协议对话框，使用这个参数可以防止对话框弹出。<code>-s</code>表示在系统会话，也就是0号会话中执行后面的命令。最终效果就是在0号会话中执行了<code>crasher.exe 10032</code>这个命令。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/调试/">调试</a>, <a href="/tags/异常/">异常</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2016/09/08/how-to-make-a-specified-application-crash/" data-title="如何让指定的程序崩溃" data-url="http://zplutor.github.io/2016/09/08/how-to-make-a-specified-application-crash/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>11</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OS-X/">OS X</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>14</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-filesystem-unique-path/">boost::filesystem::unique_path</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>1</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-string/">std::string</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/std-wstring-convert/">std::wstring_convert</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>1</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>2</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>4</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>1</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2016 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>

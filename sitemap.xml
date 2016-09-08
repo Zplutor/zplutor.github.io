@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zplutor.github.io/2016/09/08/how-to-make-a-specified-application-crash/</loc>
+    
+    <lastmod>2016-09-08T12:42:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://zplutor.github.io/2016/08/15/catch-application-crashing-information-with-procdump/</loc>
     
     <lastmod>2016-08-15T14:09:31.000Z</lastmod>

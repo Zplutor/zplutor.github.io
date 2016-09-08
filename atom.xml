@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2016-08-15T14:09:31.000Z</updated>
+  <updated>2016-09-08T12:42:30.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -14,6 +14,48 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>如何让指定的程序崩溃</title>
+    <link href="http://zplutor.github.io/2016/09/08/how-to-make-a-specified-application-crash/"/>
+    <id>http://zplutor.github.io/2016/09/08/how-to-make-a-specified-application-crash/</id>
+    <published>2016-09-08T12:24:38.000Z</published>
+    <updated>2016-09-08T12:42:30.000Z</updated>
+    
+    <content type="html">&lt;p&gt;为了验证程序崩溃信息的收集和上报机制，需要让程序崩溃。为了达到这个目的，一般的做法是临时在程序中加入引发异常的代码。这种做法只在开发人员自己编译的版本中有效，在正式版本中无法进行验证。另外一种方法是加入一个隐藏开关，但这样会在正式版本中带上调试代码，也不理想。最好的方法是在不修改任何代码的前提下，也能够让程序崩溃。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;这看起来似乎不可能，但实际上是可行的，而且做法简单得让人惊讶。Windows API有一个&lt;code&gt;CreateRemoteThread&lt;/code&gt;函数，这个函数可以在指定的进程中创建一个线程，并且能够让这个线程执行任意代码——DLL注入就是通过这种方式实现的。显然，只要用这个函数创建一个会产生异常的线程就可以了。先来看一下这个函数的原型：&lt;br&gt;&lt;figure class=&quot;highlight cpp&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;HANDLE WINAPI &lt;span class=&quot;title&quot;&gt;CreateRemoteThread&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  _In_  HANDLE                 hProcess,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  _In_  LPSECURITY_ATTRIBUTES  lpThreadAttributes,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  _In_  SIZE_T                 dwStackSize,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  _In_  LPTHREAD_START_ROUTINE lpStartAddress,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  _In_  LPVOID                 lpParameter,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  _In_  DWORD                  dwCreationFlags,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  _Out_ LPDWORD                lpThreadId&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;)&lt;/span&gt;&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;值得关注的是&lt;code&gt;hProcess&lt;/code&gt;和&lt;code&gt;lpStartAddress&lt;/code&gt;参数，其它参数的含义可以参考MSDN文档，这里不再赘述。先来看&lt;code&gt;lpStartAddress&lt;/code&gt;参数，这个参数指定线程的入口点地址，这个地址必须是在目标进程的地址空间中。在本文的特殊需求下，我们并不需要传一个实际可执行的地址，只需要传入&lt;code&gt;0&lt;/code&gt;即可。这样的话，该线程会尝试从0地址执行，这毫无疑问会引发访问违规异常，导致程序崩溃——这就达到了我们的目的。&lt;/p&gt;
+&lt;p&gt;再来看&lt;code&gt;hProcess&lt;/code&gt;参数，这个参数表示目标进程的句柄，这个句柄必须具有以下访问权限：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;PROCESS_CREATE_THREAD&lt;/li&gt;
+&lt;li&gt;PROCESS_QUERY_INFORMATION&lt;/li&gt;
+&lt;li&gt;PROCESS_VM_OPERATION&lt;/li&gt;
+&lt;li&gt;PROCESS_VM_WRITE&lt;/li&gt;
+&lt;li&gt;PROCESS_VM_READ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;有了这些基础知识，我们就可以写一个简单的命令行程序来让指定的进程崩溃了。完整的代码如下：&lt;br&gt;&lt;figure class=&quot;highlight cpp&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;18&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;19&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;20&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;21&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;22&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;23&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;24&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;25&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;26&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;27&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;28&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;29&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;30&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;31&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;32&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;33&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;34&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;35&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;#&lt;span class=&quot;meta-keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;meta-string&quot;&gt;&amp;lt;Windows.h&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;#&lt;span class=&quot;meta-keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;meta-string&quot;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(&lt;span class=&quot;keyword&quot;&gt;int&lt;/span&gt; argc, &lt;span class=&quot;keyword&quot;&gt;char&lt;/span&gt;** argv)&lt;/span&gt; &lt;/span&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (argc &amp;lt; &lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;) &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::wcout &amp;lt;&amp;lt; &lt;span class=&quot;string&quot;&gt;L&quot;A PID is needed.&quot;&lt;/span&gt; &amp;lt;&amp;lt; &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::&lt;span class=&quot;built_in&quot;&gt;endl&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;int&lt;/span&gt; pid = atoi(argv[&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;]);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (pid &amp;lt;= &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;) &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::wcout &amp;lt;&amp;lt; &lt;span class=&quot;string&quot;&gt;L&quot;Invalid PID.&quot;&lt;/span&gt; &amp;lt;&amp;lt; &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::&lt;span class=&quot;built_in&quot;&gt;endl&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    HANDLE process_handle = OpenProcess(&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        FALSE,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        pid);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (process_handle == &lt;span class=&quot;literal&quot;&gt;nullptr&lt;/span&gt;) &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::wcout &amp;lt;&amp;lt; &lt;span class=&quot;string&quot;&gt;L&quot;Open process failed. Error: &quot;&lt;/span&gt; &amp;lt;&amp;lt; GetLastError() &amp;lt;&amp;lt; &lt;span class=&quot;string&quot;&gt;&#39;.&#39;&lt;/span&gt; &amp;lt;&amp;lt; &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::&lt;span class=&quot;built_in&quot;&gt;endl&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    HANDLE thread_handle = CreateRemoteThread(process_handle, &lt;span class=&quot;literal&quot;&gt;nullptr&lt;/span&gt;, &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;, &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;, &lt;span class=&quot;literal&quot;&gt;nullptr&lt;/span&gt;, &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;, &lt;span class=&quot;literal&quot;&gt;nullptr&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (thread_handle == &lt;span class=&quot;literal&quot;&gt;nullptr&lt;/span&gt;) &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::wcout &amp;lt;&amp;lt; &lt;span class=&quot;string&quot;&gt;L&quot;Create remote thread failed. Error: &quot;&lt;/span&gt; &amp;lt;&amp;lt; GetLastError() &amp;lt;&amp;lt; &lt;span class=&quot;string&quot;&gt;&#39;.&#39;&lt;/span&gt; &amp;lt;&amp;lt; &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::&lt;span class=&quot;built_in&quot;&gt;endl&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;4&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::wcout &amp;lt;&amp;lt; &lt;span class=&quot;string&quot;&gt;L&quot;Crashed. :)&quot;&lt;/span&gt; &amp;lt;&amp;lt; &lt;span class=&quot;built_in&quot;&gt;std&lt;/span&gt;::&lt;span class=&quot;built_in&quot;&gt;endl&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;假设这个命令行程序的名称是&lt;code&gt;crasher.exe&lt;/code&gt;，目标进程的PID是&lt;code&gt;10032&lt;/code&gt;，那么只要像下面这样调用就能让这个进程崩溃：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;crasher.exe 10032
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如果你的目标进程是一个普通程序，那么本文到这里就结束了。但如果你的目标进程是一个服务程序，情况就有所不同了。CreateRemoteThread有一个限制，它不能跨会话来创建线程。例如，服务程序都在0号会话下运行，而制造崩溃的程序是在当前用户登录的会话下运行（必定不是0号会话），所以CreateRemoteThread的调用会失败。为了解决这个问题，需要让制造崩溃的程序转移到0号会话下运行。可以借助Sysinternals出品的&lt;code&gt;PsExec&lt;/code&gt;工具来实现这个目的，只要执行下面的命令行即可：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PsExec.exe -accepteula -s crasher.exe 10032
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;-accepteula&lt;/code&gt;参数表示接受Sysinternals的最终用户许可协议。Sysinternals的工具在首次使用的时候都会弹出最终用户许可协议对话框，使用这个参数可以防止对话框弹出。&lt;code&gt;-s&lt;/code&gt;表示在系统会话，也就是0号会话中执行后面的命令。最终效果就是在0号会话中执行了&lt;code&gt;crasher.exe 10032&lt;/code&gt;这个命令。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;为了验证程序崩溃信息的收集和上报机制，需要让程序崩溃。为了达到这个目的，一般的做法是临时在程序中加入引发异常的代码。这种做法只在开发人员自己编译的版本中有效，在正式版本中无法进行验证。另外一种方法是加入一个隐藏开关，但这样会在正式版本中带上调试代码，也不理想。最好的方法是在不修改任何代码的前提下，也能够让程序崩溃。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
+    
+      <category term="异常" scheme="http://zplutor.github.io/tags/%E5%BC%82%E5%B8%B8/"/>
+    
+  </entry>
   
   <entry>
     <title>使用ProcDump捕获程序崩溃信息</title>
@@ -254,13 +296,13 @@
     </summary>
     
     
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
       <category term="boost::thread_specific_ptr" scheme="http://zplutor.github.io/tags/boost-thread-specific-ptr/"/>
     
       <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
       <category term="内存泄露" scheme="http://zplutor.github.io/tags/%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/"/>
-    
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
   </entry>
   
@@ -521,13 +563,13 @@
     </summary>
     
     
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="RAND_poll" scheme="http://zplutor.github.io/tags/RAND-poll/"/>
     
       <category term="RAND_bytes" scheme="http://zplutor.github.io/tags/RAND-bytes/"/>
     
       <category term="OpenSSL" scheme="http://zplutor.github.io/tags/OpenSSL/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
       <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
     
@@ -746,11 +788,11 @@
     </summary>
     
     
-      <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
-    
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
       <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
