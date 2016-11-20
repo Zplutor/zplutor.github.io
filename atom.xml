@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2016-09-08T12:42:30.000Z</updated>
+  <updated>2016-11-20T14:40:46.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -14,6 +14,46 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>libcurl动态超时的陷阱</title>
+    <link href="http://zplutor.github.io/2016/11/20/a-trap-of-dynamic-timeout-in-libcurl/"/>
+    <id>http://zplutor.github.io/2016/11/20/a-trap-of-dynamic-timeout-in-libcurl/</id>
+    <published>2016-11-20T14:35:41.000Z</published>
+    <updated>2016-11-20T14:40:46.000Z</updated>
+    
+    <content type="html">&lt;p&gt;在《&lt;a href=&quot;http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/&quot;&gt;如何设置libcurl的动态超时值&lt;/a&gt;》中提到，动态超时值（通过&lt;code&gt;CURLOPT_LOW_SPEED_LIMIT&lt;/code&gt;和&lt;code&gt;CURLOPT_LOW_SPEED_TIME&lt;/code&gt;设置）比固定超时值（通过&lt;code&gt;CURLOPT_TIMEOUT&lt;/code&gt;设置）更符合实际需要，所以我一般只设置动态超时值，而不设置固定超时值。然而，在实际使用中发现，有时网络请求会一直没有结束，也就是说设置的动态超时值在某些情况下会失效。在阅读了libcurl的源代码之后，我发现原来动态超时值存在一个陷阱。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;简单地说，libcurl只在下载响应数据阶段才会检测动态超时，如果网络请求一直没有进入这个阶段，那么动态超时值就没有作用了。下面我们从libcurl的内部机制分析一下这个陷阱。&lt;/p&gt;
+&lt;p&gt;在libcurl内部，网络请求由Session对象表示，而Session对象由Multi对象管理。Multi对象是一个管理器，它自身维护一个定时器，每隔一段时间触发一次Session对象执行。也就是说，Session本身不会主动执行，而是由Multi来驱动执行， 如下图所示：&lt;/p&gt;
+&lt;img src=&quot;/2016/11/20/a-trap-of-dynamic-timeout-in-libcurl/1.png&quot; alt=&quot;1.png&quot; title=&quot;&quot;&gt;
+&lt;p&gt;Session的实现是一个状态机，从请求开始到结束，大致要经过以下状态（这是一份精简过的状态，实际状态比这个复杂）：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Init，初始化状态。&lt;/li&gt;
+&lt;li&gt;Connect，正在连接状态。&lt;/li&gt;
+&lt;li&gt;Do，正在发送请求数据状态。&lt;/li&gt;
+&lt;li&gt;WaitPerform，等待响应状态。&lt;/li&gt;
+&lt;li&gt;Perform，正在接收响应数据状态。&lt;/li&gt;
+&lt;li&gt;Completed，完成状态。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;一般情况下，只有当Session处于Perform状态时，libcurl才会检测动态超时。所以，一旦等不到服务器的响应，Session就会一直停留在WaitPerform状态，动态超时值也就没有任何作用了。&lt;/p&gt;
+&lt;p&gt;至于固定超时值，它的检测时机是在每次心跳触发Session对象执行的时候，与Session的状态机制没有任何关系，因此固定超时值总是有效的。&lt;/p&gt;
+&lt;p&gt;可见，licurl的超时机制并不够好——动态超时值不可靠，固定超时值又不能满足需求。那么在实践中应该如何做呢？有两种方法可供选择。首先，如果条件允许的话，可以摒弃libcurl的超时机制，自己来实现。这样的好处是可以自主控制超时，具有最大的灵活性。当然，这种方法复杂度较高，大部分情况下条件也不允许。&lt;/p&gt;
+&lt;p&gt;其次，可以通过不断设置固定超时值来模拟动态超时。例如，每收到libcurl的一次进度回调，就重新设置一个更大的固定超时值。虽然官方文档并没有明说，但从libcurl的源代码来看，这种做法是可行的。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在《&lt;a href=&quot;http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/&quot;&gt;如何设置libcurl的动态超时值&lt;/a&gt;》中提到，动态超时值（通过&lt;code&gt;CURLOPT_LOW_SPEED_LIMIT&lt;/code&gt;和&lt;code&gt;CURLOPT_LOW_SPEED_TIME&lt;/code&gt;设置）比固定超时值（通过&lt;code&gt;CURLOPT_TIMEOUT&lt;/code&gt;设置）更符合实际需要，所以我一般只设置动态超时值，而不设置固定超时值。然而，在实际使用中发现，有时网络请求会一直没有结束，也就是说设置的动态超时值在某些情况下会失效。在阅读了libcurl的源代码之后，我发现原来动态超时值存在一个陷阱。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="libcurl" scheme="http://zplutor.github.io/tags/libcurl/"/>
+    
+      <category term="超时" scheme="http://zplutor.github.io/tags/%E8%B6%85%E6%97%B6/"/>
+    
+  </entry>
   
   <entry>
     <title>如何让指定的程序崩溃</title>
