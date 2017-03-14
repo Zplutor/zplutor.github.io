@@ -1,0 +1,255 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>STL中的二分查找 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="二分查找是重要且常用的算法，在STL中自然少不了它的身影。本文介绍一下在STL中与二分查找有关的函数。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="STL中的二分查找"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2017-03-14T15:41:16.000Z"><a href="/2017/03/14/binary-search-in-stl/">2017-03-14</a></time>
+      
+      
+  
+    <h1 class="title">STL中的二分查找</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>二分查找是重要且常用的算法，在STL中自然少不了它的身影。本文介绍一下在STL中与二分查找有关的函数。</p>
+<a id="more"></a>
+<p>要注意，这些函数都要求集合是有序的，在使用之前应使用<code>std::sort</code>等函数对集合进行排序。</p>
+<h2 id="检查元素是否存在"><a href="#检查元素是否存在" class="headerlink" title="检查元素是否存在"></a>检查元素是否存在</h2><h3 id="std-binary-search"><a href="#std-binary-search" class="headerlink" title="std::binary_search"></a>std::binary_search</h3><p><code>std::binary_search</code>用来检查指定的元素是否存在集合中，函数原型如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt; <span class="keyword">class</span> ForwardIt, <span class="keyword">class</span> T &gt;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">binary_search</span><span class="params">( ForwardIt first, ForwardIt last, <span class="keyword">const</span> T&amp; value )</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt; <span class="keyword">class</span> ForwardIt, <span class="keyword">class</span> T, <span class="keyword">class</span> Compare &gt;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">binary_search</span><span class="params">( ForwardIt first, ForwardIt last, <span class="keyword">const</span> T&amp; value, Compare comp )</span></span>;</span><br></pre></td></tr></table></figure>
+<p>第一个原型使用<code>&lt;</code>操作符来比较元素，第二个原型使用指定的比较器来比较元素。比较器的比较规则应该与排序时使用的比较规则一致。</p>
+<p>使用示例如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用默认比较器来查找元素</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; numbers&#123; <span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span> &#125;;</span><br><span class="line"><span class="keyword">bool</span> exist;</span><br><span class="line">exist = <span class="built_in">std</span>::binary_search(numbers.begin(), numbers.end(), <span class="number">3</span>); <span class="comment">// exist = true</span></span><br><span class="line">exist = <span class="built_in">std</span>::binary_search(numbers.begin(), numbers.end(), <span class="number">4</span>); <span class="comment">// exist = false</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//使用自定义比较器来查找元素</span></span><br><span class="line"><span class="keyword">auto</span> comparer = [](<span class="keyword">int</span> i1, <span class="keyword">int</span> i2) &#123;</span><br><span class="line">    <span class="keyword">return</span> i1 &gt; i2;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">std</span>::sort(numbers.begin(), numbers.end(), comparer); <span class="comment">// 9, 7, 5, 3, 1</span></span><br><span class="line">exist = <span class="built_in">std</span>::binary_search(numbers.begin(), numbers.end(), <span class="number">5</span>, comparer); <span class="comment">//exist = true</span></span><br><span class="line">exist = <span class="built_in">std</span>::binary_search(numbers.begin(), numbers.end(), <span class="number">6</span>, comparer); <span class="comment">//exist = false</span></span><br></pre></td></tr></table></figure>
+<p><code>std::binary_search</code>至多需要进行<code>log2(last - first) + O(1)</code>次比较。</p>
+<p><code>std::binary_search</code>的使用场景比较单一，它只能知道某个元素是否存在集合中。如果要获取元素的位置，需要使用下面的函数。</p>
+<h2 id="获取元素位置"><a href="#获取元素位置" class="headerlink" title="获取元素位置"></a>获取元素位置</h2><h3 id="std-lower-bound"><a href="#std-lower-bound" class="headerlink" title="std::lower_bound"></a>std::lower_bound</h3><p><code>std::lower_bound</code>用来获取集合中第一个等于或大于指定值的元素位置，函数原型如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt; <span class="keyword">class</span> ForwardIt, <span class="keyword">class</span> T &gt;</span><br><span class="line"><span class="function">ForwardIt <span class="title">lower_bound</span><span class="params">( ForwardIt first, ForwardIt last, <span class="keyword">const</span> T&amp; value )</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt; <span class="keyword">class</span> ForwardIt, <span class="keyword">class</span> T, <span class="keyword">class</span> Compare &gt;</span><br><span class="line"><span class="function">ForwardIt <span class="title">lower_bound</span><span class="params">( ForwardIt first, ForwardIt last, <span class="keyword">const</span> T&amp; value, Compare comp )</span></span>;</span><br></pre></td></tr></table></figure>
+<p>第一个原型使用<code>&lt;</code>操作符来比较元素，第二个原型使用指定的比较器来比较元素。比较器的比较规则应该与排序时使用的比较规则一致。</p>
+<p>使用示例如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; numbers&#123; <span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;::iterator iterator;</span><br><span class="line">iterator = <span class="built_in">std</span>::lower_bound(numbers.begin(), numbers.end(), <span class="number">3</span>); </span><br><span class="line"><span class="comment">// *iterator = 3</span></span><br><span class="line"></span><br><span class="line">iterator = <span class="built_in">std</span>::lower_bound(numbers.begin(), numbers.end(), <span class="number">4</span>); </span><br><span class="line"><span class="comment">// *iterator = 5</span></span><br><span class="line"></span><br><span class="line">iterator = <span class="built_in">std</span>::lower_bound(numbers.begin(), numbers.end(), <span class="number">11</span>); </span><br><span class="line"><span class="comment">// iterator = numbers.end()</span></span><br></pre></td></tr></table></figure>
+<p>要注意，<code>std::lower_bound</code>返回的迭代器指向的是第一个大于或等于指定值的元素，所以在它返回之后还要再检查一次，以确认真的找到了该元素。例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取集合</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; numbers = ...; </span><br><span class="line"></span><br><span class="line"><span class="comment">//查找元素位置</span></span><br><span class="line"><span class="keyword">auto</span> iterator = <span class="built_in">std</span>::lower_bound(numbers.begin(), numbers.end(), <span class="number">3</span>); </span><br><span class="line"><span class="keyword">if</span> (iterator != numbers.end() &amp;&amp; *iterator == <span class="number">3</span>) &#123;</span><br><span class="line">    <span class="comment">//集合中存在该元素，iterator指向它。</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">//集合中不存在该元素，iterator指向第一个大于它的元素，或集合末尾。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样设计的好处是，如果要执行的是“如果元素不存在则插入”的操作，那么可以直接往<code>iterator</code>指向的位置插入新元素，而不必担心破坏集合的有序性。</p>
+<p><code>std::lower_bound</code>至多需要进行<code>log2(last - first) + O(1)</code>次比较。</p>
+<h3 id="std-upper-bound"><a href="#std-upper-bound" class="headerlink" title="std::upper_bound"></a>std::upper_bound</h3><p>与<code>std::lower_bound</code>类似，<code>std::upper_bound</code>用来获取集合中第一个大于指定值的元素位置，函数原型如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt; <span class="keyword">class</span> ForwardIt, <span class="keyword">class</span> T &gt;</span><br><span class="line"><span class="function">ForwardIt <span class="title">upper_bound</span><span class="params">( ForwardIt first, ForwardIt last, <span class="keyword">const</span> T&amp; value )</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt; <span class="keyword">class</span> ForwardIt, <span class="keyword">class</span> T, <span class="keyword">class</span> Compare &gt;</span><br><span class="line"><span class="function">ForwardIt <span class="title">upper_bound</span><span class="params">( ForwardIt first, ForwardIt last, <span class="keyword">const</span> T&amp; value, Compare comp )</span></span>;</span><br></pre></td></tr></table></figure>
+<p>第一个原型使用<code>&lt;</code>操作符来比较元素，第二个原型使用指定的比较器来比较元素。比较器的比较规则应该与排序时使用的比较规则一致。</p>
+<p>使用示例如下：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; numbers&#123; <span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;::iterator iterator;</span><br><span class="line">iterator = <span class="built_in">std</span>::upper_bound(numbers.begin(), numbers.end(), <span class="number">3</span>); </span><br><span class="line"><span class="comment">// *iterator = 5</span></span><br><span class="line"></span><br><span class="line">iterator = <span class="built_in">std</span>::upper_bound(numbers.begin(), numbers.end(), <span class="number">4</span>); </span><br><span class="line"><span class="comment">// *iterator = 5</span></span><br><span class="line"></span><br><span class="line">iterator = <span class="built_in">std</span>::upper_bound(numbers.begin(), numbers.end(), <span class="number">11</span>); </span><br><span class="line"><span class="comment">// iterator = numbers.end()</span></span><br></pre></td></tr></table></figure></p>
+<p>由于<code>std::upper_bound</code>返回的迭代器指向的是第一个大于指定值的元素，相对来说它的使用场景较<code>std::lower_bound</code>要少。</p>
+<p><code>std::upper_bound</code>至多需要进行<code>log2(last - first) + O(1)</code>次比较。</p>
+<h3 id="std-equal-range"><a href="#std-equal-range" class="headerlink" title="std::equal_range"></a>std::equal_range</h3><p><code>std::equal_range</code>用来获取集合中所有与指定值相等的元素范围，函数原型如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt; <span class="keyword">class</span> ForwardIt, <span class="keyword">class</span> T &gt;</span><br><span class="line"><span class="built_in">std</span>::pair&lt;ForwardIt,ForwardIt&gt; equal_range( ForwardIt first, ForwardIt last, <span class="keyword">const</span> T&amp; value );</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt; <span class="keyword">class</span> ForwardIt, <span class="keyword">class</span> T, <span class="keyword">class</span> Compare &gt;</span><br><span class="line"><span class="built_in">std</span>::pair&lt;ForwardIt,ForwardIt&gt; equal_range( ForwardIt first, ForwardIt last, <span class="keyword">const</span> T&amp; value, Compare comp );</span><br></pre></td></tr></table></figure>
+<p>第一个原型使用<code>&lt;</code>操作符来比较元素，第二个原型使用指定的比较器来比较元素。比较器的比较规则应该与排序时使用的比较规则一致。</p>
+<p><code>std::equal_range</code>返回一对迭代器，第一个迭代器指向第一个等于或大于指定值的元素（等同于<code>std::lower_bound</code>的返回值），第二个迭代器指向第一个大于指定值的元素（等同于<code>std::upper_bound</code>的返回值）。如果两个迭代器相等，说明不存在这样的元素。</p>
+<p>使用示例如下：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; numbers&#123; <span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">std</span>::pair&lt;<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;::iterator, <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;::iterator&gt; iterator_pair;</span><br><span class="line">iterator_pair = <span class="built_in">std</span>::equal_range(numbers.begin(), numbers.end(), <span class="number">3</span>); </span><br><span class="line"><span class="comment">// *iterator.first = 3, *iterator.second = 5(1)</span></span><br><span class="line"></span><br><span class="line">iterator_pair = <span class="built_in">std</span>::equal_range(numbers.begin(), numbers.end(), <span class="number">5</span>); </span><br><span class="line"><span class="comment">// *iterator.first = 5(1), *iterator.second = 7</span></span><br><span class="line"></span><br><span class="line">iterator_pair = <span class="built_in">std</span>::equal_range(numbers.begin(), numbers.end(), <span class="number">8</span>); </span><br><span class="line"><span class="comment">// *iterator.first = *iterator.second = 9</span></span><br><span class="line"></span><br><span class="line">iterator_pair = <span class="built_in">std</span>::equal_range(numbers.begin(), numbers.end(), <span class="number">9</span>); </span><br><span class="line"><span class="comment">// *iterator.first = 9, iterator.second = numbers.end()</span></span><br><span class="line"></span><br><span class="line">iterator_pair = <span class="built_in">std</span>::equal_range(numbers.begin(), numbers.end(), <span class="number">11</span>); </span><br><span class="line"><span class="comment">// iterator.first = iterator.second = numbers.end()</span></span><br></pre></td></tr></table></figure></p>
+<p><code>std::equal_range</code>至多需要进行<code>2 * log2(last - first) + O(1)</code>次比较，在性能上不如<code>std::lower_bound</code>和<code>std::upper_bound</code>，所以如果不需要获取相等元素区间的话，按需调用<code>std::lower_bound</code>或<code>std::upper_bound</code>是更好的选择。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2017/03/14/binary-search-in-stl/" data-title="STL中的二分查找" data-url="http://zplutor.github.io/2017/03/14/binary-search-in-stl/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>12</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OS-X/">OS X</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>14</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-filesystem-unique-path/">boost::filesystem::unique_path</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>2</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-string/">std::string</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/std-wstring-convert/">std::wstring_convert</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>1</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>2</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>4</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>2</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
