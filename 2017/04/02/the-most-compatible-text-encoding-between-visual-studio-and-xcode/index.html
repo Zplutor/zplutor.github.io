@@ -1,0 +1,260 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>在Visual Studio和XCode之间兼容性最好的文本编码 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="跨平台开发的文本编码问题有一个跨平台的模块需要同时在Visual Studio 2013和XCode 8下开发，在开发过程中发现以下问题：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="在Visual Studio和XCode之间兼容性最好的文本编码"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2017-04-02T06:42:04.000Z"><a href="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/">2017-04-02</a></time>
+      
+      
+  
+    <h1 class="title">在Visual Studio和XCode之间兼容性最好的文本编码</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="跨平台开发的文本编码问题"><a href="#跨平台开发的文本编码问题" class="headerlink" title="跨平台开发的文本编码问题"></a>跨平台开发的文本编码问题</h2><p>有一个跨平台的模块需要同时在Visual Studio 2013和XCode 8下开发，在开发过程中发现以下问题：</p>
+<a id="more"></a>
+<ul>
+<li><p>在Visual Studio创建的代码文件，里面的中文注释在XCode下会显示成乱码：</p>
+<img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/1.png" alt="1.png" title="">
+</li>
+<li><p>在XCode创建的代码文件，如果里面包含中文注释，在Visual Studio中编译时可能会产生C4819警告：</p>
+<img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/2.png" alt="2.png" title="">
+</li>
+</ul>
+<p>产生这些问题的原因是两款IDE对文本编码的支持方式不一致。为了解决它们，需要弄清楚Visual Studio和XCode的异同。</p>
+<h2 id="Visual-Studio对文本编码的支持"><a href="#Visual-Studio对文本编码的支持" class="headerlink" title="Visual Studio对文本编码的支持"></a>Visual Studio对文本编码的支持</h2><p>Visual Studio的默认编码是ANSI，也就是Windows当前语言的编码。对于简体中文来说就是GB2312。默认编码无法设置。</p>
+<p>打开了一个文件之后，在Visual Studio的“文件” - “高级保存选项”菜单中可以修改当前文件的编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/3.png" alt="3.png" title=""></p>
+<p>在弹出的对话框中可以选择各种编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/4.png" alt="4.png" title=""></p>
+<p>Visual Studio只能手动一个一个地转换文本编码，不能做到自动转换或者批量转换。</p>
+<p>虽然在上面的列表中可以找到UTF8 without BOM编码，并且Visual Studio也确实能够正确显示这种编码的文件内容，但实测发现编译器并不能很好地支持这种编码。例如，当文件中含有奇数个中文字符时，编译的时候会出现上文说的C4819警告；而当含有偶数个中文字符时，则一切正常。</p>
+<h2 id="XCode对文本编码的支持"><a href="#XCode对文本编码的支持" class="headerlink" title="XCode对文本编码的支持"></a>XCode对文本编码的支持</h2><p>XCode的默认编码是UTF8 without BOM，而且可以在Preferences中修改默认编码，甚至还能设置在保存的时候自动将编码转换成默认编码。<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/5.png" alt="5.png" title=""></p>
+<p>XCode也支持各种文本编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/6.png" alt="6.png" title=""></p>
+<p>XCode并没有区分UTF8 with BOM和UTF8 without BOM，默认是UTF8 without BOM，但它还是能够打开和编辑UTF8 with BOM编码的文件。</p>
+<p>打开了一个文件后，在Utilities面板中可以查看和设置当前文件使用的编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/7.png" alt="7.png" title=""></p>
+<p>XCode的编码检测也不太准确。例如，GB2312编码的文件会被检测为Western (Mac OS Roman)，导致中文显示成乱码。</p>
+<p>通过下拉列表修改了文本编码后，XCode会弹出以下的对话框，询问是要转换编码还是重新解析文件：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/8.png" alt="8.png" title=""></p>
+<p>Convert选项会把当前文件转换成选择的编码；Reinterpret选项会以选择的编码重新解析当前文件。如果内容显示正常，只想改变编码的话，应该使用Convert；如果内容出现乱码，应该使用Reinterpret重新解析。</p>
+<h2 id="选择兼容性最好的文本编码"><a href="#选择兼容性最好的文本编码" class="headerlink" title="选择兼容性最好的文本编码"></a>选择兼容性最好的文本编码</h2><p>综合两款IDE对文本编码的支持情况，可以知道能够同时被Visual Studio和XCode支持的文本编码是：</p>
+<ul>
+<li>UTF-8 with BOM</li>
+<li>UTF-16 BE</li>
+<li>UTF-16 LE</li>
+<li>GB2312（以及其它区域语言）</li>
+</ul>
+<p>对于代码文件，UTF-16比较浪费空间，所以首先排除掉。最理想的选择是UTF-8 with BOM，然而事实并不理想——Visual Studio不能设置默认编码；XCode的默认编码不能设置成UTF8 with BOM。所以UTF-8 with BOM也不是最合适的。</p>
+<p>那么，只能退而求其次，选择GB2312编码了。对于Visual Studio，不需要做任何改变；对于XCode，只需要把默认编码设置成GB2312，并且勾选上保存时自动转换编码的选项即可。当代码中不涉及国际化方面的问题时，这是最简单的解决方法。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/字符编码/">字符编码</a>, <a href="/tags/macOS/">macOS</a>, <a href="/tags/Visual-Studio/">Visual Studio</a>, <a href="/tags/XCode/">XCode</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/" data-title="在Visual Studio和XCode之间兼容性最好的文本编码" data-url="http://zplutor.github.io/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>12</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>15</small></li>
+  
+    <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-filesystem-unique-path/">boost::filesystem::unique_path</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>2</small></li>
+  
+    <li><a href="/tags/macOS/">macOS</a><small>2</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-string/">std::string</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/std-wstring-convert/">std::wstring_convert</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>2</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>2</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>4</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>2</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>

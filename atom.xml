@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2017-03-14T16:07:27.000Z</updated>
+  <updated>2017-04-02T06:53:13.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -14,6 +14,66 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>在Visual Studio和XCode之间兼容性最好的文本编码</title>
+    <link href="http://zplutor.github.io/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/"/>
+    <id>http://zplutor.github.io/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/</id>
+    <published>2017-04-02T06:42:04.000Z</published>
+    <updated>2017-04-02T06:53:13.000Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;跨平台开发的文本编码问题&quot;&gt;&lt;a href=&quot;#跨平台开发的文本编码问题&quot; class=&quot;headerlink&quot; title=&quot;跨平台开发的文本编码问题&quot;&gt;&lt;/a&gt;跨平台开发的文本编码问题&lt;/h2&gt;&lt;p&gt;有一个跨平台的模块需要同时在Visual Studio 2013和XCode 8下开发，在开发过程中发现以下问题：&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;在Visual Studio创建的代码文件，里面的中文注释在XCode下会显示成乱码：&lt;/p&gt;
+&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/1.png&quot; alt=&quot;1.png&quot; title=&quot;&quot;&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;在XCode创建的代码文件，如果里面包含中文注释，在Visual Studio中编译时可能会产生C4819警告：&lt;/p&gt;
+&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/2.png&quot; alt=&quot;2.png&quot; title=&quot;&quot;&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;产生这些问题的原因是两款IDE对文本编码的支持方式不一致。为了解决它们，需要弄清楚Visual Studio和XCode的异同。&lt;/p&gt;
+&lt;h2 id=&quot;Visual-Studio对文本编码的支持&quot;&gt;&lt;a href=&quot;#Visual-Studio对文本编码的支持&quot; class=&quot;headerlink&quot; title=&quot;Visual Studio对文本编码的支持&quot;&gt;&lt;/a&gt;Visual Studio对文本编码的支持&lt;/h2&gt;&lt;p&gt;Visual Studio的默认编码是ANSI，也就是Windows当前语言的编码。对于简体中文来说就是GB2312。默认编码无法设置。&lt;/p&gt;
+&lt;p&gt;打开了一个文件之后，在Visual Studio的“文件” - “高级保存选项”菜单中可以修改当前文件的编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/3.png&quot; alt=&quot;3.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;在弹出的对话框中可以选择各种编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/4.png&quot; alt=&quot;4.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;Visual Studio只能手动一个一个地转换文本编码，不能做到自动转换或者批量转换。&lt;/p&gt;
+&lt;p&gt;虽然在上面的列表中可以找到UTF8 without BOM编码，并且Visual Studio也确实能够正确显示这种编码的文件内容，但实测发现编译器并不能很好地支持这种编码。例如，当文件中含有奇数个中文字符时，编译的时候会出现上文说的C4819警告；而当含有偶数个中文字符时，则一切正常。&lt;/p&gt;
+&lt;h2 id=&quot;XCode对文本编码的支持&quot;&gt;&lt;a href=&quot;#XCode对文本编码的支持&quot; class=&quot;headerlink&quot; title=&quot;XCode对文本编码的支持&quot;&gt;&lt;/a&gt;XCode对文本编码的支持&lt;/h2&gt;&lt;p&gt;XCode的默认编码是UTF8 without BOM，而且可以在Preferences中修改默认编码，甚至还能设置在保存的时候自动将编码转换成默认编码。&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/5.png&quot; alt=&quot;5.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;XCode也支持各种文本编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/6.png&quot; alt=&quot;6.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;XCode并没有区分UTF8 with BOM和UTF8 without BOM，默认是UTF8 without BOM，但它还是能够打开和编辑UTF8 with BOM编码的文件。&lt;/p&gt;
+&lt;p&gt;打开了一个文件后，在Utilities面板中可以查看和设置当前文件使用的编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/7.png&quot; alt=&quot;7.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;XCode的编码检测也不太准确。例如，GB2312编码的文件会被检测为Western (Mac OS Roman)，导致中文显示成乱码。&lt;/p&gt;
+&lt;p&gt;通过下拉列表修改了文本编码后，XCode会弹出以下的对话框，询问是要转换编码还是重新解析文件：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/8.png&quot; alt=&quot;8.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;Convert选项会把当前文件转换成选择的编码；Reinterpret选项会以选择的编码重新解析当前文件。如果内容显示正常，只想改变编码的话，应该使用Convert；如果内容出现乱码，应该使用Reinterpret重新解析。&lt;/p&gt;
+&lt;h2 id=&quot;选择兼容性最好的文本编码&quot;&gt;&lt;a href=&quot;#选择兼容性最好的文本编码&quot; class=&quot;headerlink&quot; title=&quot;选择兼容性最好的文本编码&quot;&gt;&lt;/a&gt;选择兼容性最好的文本编码&lt;/h2&gt;&lt;p&gt;综合两款IDE对文本编码的支持情况，可以知道能够同时被Visual Studio和XCode支持的文本编码是：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;UTF-8 with BOM&lt;/li&gt;
+&lt;li&gt;UTF-16 BE&lt;/li&gt;
+&lt;li&gt;UTF-16 LE&lt;/li&gt;
+&lt;li&gt;GB2312（以及其它区域语言）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;对于代码文件，UTF-16比较浪费空间，所以首先排除掉。最理想的选择是UTF-8 with BOM，然而事实并不理想——Visual Studio不能设置默认编码；XCode的默认编码不能设置成UTF8 with BOM。所以UTF-8 with BOM也不是最合适的。&lt;/p&gt;
+&lt;p&gt;那么，只能退而求其次，选择GB2312编码了。对于Visual Studio，不需要做任何改变；对于XCode，只需要把默认编码设置成GB2312，并且勾选上保存时自动转换编码的选项即可。当代码中不涉及国际化方面的问题时，这是最简单的解决方法。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;跨平台开发的文本编码问题&quot;&gt;&lt;a href=&quot;#跨平台开发的文本编码问题&quot; class=&quot;headerlink&quot; title=&quot;跨平台开发的文本编码问题&quot;&gt;&lt;/a&gt;跨平台开发的文本编码问题&lt;/h2&gt;&lt;p&gt;有一个跨平台的模块需要同时在Visual Studio 2013和XCode 8下开发，在开发过程中发现以下问题：&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="字符编码" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/"/>
+    
+      <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
+    
+      <category term="Visual Studio" scheme="http://zplutor.github.io/tags/Visual-Studio/"/>
+    
+      <category term="XCode" scheme="http://zplutor.github.io/tags/XCode/"/>
+    
+  </entry>
   
   <entry>
     <title>STL中的二分查找</title>
@@ -580,6 +640,8 @@
     
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
+      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
+    
       <category term="Windowless RichEdit" scheme="http://zplutor.github.io/tags/Windowless-RichEdit/"/>
     
       <category term="RichEdit" scheme="http://zplutor.github.io/tags/RichEdit/"/>
@@ -588,8 +650,6 @@
     
       <category term="ITextService" scheme="http://zplutor.github.io/tags/ITextService/"/>
     
-      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
-    
   </entry>
   
   <entry>
@@ -597,7 +657,7 @@
     <link href="http://zplutor.github.io/2015/11/28/keywindow-0-1-2/"/>
     <id>http://zplutor.github.io/2015/11/28/keywindow-0-1-2/</id>
     <published>2015-11-28T05:20:30.000Z</published>
-    <updated>2015-12-01T16:56:35.000Z</updated>
+    <updated>2017-04-02T06:47:43.000Z</updated>
     
     <content type="html">&lt;h2 id=&quot;介绍&quot;&gt;&lt;a href=&quot;#介绍&quot; class=&quot;headerlink&quot; title=&quot;介绍&quot;&gt;&lt;/a&gt;介绍&lt;/h2&gt;&lt;p&gt;KeyWindow是一个通过快捷键快速调整窗口布局的工具。&lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
@@ -625,7 +685,7 @@
     
       <category term="KeyWindow" scheme="http://zplutor.github.io/tags/KeyWindow/"/>
     
-      <category term="OS X" scheme="http://zplutor.github.io/tags/OS-X/"/>
+      <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
     
   </entry>
   
@@ -725,6 +785,8 @@
     
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
+      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
+    
       <category term="Windowless RichEdit" scheme="http://zplutor.github.io/tags/Windowless-RichEdit/"/>
     
       <category term="RichEdit" scheme="http://zplutor.github.io/tags/RichEdit/"/>
@@ -732,8 +794,6 @@
       <category term="ITextHost" scheme="http://zplutor.github.io/tags/ITextHost/"/>
     
       <category term="ITextService" scheme="http://zplutor.github.io/tags/ITextService/"/>
-    
-      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
     
   </entry>
   
@@ -820,8 +880,6 @@
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
-      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
-    
       <category term="std::shared_ptr" scheme="http://zplutor.github.io/tags/std-shared-ptr/"/>
     
       <category term="IUnknown" scheme="http://zplutor.github.io/tags/IUnknown/"/>
@@ -829,6 +887,8 @@
       <category term="智能指针" scheme="http://zplutor.github.io/tags/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/"/>
     
       <category term="引用计数" scheme="http://zplutor.github.io/tags/%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0/"/>
+    
+      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
     
   </entry>
   
