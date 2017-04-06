@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2017-04-02T06:53:13.000Z</updated>
+  <updated>2017-04-06T15:04:27.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://zplutor.github.io/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/"/>
     <id>http://zplutor.github.io/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/</id>
     <published>2017-04-02T06:42:04.000Z</published>
-    <updated>2017-04-02T06:53:13.000Z</updated>
+    <updated>2017-04-06T15:04:27.000Z</updated>
     
     <content type="html">&lt;h2 id=&quot;跨平台开发的文本编码问题&quot;&gt;&lt;a href=&quot;#跨平台开发的文本编码问题&quot; class=&quot;headerlink&quot; title=&quot;跨平台开发的文本编码问题&quot;&gt;&lt;/a&gt;跨平台开发的文本编码问题&lt;/h2&gt;&lt;p&gt;有一个跨平台的模块需要同时在Visual Studio 2013和XCode 8下开发，在开发过程中发现以下问题：&lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
@@ -37,12 +37,13 @@
 &lt;p&gt;打开了一个文件之后，在Visual Studio的“文件” - “高级保存选项”菜单中可以修改当前文件的编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/3.png&quot; alt=&quot;3.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
 &lt;p&gt;在弹出的对话框中可以选择各种编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/4.png&quot; alt=&quot;4.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
 &lt;p&gt;Visual Studio只能手动一个一个地转换文本编码，不能做到自动转换或者批量转换。&lt;/p&gt;
-&lt;p&gt;虽然在上面的列表中可以找到UTF8 without BOM编码，并且Visual Studio也确实能够正确显示这种编码的文件内容，但实测发现编译器并不能很好地支持这种编码。例如，当文件中含有奇数个中文字符时，编译的时候会出现上文说的C4819警告；而当含有偶数个中文字符时，则一切正常。&lt;/p&gt;
-&lt;h2 id=&quot;XCode对文本编码的支持&quot;&gt;&lt;a href=&quot;#XCode对文本编码的支持&quot; class=&quot;headerlink&quot; title=&quot;XCode对文本编码的支持&quot;&gt;&lt;/a&gt;XCode对文本编码的支持&lt;/h2&gt;&lt;p&gt;XCode的默认编码是UTF8 without BOM，而且可以在Preferences中修改默认编码，甚至还能设置在保存的时候自动将编码转换成默认编码。&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/5.png&quot; alt=&quot;5.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;XCode也支持各种文本编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/6.png&quot; alt=&quot;6.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;XCode并没有区分UTF8 with BOM和UTF8 without BOM，默认是UTF8 without BOM，但它还是能够打开和编辑UTF8 with BOM编码的文件。&lt;/p&gt;
+&lt;p&gt;虽然在上面的列表中可以找到UTF-8 without BOM编码，并且Visual Studio也确实能够正确显示这种编码的文件内容，但实测发现编译器并不能很好地支持这种编码。例如，当文件中含有奇数个中文字符时，编译的时候会出现上文说的C4819警告；而当含有偶数个中文字符时，则一切正常。&lt;/p&gt;
+&lt;h2 id=&quot;XCode对文本编码的支持&quot;&gt;&lt;a href=&quot;#XCode对文本编码的支持&quot; class=&quot;headerlink&quot; title=&quot;XCode对文本编码的支持&quot;&gt;&lt;/a&gt;XCode对文本编码的支持&lt;/h2&gt;&lt;p&gt;XCode的默认编码是UTF-8 without BOM，可以在Preferences中修改默认编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/5.png&quot; alt=&quot;5.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;在该选项中可以选择各种文本编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/6.png&quot; alt=&quot;6.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;然而实测发现这个选项没有什么用。修改之后，新建的文件仍然是UTF-8编码，打开的文件也不会使用指定编码。&lt;/p&gt;
+&lt;p&gt;XCode并没有区分UTF-8 with BOM和UTF-8 without BOM，默认是UTF-8 without BOM，但它还是能够打开和编辑UTF-8 with BOM编码的文件。&lt;/p&gt;
 &lt;p&gt;打开了一个文件后，在Utilities面板中可以查看和设置当前文件使用的编码：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/7.png&quot; alt=&quot;7.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;XCode的编码检测也不太准确。例如，GB2312编码的文件会被检测为Western (Mac OS Roman)，导致中文显示成乱码。&lt;/p&gt;
+&lt;p&gt;XCode的编码检测也不准确。例如，GB2312编码的文件会被检测为Western (Mac OS Roman)，导致中文显示成乱码。&lt;/p&gt;
 &lt;p&gt;通过下拉列表修改了文本编码后，XCode会弹出以下的对话框，询问是要转换编码还是重新解析文件：&lt;br&gt;&lt;img src=&quot;/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/8.png&quot; alt=&quot;8.png&quot; title=&quot;&quot;&gt;&lt;/p&gt;
 &lt;p&gt;Convert选项会把当前文件转换成选择的编码；Reinterpret选项会以选择的编码重新解析当前文件。如果内容显示正常，只想改变编码的话，应该使用Convert；如果内容出现乱码，应该使用Reinterpret重新解析。&lt;/p&gt;
 &lt;h2 id=&quot;选择兼容性最好的文本编码&quot;&gt;&lt;a href=&quot;#选择兼容性最好的文本编码&quot; class=&quot;headerlink&quot; title=&quot;选择兼容性最好的文本编码&quot;&gt;&lt;/a&gt;选择兼容性最好的文本编码&lt;/h2&gt;&lt;p&gt;综合两款IDE对文本编码的支持情况，可以知道能够同时被Visual Studio和XCode支持的文本编码是：&lt;/p&gt;
@@ -52,8 +53,8 @@
 &lt;li&gt;UTF-16 LE&lt;/li&gt;
 &lt;li&gt;GB2312（以及其它区域语言）&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;对于代码文件，UTF-16比较浪费空间，所以首先排除掉。最理想的选择是UTF-8 with BOM，然而事实并不理想——Visual Studio不能设置默认编码；XCode的默认编码不能设置成UTF8 with BOM。所以UTF-8 with BOM也不是最合适的。&lt;/p&gt;
-&lt;p&gt;那么，只能退而求其次，选择GB2312编码了。对于Visual Studio，不需要做任何改变；对于XCode，只需要把默认编码设置成GB2312，并且勾选上保存时自动转换编码的选项即可。当代码中不涉及国际化方面的问题时，这是最简单的解决方法。&lt;/p&gt;
+&lt;p&gt;对于代码文件，UTF-16比较浪费空间，所以首先排除掉。至于GB2312等区域语言，由于XCode无法正确检测出这种编码的文件，每次打开的时候都要手工转换一下，所以也不是理想的选择。&lt;/p&gt;
+&lt;p&gt;最后只剩下UTF-8 with BOM。Visual Studio和XCode都能够直接打开和编辑这种编码的文件，无需进行任何转换。遗憾的是，两款IDE都不能直接创建这种编码的文件，只能在创建之后再手工转换一下（XCode需要借助工具来转换）。虽然存在这个不足，不过UTF-8 with BOM是当前情况下兼容性最好的选择。&lt;/p&gt;
 </content>
     
     <summary type="html">
