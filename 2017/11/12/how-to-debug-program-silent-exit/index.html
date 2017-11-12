@@ -6,15 +6,15 @@
   <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
-  <title>C4250警告产生的原因及解决方法 | Zplutor&#39;s</title>
+  <title>如何调试程序静默退出 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
   
-  <meta name="description" content="使用MSVC编译以下代码会产生C4250警告：">
+  <meta name="description" content="程序的静默退出，俗称闪退，是一个令人郁闷的问题。闪退发生的时候，没有任何提示，也没有留下任何现场信息（除了闪退之前一些没什么用的日志），导致很难去定位和解决。">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="C4250警告产生的原因及解决方法"/>
+  <meta property="og:title" content="如何调试程序静默退出"/>
   <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
@@ -54,25 +54,47 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2016-02-24T06:20:46.000Z"><a href="/2016/02/24/reason-and-solution-for-c4250-warning/">2016-02-24</a></time>
+        <time datetime="2017-11-12T05:11:42.000Z"><a href="/2017/11/12/how-to-debug-program-silent-exit/">2017-11-12</a></time>
       
       
   
-    <h1 class="title">C4250警告产生的原因及解决方法</h1>
+    <h1 class="title">如何调试程序静默退出</h1>
   
 
     </header>
     <div class="entry">
       
-        <p>使用MSVC编译以下代码会产生C4250警告：</p>
+        <p>程序的静默退出，俗称闪退，是一个令人郁闷的问题。闪退发生的时候，没有任何提示，也没有留下任何现场信息（除了闪退之前一些没什么用的日志），导致很难去定位和解决。</p>
 <a id="more"></a>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Print</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"A::Print"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> B : <span class="keyword">virtual</span> <span class="keyword">public</span> A &#123;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> C : <span class="keyword">virtual</span> <span class="keyword">public</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Print</span><span class="params">()</span> override </span>&#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"C::Print"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> D : <span class="keyword">public</span> B, <span class="keyword">public</span> C &#123;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    D d;</span><br><span class="line">    d.Print();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>警告信息为<code>warning C4250: “D”: 通过域控制继承“C::C::Print”</code>。这样的警告信息并没有什么价值，我们需要自己来分析一下。</p>
-<p>上述代码塑造出了菱形继承关系，如下所示：</p>
-<img src="/2016/02/24/reason-and-solution-for-c4250-warning/1.png" alt="1.png" title="">
-<p>根基类A定义了一个虚方法Print，因此在子类B和C中存在继承而来的Print，其中C重写了该方法。D多重继承于B和C，因此它会同时继承B和C的Print。这时问题来了，当对D的实例调用Print时，它应该调用B::Print还是C::Print呢？这里编译器做出了选择，它调用的是在基类中被重写的版本，也就是C::Print。然而，这很有可能不是我们想要的结果，所以编译器发出警告，提醒我们这里可能存在问题。</p>
-<p>假如B也重写了Print，会怎么样呢？在这种情况下编译会失败，因为两个基类都重写了Print，编译器无法做出选择。</p>
-<p>解决的方法很简单，只要在D中也重写Print即可，这样可以明确地告诉编译器，我们要调用的就是D::Print，从而消除了编译器的疑虑。在实现D::Print的时候，可能需要调用基类版本，这时要根据具体情况来决定调用哪个版本。</p>
+<p>总的来说，闪退一般是在以下几种情况下出现的：</p>
+<ul>
+<li><p>程序发生异常。有些特殊的异常会使异常捕获机制失效，因此我们准备好的错误报告，甚至是Windows的错误报告都不能正常执行。有时在Windows事件查看器中能看到对应的程序异常记录，但是这个记录的信息量太少，不足以定位异常。</p>
+</li>
+<li><p>程序被其它程序终止。听起来这有点匪夷所思，我的程序没有干任何坏事，为什么会无缘无故被终止？事实上这种情况确实发生过，举个例子：360安全卫士的某个版本会毫无预兆地终止企业微信。如果你恰好碰到了这样的问题，可以尝试把360安全卫士升级到最新版本。</p>
+</li>
+<li><p>程序自行终止。有些（设计不合理的）程序会在某些不能继续执行的情况下调用<code>TerminateProcess</code>来终止自己。通常在终止之前程序要进行提示或者留下一点日志，以方便调试。然而有的程序的确会给自己带来麻烦，终止之前不留下一丝痕迹。</p>
+</li>
+</ul>
+<p>幸运的是，Windows已经针对闪退问题提供了专门的调试功能。这个功能需要使用GFlags工具来开启，GFlags包含在Windows SDK的Debugging Tools中，可以通过安装这个套件来获取。运行GFlags后，切换到Silent Process Exit标签（GFlags可以开启很多调试功能，闪退调试只是其中一个），参考下图来进行设置：</p>
+<img src="/2017/11/12/how-to-debug-program-silent-exit/1.png" alt="1.png" title="">
+<p>Silent Process Exit可以针对指定程序进行设置，也可以全局设置，一般只需要针对我们自己的程序设置即可。在Application Specific Settings的Image一栏，填入程序的可执行文件名称，然后按下TAB键，即可打开这个程序的设置。</p>
+<p>在Reporting Mode一栏，首先勾选Enable Silent Process Exit Monitoring 选项，然后根据需要勾选其它四个选项。</p>
+<ul>
+<li><p>Enable dump collection，勾选了该选项后，程序退出的时候生成dump文件。该选项可以保留退出时的现场环境，一般都要勾选。同时需要填写Dump Folder Location和Dump Type两栏。</p>
+</li>
+<li><p>Launch monitor process，勾选了该选项后，程序退出的时候会启动指定的进程来调试。如果已经勾选了生成dump，那么不太必要再启动调试器了。同时需要填写Monitor Process一栏。</p>
+</li>
+<li><p>Enable notification，勾选了该选项后，程序退出的时候会在系统任务栏区域弹出提示。实践发现这个选项有时不生效，程序闪退时没有提示。</p>
+</li>
+<li><p>Ignore Self Exists，勾选了该选项后，程序自行的退出会被忽略。如果不勾选，程序每次正常退出时系统都会根据前面三个选项进行处理，勾选这个选项可以避免不必要的骚扰。可是实践发现这个选项有时也会不生效，有些程序正常退出也会触发前面选项的处理。</p>
+</li>
+</ul>
+<p>这里以记事本程序<code>notepad.exe</code>为例子，按确定按钮保存设置。打开记事本，在任务管理器中结束它，此时系统任务栏会弹出提示：</p>
+<img src="/2017/11/12/how-to-debug-program-silent-exit/2.png" alt="2.png" title="">
+<p>在事件查看器中可以看到对应的记录。同时在<code>C:\</code>下生成了对应的dump文件：</p>
+<img src="/2017/11/12/how-to-debug-program-silent-exit/3.png" alt="3.png" title="">
+<p>Windows提供的这个调试功能非常方便，但是GFlags的使用方式仍有一定门槛，不是每个用户都能快速按照我们的指引来设置。为了节约沟通成本，最好能有一种自动化的方式来帮用户打开这个功能。事实上，GFlags是通过修改注册表来实现功能的，所以只要把对应的注册表项导出，再让用户导入即可。</p>
+<p>以上面记事本的设置为例，对应的注册表项如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe]</span><br><span class="line">&quot;GlobalFlag&quot;=dword:00000200</span><br><span class="line"></span><br><span class="line">[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SilentProcessExit\notepad.exe]</span><br><span class="line">&quot;LocalDumpFolder&quot;=&quot;C:\\&quot;</span><br><span class="line">&quot;DumpType&quot;=dword:00000121</span><br><span class="line">&quot;ReportingMode&quot;=dword:00000006</span><br><span class="line">&quot;IgnoreSelfExits&quot;=dword:00000001</span><br></pre></td></tr></table></figure></p>
 
       
     </div>
@@ -82,7 +104,7 @@
         
   
   <div class="tags">
-    <a href="/tags/Windows/">Windows</a>, <a href="/tags/C/">C++</a>, <a href="/tags/继承/">继承</a>
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/调试/">调试</a>, <a href="/tags/异常/">异常</a>
   </div>
 
         
@@ -96,7 +118,7 @@
 <section id="comment">
   <h1 class="title">留言</h1>
 
-  <div class="ds-thread" data-thread-key="2016/02/24/reason-and-solution-for-c4250-warning/" data-title="C4250警告产生的原因及解决方法" data-url="http://zplutor.github.io/2016/02/24/reason-and-solution-for-c4250-warning/"></div>
+  <div class="ds-thread" data-thread-key="2017/11/12/how-to-debug-program-silent-exit/" data-title="如何调试程序静默退出" data-url="http://zplutor.github.io/2017/11/12/how-to-debug-program-silent-exit/"></div>
 
   <script type="text/javascript">
     var duoshuoQuery = {short_name:"zplutor"};

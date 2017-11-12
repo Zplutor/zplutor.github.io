@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2017-04-06T15:04:27.000Z</updated>
+  <updated>2017-11-12T05:20:01.000Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -14,6 +14,61 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>如何调试程序静默退出</title>
+    <link href="http://zplutor.github.io/2017/11/12/how-to-debug-program-silent-exit/"/>
+    <id>http://zplutor.github.io/2017/11/12/how-to-debug-program-silent-exit/</id>
+    <published>2017-11-12T05:11:42.000Z</published>
+    <updated>2017-11-12T05:20:01.000Z</updated>
+    
+    <content type="html">&lt;p&gt;程序的静默退出，俗称闪退，是一个令人郁闷的问题。闪退发生的时候，没有任何提示，也没有留下任何现场信息（除了闪退之前一些没什么用的日志），导致很难去定位和解决。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;总的来说，闪退一般是在以下几种情况下出现的：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;程序发生异常。有些特殊的异常会使异常捕获机制失效，因此我们准备好的错误报告，甚至是Windows的错误报告都不能正常执行。有时在Windows事件查看器中能看到对应的程序异常记录，但是这个记录的信息量太少，不足以定位异常。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;程序被其它程序终止。听起来这有点匪夷所思，我的程序没有干任何坏事，为什么会无缘无故被终止？事实上这种情况确实发生过，举个例子：360安全卫士的某个版本会毫无预兆地终止企业微信。如果你恰好碰到了这样的问题，可以尝试把360安全卫士升级到最新版本。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;程序自行终止。有些（设计不合理的）程序会在某些不能继续执行的情况下调用&lt;code&gt;TerminateProcess&lt;/code&gt;来终止自己。通常在终止之前程序要进行提示或者留下一点日志，以方便调试。然而有的程序的确会给自己带来麻烦，终止之前不留下一丝痕迹。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;幸运的是，Windows已经针对闪退问题提供了专门的调试功能。这个功能需要使用GFlags工具来开启，GFlags包含在Windows SDK的Debugging Tools中，可以通过安装这个套件来获取。运行GFlags后，切换到Silent Process Exit标签（GFlags可以开启很多调试功能，闪退调试只是其中一个），参考下图来进行设置：&lt;/p&gt;
+&lt;img src=&quot;/2017/11/12/how-to-debug-program-silent-exit/1.png&quot; alt=&quot;1.png&quot; title=&quot;&quot;&gt;
+&lt;p&gt;Silent Process Exit可以针对指定程序进行设置，也可以全局设置，一般只需要针对我们自己的程序设置即可。在Application Specific Settings的Image一栏，填入程序的可执行文件名称，然后按下TAB键，即可打开这个程序的设置。&lt;/p&gt;
+&lt;p&gt;在Reporting Mode一栏，首先勾选Enable Silent Process Exit Monitoring 选项，然后根据需要勾选其它四个选项。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Enable dump collection，勾选了该选项后，程序退出的时候生成dump文件。该选项可以保留退出时的现场环境，一般都要勾选。同时需要填写Dump Folder Location和Dump Type两栏。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Launch monitor process，勾选了该选项后，程序退出的时候会启动指定的进程来调试。如果已经勾选了生成dump，那么不太必要再启动调试器了。同时需要填写Monitor Process一栏。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Enable notification，勾选了该选项后，程序退出的时候会在系统任务栏区域弹出提示。实践发现这个选项有时不生效，程序闪退时没有提示。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Ignore Self Exists，勾选了该选项后，程序自行的退出会被忽略。如果不勾选，程序每次正常退出时系统都会根据前面三个选项进行处理，勾选这个选项可以避免不必要的骚扰。可是实践发现这个选项有时也会不生效，有些程序正常退出也会触发前面选项的处理。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这里以记事本程序&lt;code&gt;notepad.exe&lt;/code&gt;为例子，按确定按钮保存设置。打开记事本，在任务管理器中结束它，此时系统任务栏会弹出提示：&lt;/p&gt;
+&lt;img src=&quot;/2017/11/12/how-to-debug-program-silent-exit/2.png&quot; alt=&quot;2.png&quot; title=&quot;&quot;&gt;
+&lt;p&gt;在事件查看器中可以看到对应的记录。同时在&lt;code&gt;C:\&lt;/code&gt;下生成了对应的dump文件：&lt;/p&gt;
+&lt;img src=&quot;/2017/11/12/how-to-debug-program-silent-exit/3.png&quot; alt=&quot;3.png&quot; title=&quot;&quot;&gt;
+&lt;p&gt;Windows提供的这个调试功能非常方便，但是GFlags的使用方式仍有一定门槛，不是每个用户都能快速按照我们的指引来设置。为了节约沟通成本，最好能有一种自动化的方式来帮用户打开这个功能。事实上，GFlags是通过修改注册表来实现功能的，所以只要把对应的注册表项导出，再让用户导入即可。&lt;/p&gt;
+&lt;p&gt;以上面记事本的设置为例，对应的注册表项如下：&lt;br&gt;&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;quot;GlobalFlag&amp;quot;=dword:00000200&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SilentProcessExit\notepad.exe]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;quot;LocalDumpFolder&amp;quot;=&amp;quot;C:\\&amp;quot;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;quot;DumpType&amp;quot;=dword:00000121&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;quot;ReportingMode&amp;quot;=dword:00000006&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;quot;IgnoreSelfExits&amp;quot;=dword:00000001&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;程序的静默退出，俗称闪退，是一个令人郁闷的问题。闪退发生的时候，没有任何提示，也没有留下任何现场信息（除了闪退之前一些没什么用的日志），导致很难去定位和解决。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
+    
+      <category term="异常" scheme="http://zplutor.github.io/tags/%E5%BC%82%E5%B8%B8/"/>
+    
+  </entry>
   
   <entry>
     <title>在Visual Studio和XCode之间兼容性最好的文本编码</title>
@@ -68,11 +123,11 @@
     
       <category term="字符编码" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/"/>
     
-      <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
-    
       <category term="Visual Studio" scheme="http://zplutor.github.io/tags/Visual-Studio/"/>
     
       <category term="XCode" scheme="http://zplutor.github.io/tags/XCode/"/>
+    
+      <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
     
   </entry>
   
@@ -641,8 +696,6 @@
     
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
-      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
-    
       <category term="Windowless RichEdit" scheme="http://zplutor.github.io/tags/Windowless-RichEdit/"/>
     
       <category term="RichEdit" scheme="http://zplutor.github.io/tags/RichEdit/"/>
@@ -650,6 +703,8 @@
       <category term="ITextHost" scheme="http://zplutor.github.io/tags/ITextHost/"/>
     
       <category term="ITextService" scheme="http://zplutor.github.io/tags/ITextService/"/>
+    
+      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
     
   </entry>
   
@@ -684,9 +739,9 @@
     </summary>
     
     
-      <category term="KeyWindow" scheme="http://zplutor.github.io/tags/KeyWindow/"/>
-    
       <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
+    
+      <category term="KeyWindow" scheme="http://zplutor.github.io/tags/KeyWindow/"/>
     
   </entry>
   
@@ -786,8 +841,6 @@
     
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
-      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
-    
       <category term="Windowless RichEdit" scheme="http://zplutor.github.io/tags/Windowless-RichEdit/"/>
     
       <category term="RichEdit" scheme="http://zplutor.github.io/tags/RichEdit/"/>
@@ -795,6 +848,8 @@
       <category term="ITextHost" scheme="http://zplutor.github.io/tags/ITextHost/"/>
     
       <category term="ITextService" scheme="http://zplutor.github.io/tags/ITextService/"/>
+    
+      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
     
   </entry>
   
@@ -881,6 +936,8 @@
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
+      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
+    
       <category term="std::shared_ptr" scheme="http://zplutor.github.io/tags/std-shared-ptr/"/>
     
       <category term="IUnknown" scheme="http://zplutor.github.io/tags/IUnknown/"/>
@@ -888,8 +945,6 @@
       <category term="智能指针" scheme="http://zplutor.github.io/tags/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/"/>
     
       <category term="引用计数" scheme="http://zplutor.github.io/tags/%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0/"/>
-    
-      <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
     
   </entry>
   
@@ -948,9 +1003,9 @@
     
       <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
-      <category term="WinDbg" scheme="http://zplutor.github.io/tags/WinDbg/"/>
-    
       <category term="异常" scheme="http://zplutor.github.io/tags/%E5%BC%82%E5%B8%B8/"/>
+    
+      <category term="WinDbg" scheme="http://zplutor.github.io/tags/WinDbg/"/>
     
       <category term="std::thread" scheme="http://zplutor.github.io/tags/std-thread/"/>
     

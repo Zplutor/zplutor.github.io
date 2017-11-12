@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zplutor.github.io/2017/11/12/how-to-debug-program-silent-exit/</loc>
+    
+    <lastmod>2017-11-12T05:20:01.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://zplutor.github.io/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/</loc>
     
     <lastmod>2017-04-06T15:04:27.000Z</lastmod>

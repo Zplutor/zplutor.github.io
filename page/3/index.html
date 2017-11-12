@@ -53,6 +53,42 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2015-10-31T03:26:46.000Z"><a href="/2015/10/31/how-to-maintain-iunknown-object-in-shared-ptr/">2015-10-31</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/10/31/how-to-maintain-iunknown-object-in-shared-ptr/">如何让std::shared_ptr持有IUnknown对象</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>C++11新增的智能指针std::shared_ptr使用引用计数来管理对象的生命周期，而COM提供的IUnknown接口也使用引用计数来管理自身的生命周期。理论上来说，在同一个环境中不应该同时使用两套引用计数方案，不然会造成混乱，带来很多麻烦。然而实际上，需要同时使用这两种方案的情况并不少见，有时的确需要用std::shared_ptr来持有COM对象。虽然这种做法看上去丑陋，并且是可以用别的方法来避免的，但本文不讨论这些方面，只聚焦于问题的本身。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2015/10/31/how-to-maintain-iunknown-object-in-shared-ptr/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2015-10-11T12:06:41.000Z"><a href="/2015/10/11/how-to-debug-cpp-exception-thrown-within-std-thread/">2015-10-11</a></time>
       
       
@@ -273,7 +309,7 @@
   
     <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>15</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>16</small></li>
   
     <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
   
@@ -315,7 +351,7 @@
   
     <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
   
-    <li><a href="/tags/异常/">异常</a><small>2</small></li>
+    <li><a href="/tags/异常/">异常</a><small>3</small></li>
   
     <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
   
@@ -337,7 +373,7 @@
   
     <li><a href="/tags/编译/">编译</a><small>1</small></li>
   
-    <li><a href="/tags/调试/">调试</a><small>4</small></li>
+    <li><a href="/tags/调试/">调试</a><small>5</small></li>
   
     <li><a href="/tags/超时/">超时</a><small>2</small></li>
   
