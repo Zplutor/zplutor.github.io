@@ -365,11 +365,11 @@
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
+      <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
+    
       <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
     
       <category term="字符编码" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/"/>
-    
-      <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
     
   </entry>
   
@@ -580,9 +580,9 @@
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
-      <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
-    
       <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
+    
+      <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
     
   </entry>
   
@@ -655,9 +655,9 @@
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
-      <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
-    
       <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
+    
+      <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
     
   </entry>
   
@@ -967,6 +967,8 @@
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
+      <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
+    
       <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
     
       <category term="IUnknown" scheme="http://zplutor.github.io/tags/IUnknown/"/>
@@ -974,8 +976,6 @@
       <category term="智能指针" scheme="http://zplutor.github.io/tags/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/"/>
     
       <category term="引用计数" scheme="http://zplutor.github.io/tags/%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0/"/>
-    
-      <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
     
   </entry>
   
@@ -1030,6 +1030,8 @@
     
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
+      <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
+    
       <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
       <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
@@ -1037,8 +1039,6 @@
       <category term="WinDbg" scheme="http://zplutor.github.io/tags/WinDbg/"/>
     
       <category term="异常" scheme="http://zplutor.github.io/tags/%E5%BC%82%E5%B8%B8/"/>
-    
-      <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
     
   </entry>
   
