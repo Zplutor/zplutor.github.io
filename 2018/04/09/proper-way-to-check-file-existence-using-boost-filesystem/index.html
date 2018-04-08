@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>使用boost.filesystem检查文件是否存在的正确方式 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="在我参与的项目中，使用了boost.filesystem进行文件操作。boost.filesystem在发生错误的时候会抛出异常，但是在大部分情况下这些异常是可以忽略的，例如，在检查文件是否存在的时候，发生错误可以等同于文件不存在。虽然boost.filesystem也提供了重载函数，通过输出参数返回错误来代替异常，但是在每个调用点都得定义一个输出参数，稍显麻烦。所以，为了简化客户代码，我们实现了一些包装函数，如下所示：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="使用boost.filesystem检查文件是否存在的正确方式"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2018-04-08T16:41:37.000Z"><a href="/2018/04/09/proper-way-to-check-file-existence-using-boost-filesystem/">2018-04-09</a></time>
+      
+      
+  
+    <h1 class="title">使用boost.filesystem检查文件是否存在的正确方式</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在我参与的项目中，使用了boost.filesystem进行文件操作。boost.filesystem在发生错误的时候会抛出异常，但是在大部分情况下这些异常是可以忽略的，例如，在检查文件是否存在的时候，发生错误可以等同于文件不存在。虽然boost.filesystem也提供了重载函数，通过输出参数返回错误来代替异常，但是在每个调用点都得定义一个输出参数，稍显麻烦。所以，为了简化客户代码，我们实现了一些包装函数，如下所示：</p>
+<a id="more"></a>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">IsFileExistent</span><span class="params">(<span class="keyword">const</span> boost::filesystem::path&amp; path)</span> </span>&#123;</span><br><span class="line">    boost::system:error_code error;</span><br><span class="line">    <span class="keyword">return</span> boost::filesystem::is_regular_file(path, error);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的函数用来检查文件是否存在，使用了<code>boost::filesystem::is_regular_file</code>。当<code>path</code>指向一个“常规文件”的时候，认为该文件存在；否则其它任何情况都认为文件不存在。</p>
+<p>这个函数一直都很正常，直到最近有用户反馈，当发送OneDrive同步文件夹中的文件时，会出现文件不存在的提示，而这个文件明明是存在的。经过排查，我发现当OneDrive开启了“按需文件”功能时，<code>boost::filesystem::is_regular_file</code>对于同步文件夹中的文件会返回false。这个功能的设置界面如下图所示：</p>
+<img src="/2018/04/09/proper-way-to-check-file-existence-using-boost-filesystem/1.png" alt="1.png" title="">
+<p>当开启了“按需文件”功能时，OneDrive中的文件信息会同步到本地文件系统中，但文件内容不会立即同步，只有真正用到文件内容时才会同步下来。这样一来可以节省本地的硬盘空间。并不是所有Windows系统都支持该功能，只有安装了2017年10月份发布的<a href="https://blogs.windows.com/windowsexperience/2017/09/01/create-and-play-this-holiday-with-the-windows-10-fall-creators-update-coming-oct-17/#S6S0hTTo5v4hZw8X.97" target="_blank" rel="external">秋季更新</a>的Windows 10系统才可以。</p>
+<p>显然，当OneDrive中的文件还没有将内容同步下来时，它并不算是一个“常规文件”，难怪<code>boost::filesystem::is_regular_file</code>会返回false。事实上，用<code>boost::filesystem::status</code>获取这些文件的类型时，会返回<code>symlink_file</code>，boost.filesystem将它们视为符号链接文件。</p>
+<p>不论是常规文件还是符号链接文件，呈现给用户的都是能够正常使用的文件。所以，不能单纯地用<code>boost::filesystem::is_regular_file</code>来检查文件是否存在了，下面是包装函数的改进版本：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">IsFileExistent</span><span class="params">(<span class="keyword">const</span> boost::filesystem::path&amp; path)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    boost::system:error_code error;</span><br><span class="line">    <span class="keyword">auto</span> file_status = boost::filesystem::status(path, error);</span><br><span class="line">    <span class="keyword">if</span> (error) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (! boost::filesystem::exists(file_status)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (boost::filesystem::is_directory(file_status)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先，通过<code>boost::filesystem::status</code>获取文件的信息，如果发生错误，则认为文件不存在。然后，使用<code>boost::filesystem::exists</code>判断文件是否存在，该函数不区分文件夹和文件，所以最后还要使用<code>boost::filesystem::is_directory</code>判断一下是否文件夹，只要不是文件夹，都认为文件是存在的。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>, <a href="/tags/Windows/">Windows</a>, <a href="/tags/boost/">boost</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2018/04/09/proper-way-to-check-file-existence-using-boost-filesystem/" data-title="使用boost.filesystem检查文件是否存在的正确方式" data-url="http://zplutor.github.io/2018/04/09/proper-way-to-check-file-existence-using-boost-filesystem/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>13</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>17</small></li>
+  
+    <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
+  
+    <li><a href="/tags/boost/">boost</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-asio-deadline-timer/">boost::asio::deadline_timer</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-filesystem-unique-path/">boost::filesystem::unique_path</a><small>1</small></li>
+  
+    <li><a href="/tags/boost-thread-specific-ptr/">boost::thread_specific_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>2</small></li>
+  
+    <li><a href="/tags/macOS/">macOS</a><small>2</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/std-shared-ptr/">std::shared_ptr</a><small>1</small></li>
+  
+    <li><a href="/tags/std-string/">std::string</a><small>1</small></li>
+  
+    <li><a href="/tags/std-thread/">std::thread</a><small>1</small></li>
+  
+    <li><a href="/tags/std-tolower/">std::tolower</a><small>1</small></li>
+  
+    <li><a href="/tags/std-toupper/">std::toupper</a><small>1</small></li>
+  
+    <li><a href="/tags/std-transform/">std::transform</a><small>1</small></li>
+  
+    <li><a href="/tags/std-wstring-convert/">std::wstring_convert</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>2</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>3</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>5</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>2</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>

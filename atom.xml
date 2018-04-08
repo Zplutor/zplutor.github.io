@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2017-11-12T05:20:01.000Z</updated>
+  <updated>2018-04-08T16:46:09.551Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -14,6 +14,41 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>使用boost.filesystem检查文件是否存在的正确方式</title>
+    <link href="http://zplutor.github.io/2018/04/09/proper-way-to-check-file-existence-using-boost-filesystem/"/>
+    <id>http://zplutor.github.io/2018/04/09/proper-way-to-check-file-existence-using-boost-filesystem/</id>
+    <published>2018-04-08T16:41:37.000Z</published>
+    <updated>2018-04-08T16:46:09.551Z</updated>
+    
+    <content type="html">&lt;p&gt;在我参与的项目中，使用了boost.filesystem进行文件操作。boost.filesystem在发生错误的时候会抛出异常，但是在大部分情况下这些异常是可以忽略的，例如，在检查文件是否存在的时候，发生错误可以等同于文件不存在。虽然boost.filesystem也提供了重载函数，通过输出参数返回错误来代替异常，但是在每个调用点都得定义一个输出参数，稍显麻烦。所以，为了简化客户代码，我们实现了一些包装函数，如下所示：&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;figure class=&quot;highlight cpp&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;IsFileExistent&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(&lt;span class=&quot;keyword&quot;&gt;const&lt;/span&gt; boost::filesystem::path&amp;amp; path)&lt;/span&gt; &lt;/span&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    boost::system:error_code error;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; boost::filesystem::is_regular_file(path, error);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;上面的函数用来检查文件是否存在，使用了&lt;code&gt;boost::filesystem::is_regular_file&lt;/code&gt;。当&lt;code&gt;path&lt;/code&gt;指向一个“常规文件”的时候，认为该文件存在；否则其它任何情况都认为文件不存在。&lt;/p&gt;
+&lt;p&gt;这个函数一直都很正常，直到最近有用户反馈，当发送OneDrive同步文件夹中的文件时，会出现文件不存在的提示，而这个文件明明是存在的。经过排查，我发现当OneDrive开启了“按需文件”功能时，&lt;code&gt;boost::filesystem::is_regular_file&lt;/code&gt;对于同步文件夹中的文件会返回false。这个功能的设置界面如下图所示：&lt;/p&gt;
+&lt;img src=&quot;/2018/04/09/proper-way-to-check-file-existence-using-boost-filesystem/1.png&quot; alt=&quot;1.png&quot; title=&quot;&quot;&gt;
+&lt;p&gt;当开启了“按需文件”功能时，OneDrive中的文件信息会同步到本地文件系统中，但文件内容不会立即同步，只有真正用到文件内容时才会同步下来。这样一来可以节省本地的硬盘空间。并不是所有Windows系统都支持该功能，只有安装了2017年10月份发布的&lt;a href=&quot;https://blogs.windows.com/windowsexperience/2017/09/01/create-and-play-this-holiday-with-the-windows-10-fall-creators-update-coming-oct-17/#S6S0hTTo5v4hZw8X.97&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;秋季更新&lt;/a&gt;的Windows 10系统才可以。&lt;/p&gt;
+&lt;p&gt;显然，当OneDrive中的文件还没有将内容同步下来时，它并不算是一个“常规文件”，难怪&lt;code&gt;boost::filesystem::is_regular_file&lt;/code&gt;会返回false。事实上，用&lt;code&gt;boost::filesystem::status&lt;/code&gt;获取这些文件的类型时，会返回&lt;code&gt;symlink_file&lt;/code&gt;，boost.filesystem将它们视为符号链接文件。&lt;/p&gt;
+&lt;p&gt;不论是常规文件还是符号链接文件，呈现给用户的都是能够正常使用的文件。所以，不能单纯地用&lt;code&gt;boost::filesystem::is_regular_file&lt;/code&gt;来检查文件是否存在了，下面是包装函数的改进版本：&lt;/p&gt;
+&lt;figure class=&quot;highlight cpp&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;18&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;IsFileExistent&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(&lt;span class=&quot;keyword&quot;&gt;const&lt;/span&gt; boost::filesystem::path&amp;amp; path)&lt;/span&gt; &lt;/span&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    boost::system:error_code error;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;auto&lt;/span&gt; file_status = boost::filesystem::status(path, error);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (error) &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;literal&quot;&gt;false&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (! boost::filesystem::exists(file_status)) &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;literal&quot;&gt;false&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (boost::filesystem::is_directory(file_status)) &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;literal&quot;&gt;false&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;literal&quot;&gt;true&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;首先，通过&lt;code&gt;boost::filesystem::status&lt;/code&gt;获取文件的信息，如果发生错误，则认为文件不存在。然后，使用&lt;code&gt;boost::filesystem::exists&lt;/code&gt;判断文件是否存在，该函数不区分文件夹和文件，所以最后还要使用&lt;code&gt;boost::filesystem::is_directory&lt;/code&gt;判断一下是否文件夹，只要不是文件夹，都认为文件是存在的。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在我参与的项目中，使用了boost.filesystem进行文件操作。boost.filesystem在发生错误的时候会抛出异常，但是在大部分情况下这些异常是可以忽略的，例如，在检查文件是否存在的时候，发生错误可以等同于文件不存在。虽然boost.filesystem也提供了重载函数，通过输出参数返回错误来代替异常，但是在每个调用点都得定义一个输出参数，稍显麻烦。所以，为了简化客户代码，我们实现了一些包装函数，如下所示：&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+      <category term="boost" scheme="http://zplutor.github.io/tags/boost/"/>
+    
+  </entry>
   
   <entry>
     <title>如何调试程序静默退出</title>
@@ -123,11 +158,11 @@
     
       <category term="字符编码" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/"/>
     
+      <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
+    
       <category term="Visual Studio" scheme="http://zplutor.github.io/tags/Visual-Studio/"/>
     
       <category term="XCode" scheme="http://zplutor.github.io/tags/XCode/"/>
-    
-      <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
     
   </entry>
   
@@ -358,9 +393,9 @@
     </summary>
     
     
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
       <category term="boost::filesystem::unique_path" scheme="http://zplutor.github.io/tags/boost-filesystem-unique-path/"/>
     
@@ -471,9 +506,9 @@
     </summary>
     
     
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
       <category term="继承" scheme="http://zplutor.github.io/tags/%E7%BB%A7%E6%89%BF/"/>
     
@@ -503,13 +538,13 @@
     </summary>
     
     
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="boost::thread_specific_ptr" scheme="http://zplutor.github.io/tags/boost-thread-specific-ptr/"/>
     
       <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
       <category term="内存泄露" scheme="http://zplutor.github.io/tags/%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
   </entry>
   
@@ -541,13 +576,13 @@
     </summary>
     
     
-      <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="std::string" scheme="http://zplutor.github.io/tags/std-string/"/>
     
       <category term="字符串" scheme="http://zplutor.github.io/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
+    
+      <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
     
   </entry>
   
@@ -739,9 +774,9 @@
     </summary>
     
     
-      <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
-    
       <category term="KeyWindow" scheme="http://zplutor.github.io/tags/KeyWindow/"/>
+    
+      <category term="macOS" scheme="http://zplutor.github.io/tags/macOS/"/>
     
   </entry>
   
@@ -770,15 +805,15 @@
     </summary>
     
     
+      <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
       <category term="RAND_poll" scheme="http://zplutor.github.io/tags/RAND-poll/"/>
     
       <category term="RAND_bytes" scheme="http://zplutor.github.io/tags/RAND-bytes/"/>
     
       <category term="OpenSSL" scheme="http://zplutor.github.io/tags/OpenSSL/"/>
-    
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
-      <category term="性能" scheme="http://zplutor.github.io/tags/%E6%80%A7%E8%83%BD/"/>
     
       <category term="死锁" scheme="http://zplutor.github.io/tags/%E6%AD%BB%E9%94%81/"/>
     
@@ -932,9 +967,9 @@
     </summary>
     
     
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
       <category term="COM" scheme="http://zplutor.github.io/tags/COM/"/>
     
@@ -995,17 +1030,17 @@
     </summary>
     
     
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
       <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
-      <category term="异常" scheme="http://zplutor.github.io/tags/%E5%BC%82%E5%B8%B8/"/>
-    
       <category term="WinDbg" scheme="http://zplutor.github.io/tags/WinDbg/"/>
+    
+      <category term="异常" scheme="http://zplutor.github.io/tags/%E5%BC%82%E5%B8%B8/"/>
     
       <category term="std::thread" scheme="http://zplutor.github.io/tags/std-thread/"/>
     
@@ -1060,9 +1095,9 @@
     </summary>
     
     
-      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
       <category term="编译" scheme="http://zplutor.github.io/tags/%E7%BC%96%E8%AF%91/"/>
     

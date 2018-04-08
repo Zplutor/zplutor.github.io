@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zplutor.github.io/2018/04/09/proper-way-to-check-file-existence-using-boost-filesystem/</loc>
+    
+    <lastmod>2018-04-08T16:46:09.551Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://zplutor.github.io/2017/11/12/how-to-debug-program-silent-exit/</loc>
     
     <lastmod>2017-11-12T05:20:01.000Z</lastmod>
