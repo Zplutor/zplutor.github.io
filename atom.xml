@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2018-06-14T05:35:25.106Z</updated>
+  <updated>2018-08-26T14:14:45.081Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -14,6 +14,46 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>文件的共享模式和访问权限</title>
+    <link href="http://zplutor.github.io/2018/08/26/file-share-mode-and-access-rights/"/>
+    <id>http://zplutor.github.io/2018/08/26/file-share-mode-and-access-rights/</id>
+    <published>2018-08-26T14:04:12.000Z</published>
+    <updated>2018-08-26T14:14:45.081Z</updated>
+    
+    <content type="html">&lt;p&gt;有用户反馈了这样一个问题：当Word或者Excel打开了一个文件时，无法用我们的程序打开该文件，而用其它程序却能够正常打开。经检查，这是由于在打开文件时&lt;code&gt;CreateFile&lt;/code&gt;函数失败了，错误码是32，“另一个程序正在使用此文件，进程无法访问”。 &lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;我检查了一遍代码，“看上去”似乎一切正常。但是为什么其它程序可以正常打开，就只有我们的程序不行呢？为了对比两者在打开文件上的差异，我使用ProcessMonitor来观察分别用Notepad++和我们程序打开同一个文件的过程。&lt;/p&gt;
+&lt;p&gt;经过对比，可以发现两者在执行CreateFile操作时，共享模式（ShareMode）的值明显不一样，如下所示：&lt;/p&gt;
+&lt;img src=&quot;/2018/08/26/file-share-mode-and-access-rights/1.png&quot; alt=&quot;1.png&quot; title=&quot;&quot;&gt;
+&lt;p&gt;左图是Notepad++的CreateFile操作，ShareMode包含了Read和Write，操作结果为SUCCESS；右图是我们程序的CreateFile操作，ShareMode只有Read，操作结果为SHARING_VIOLATION。显然，问题出在调用&lt;code&gt;CreateFile&lt;/code&gt;函数时传入的&lt;code&gt;dwShareMode&lt;/code&gt;参数上，我们对该参数只传入了&lt;code&gt;FILE_SHARE_READ&lt;/code&gt;。尝试加上&lt;code&gt;FILE_SHARE_WRITE&lt;/code&gt;之后，问题解决了。&lt;/p&gt;
+&lt;p&gt;我又仔细阅读了一遍文档，发现一直以来我对共享模式的理解都不够全面（通过与其他人的交流，可以肯定不止我一个人是这样）。&lt;/p&gt;
+&lt;p&gt;共享模式实际上是用来与文件的访问权限进行校验的。假设进程A要打开一个文件，而该文件已经被进程B打开了，那么系统会进行以下校验：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;进程A传入的共享模式与进程B对该文件的访问权限（即打开文件时传入的&lt;code&gt;dwDesiredAccess&lt;/code&gt;参数）是否一致；&lt;/li&gt;
+&lt;li&gt;进程A传入的访问权限与进程B的共享模式是否一致。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;共享模式与访问权限的一致性判断方式：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;如果共享模式包含读取，那么访问权限也必须包含读取；&lt;/li&gt;
+&lt;li&gt;如果共享模式包含写入，那么访问权限也必须包含写入。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;也就是说，系统会对双方的共享模式和访问权限进行交叉校验，只有两个校验都通过了，进程A才能打开文件，否则就会出现共享冲突错误。&lt;/p&gt;
+&lt;p&gt;所以，现在已不难理解为什么之前我们的程序打不开被Word和Excel打开的文件。Word和Excel必然对文件有写入权限，而我们的程序在打开文件时，共享模式只设置了读取，这意味着“我希望其它人只能读取该文件”，显然这是不可能的。&lt;/p&gt;
+&lt;p&gt;注意，为了便于理解，上面用了进程做例子，但实际上共享模式和访问权限都属于文件句柄的一部分，权限校验是针对句柄的。在一个进程中多次打开同一个文件，也会在文件句柄之间进行这些校验。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;有用户反馈了这样一个问题：当Word或者Excel打开了一个文件时，无法用我们的程序打开该文件，而用其它程序却能够正常打开。经检查，这是由于在打开文件时&lt;code&gt;CreateFile&lt;/code&gt;函数失败了，错误码是32，“另一个程序正在使用此文件，进程无法访问”。 &lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+  </entry>
   
   <entry>
     <title>修复微信快捷键截屏后无法使用输入法</title>
