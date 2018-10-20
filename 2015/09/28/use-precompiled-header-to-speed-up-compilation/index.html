@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>使用预编译头提高编译速度 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="使用预编译头提高编译速度"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="使用预编译头提高编译速度">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -74,21 +74,21 @@
 <p>precompiled.h将被指定成预编译头文件，所有在这个头文件中的代码都会被预编译。可以把任意代码添加到这个文件，一般的做法是把常用的头文件包含进来，例如：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;Windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;algorithm&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstdint&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;functional&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;list&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;map&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;set&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/filesystem.hpp&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/format.hpp&gt;</span></span></span><br></pre></td></tr></table></figure>
 <p>precompiled.cpp则为precompiled.h提供了编译的载体，因为C/C++只能对源文件编译，而不能对头文件编译。precompiled.cpp只需要包含precompiled.h即可（由于示例项目的需要，包含语句中包含了相对路径）：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="string">"win/precompiled.h"</span></span></span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"win/precompiled.h"</span></span></span><br></pre></td></tr></table></figure>
 <p>接下来，指定通过precompiled.cpp来生成预编译结果。在“解决方案资源管理器中”，右击precompiled.cpp文件，在弹出的菜单中点击“属性”，打开该文件的属性页窗口。</p>
-<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/1.png" alt="1.png" title="">
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/1.png">
 <p>在属性页窗口中，打开“预编译头”配置页，设置“预编译头”选项的值为“创建（/Yc）”，设置“预编译头文件”选项的值为“win/precompiled.h”。如下图所示：</p>
-<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/2.png" alt="2.png" title="">
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/2.png">
 <p>点击确定完成设置。如此一来，在编译precompiled.cpp的时候就会生成预编译结果，也就是.pch文件。</p>
 <p>设置了生成预编译结果之后，还需要设置使用预编译结果。在“解决方案资源管理器中”，右击项目节点，在弹出的菜单中点击“属性”，打开项目的属性页窗口。</p>
-<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/3.png" alt="3.png" title="">
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/3.png">
 <p>同样地，在属性页窗口中打开“预编译头”配置页，设置“预编译头”选项的值为“使用（/Yu）”，设置“预编译头文件”选项的值为“win/precompiled.h”。要注意“预编译头”选项的值跟之前的不同。如下图所示：</p>
-<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/4.png" alt="4.png" title="">
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/4.png">
 <p>最后，需要在所有的源文件中包含预编译头文件，并且该文件必须是第一个包含的。这是使用预编译头的硬性规定，假如不遵守这个规定，编译会失败。重复地在所有源文件中添加预编译头文件很繁琐，所幸的是Visual C++提供了强制在所有源文件中包含指定头文件的选项。同样在项目的属性页窗口中，打开“C/C++”分类下的“高级”配置页，在“强制包含文件”的选项中，添加“win/precompiled.h”即可，如下图所示：</p>
-<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/5.png" alt="5.png" title="">
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/5.png">
 <p>至此，预编译头的设置就完成了。注意，在预编译头文件之后再重复包含该文件内已包含的头文件并不会有问题，所以不必特意去掉那些重复的包含语句。</p>
 <h2 id="预编译头性能实测"><a href="#预编译头性能实测" class="headerlink" title="预编译头性能实测"></a>预编译头性能实测</h2><p>预编译头对编译性能有多大的提升呢？这里用一个实际的项目进行测试。该项目共有1006个头文件和源文件，分别在关闭和打开预编译头的情况下重新生成整个项目两次，记录下生成的开始时间和结束时间。最终得到的数据如下：</p>
-<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/6.png" alt="6.png" title="">
+<img src="/2015/09/28/use-precompiled-header-to-speed-up-compilation/6.png">
 <p>可以看到，使用了预编译头之后，编译性能有了30%以上的提升，节省了不少时间。当然，这里的数据只是一个参考值，实际的提升程度得视项目的具体情况而定。一般来说，预编译头文件中包含的头文件被使用得越多，性能提升越明显。</p>
 <h2 id="使用预编译头的注意事项"><a href="#使用预编译头的注意事项" class="headerlink" title="使用预编译头的注意事项"></a>使用预编译头的注意事项</h2><p>既然预编译头有这样的好处，那么是不是加入预编译的头文件越多越好呢？答案是否定的。上文已经提到，使用预编译头的时候必须在所有源文件中包含预编译头文件，由此造成的影响是，一旦其中的头文件发生了变化，不论这个变化有多细微，整个项目都要重新编译。把一个会被频繁修改的头文件包含到预编译头文件中是非常不明智的做法，因此，理想的选择是下列几乎不会修改的头文件：</p>
 <ul>

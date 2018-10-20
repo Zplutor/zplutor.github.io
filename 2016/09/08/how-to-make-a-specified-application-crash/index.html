@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>如何让指定的程序崩溃 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何让指定的程序崩溃"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="如何让指定的程序崩溃">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -66,7 +66,7 @@
       
         <p>为了验证程序崩溃信息的收集和上报机制，需要让程序崩溃。为了达到这个目的，一般的做法是临时在程序中加入引发异常的代码。这种做法只在开发人员自己编译的版本中有效，在正式版本中无法进行验证。另外一种方法是加入一个隐藏开关，但这样会在正式版本中带上调试代码，也不理想。最好的方法是在不修改任何代码的前提下，也能够让程序崩溃。</p>
 <a id="more"></a>
-<p>这看起来似乎不可能，但实际上是可行的，而且做法简单得让人惊讶。Windows API有一个<code>CreateRemoteThread</code>函数，这个函数可以在指定的进程中创建一个线程，并且能够让这个线程执行任意代码——DLL注入就是通过这种方式实现的。显然，只要用这个函数创建一个会产生异常的线程就可以了。先来看一下这个函数的原型：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">HANDLE WINAPI <span class="title">CreateRemoteThread</span><span class="params">(</span><br><span class="line">  _In_  HANDLE                 hProcess,</span><br><span class="line">  _In_  LPSECURITY_ATTRIBUTES  lpThreadAttributes,</span><br><span class="line">  _In_  SIZE_T                 dwStackSize,</span><br><span class="line">  _In_  LPTHREAD_START_ROUTINE lpStartAddress,</span><br><span class="line">  _In_  LPVOID                 lpParameter,</span><br><span class="line">  _In_  DWORD                  dwCreationFlags,</span><br><span class="line">  _Out_ LPDWORD                lpThreadId</span><br><span class="line">)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>这看起来似乎不可能，但实际上是可行的，而且做法简单得让人惊讶。Windows API有一个<code>CreateRemoteThread</code>函数，这个函数可以在指定的进程中创建一个线程，并且能够让这个线程执行任意代码——DLL注入就是通过这种方式实现的。显然，只要用这个函数创建一个会产生异常的线程就可以了。先来看一下这个函数的原型：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">HANDLE WINAPI <span class="title">CreateRemoteThread</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">  _In_  HANDLE                 hProcess,</span></span></span><br><span class="line"><span class="function"><span class="params">  _In_  LPSECURITY_ATTRIBUTES  lpThreadAttributes,</span></span></span><br><span class="line"><span class="function"><span class="params">  _In_  SIZE_T                 dwStackSize,</span></span></span><br><span class="line"><span class="function"><span class="params">  _In_  LPTHREAD_START_ROUTINE lpStartAddress,</span></span></span><br><span class="line"><span class="function"><span class="params">  _In_  LPVOID                 lpParameter,</span></span></span><br><span class="line"><span class="function"><span class="params">  _In_  DWORD                  dwCreationFlags,</span></span></span><br><span class="line"><span class="function"><span class="params">  _Out_ LPDWORD                lpThreadId</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure></p>
 <p>值得关注的是<code>hProcess</code>和<code>lpStartAddress</code>参数，其它参数的含义可以参考MSDN文档，这里不再赘述。先来看<code>lpStartAddress</code>参数，这个参数指定线程的入口点地址，这个地址必须是在目标进程的地址空间中。在本文的特殊需求下，我们并不需要传一个实际可执行的地址，只需要传入<code>0</code>即可。这样的话，该线程会尝试从0地址执行，这毫无疑问会引发访问违规异常，导致程序崩溃——这就达到了我们的目的。</p>
 <p>再来看<code>hProcess</code>参数，这个参数表示目标进程的句柄，这个句柄必须具有以下访问权限：</p>
 <ul>

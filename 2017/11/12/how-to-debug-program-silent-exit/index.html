@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>如何调试程序静默退出 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何调试程序静默退出"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="如何调试程序静默退出">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -76,7 +76,7 @@
 </li>
 </ul>
 <p>幸运的是，Windows已经针对闪退问题提供了专门的调试功能。这个功能需要使用GFlags工具来开启，GFlags包含在Windows SDK的Debugging Tools中，可以通过安装这个套件来获取。运行GFlags后，切换到Silent Process Exit标签（GFlags可以开启很多调试功能，闪退调试只是其中一个），参考下图来进行设置：</p>
-<img src="/2017/11/12/how-to-debug-program-silent-exit/1.png" alt="1.png" title="">
+<img src="/2017/11/12/how-to-debug-program-silent-exit/1.png">
 <p>Silent Process Exit可以针对指定程序进行设置，也可以全局设置，一般只需要针对我们自己的程序设置即可。在Application Specific Settings的Image一栏，填入程序的可执行文件名称，然后按下TAB键，即可打开这个程序的设置。</p>
 <p>在Reporting Mode一栏，首先勾选Enable Silent Process Exit Monitoring 选项，然后根据需要勾选其它四个选项。</p>
 <ul>
@@ -90,9 +90,9 @@
 </li>
 </ul>
 <p>这里以记事本程序<code>notepad.exe</code>为例子，按确定按钮保存设置。打开记事本，在任务管理器中结束它，此时系统任务栏会弹出提示：</p>
-<img src="/2017/11/12/how-to-debug-program-silent-exit/2.png" alt="2.png" title="">
+<img src="/2017/11/12/how-to-debug-program-silent-exit/2.png">
 <p>在事件查看器中可以看到对应的记录。同时在<code>C:\</code>下生成了对应的dump文件：</p>
-<img src="/2017/11/12/how-to-debug-program-silent-exit/3.png" alt="3.png" title="">
+<img src="/2017/11/12/how-to-debug-program-silent-exit/3.png">
 <p>Windows提供的这个调试功能非常方便，但是GFlags的使用方式仍有一定门槛，不是每个用户都能快速按照我们的指引来设置。为了节约沟通成本，最好能有一种自动化的方式来帮用户打开这个功能。事实上，GFlags是通过修改注册表来实现功能的，所以只要把对应的注册表项导出，再让用户导入即可。</p>
 <p>以上面记事本的设置为例，对应的注册表项如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe]</span><br><span class="line">&quot;GlobalFlag&quot;=dword:00000200</span><br><span class="line"></span><br><span class="line">[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SilentProcessExit\notepad.exe]</span><br><span class="line">&quot;LocalDumpFolder&quot;=&quot;C:\\&quot;</span><br><span class="line">&quot;DumpType&quot;=dword:00000121</span><br><span class="line">&quot;ReportingMode&quot;=dword:00000006</span><br><span class="line">&quot;IgnoreSelfExits&quot;=dword:00000001</span><br></pre></td></tr></table></figure></p>
 

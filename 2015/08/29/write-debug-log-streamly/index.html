@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>使用流式输出写调试日志 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="使用流式输出写调试日志"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="使用流式输出写调试日志">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -78,9 +78,9 @@
 <p>首先，根据是否处于调试模式定义ENABLE_DEBUG_LOG宏，这个宏仅仅是布尔值的简单替换。</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> DEBUG</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ENABLE_DEBUG_LOG true</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ENABLE_DEBUG_LOG false</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
 <p>接下来，把DLOG宏定义成一个问号表达式，为了便于理解，把这个定义分成多行。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DLOG()                 \</span><br><span class="line">    ! ENABLE_DEBUG_LOG  ?      \</span><br><span class="line">        (void)0         :      \</span><br><span class="line">        Vodify() &amp; std::cout</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DLOG()                 \</span></span><br><span class="line">    ! ENABLE_DEBUG_LOG  ?      \</span><br><span class="line">        (<span class="keyword">void</span>)<span class="number">0</span>         :      \</span><br><span class="line">        Vodify() &amp; <span class="built_in">std</span>::<span class="built_in">cout</span></span><br></pre></td></tr></table></figure>
 <p>问号表达式首先判断一下是否启用调试日志。如果不启用，则执行第一个分支，把0转换成void，也就是什么都不做。这是一种罕见的语法，可以把任意表达式转型为void。如果启用，则执行第二个分支，创建一个Vodify对象，并调用它的&amp;操作符。下面是Vodify类的定义：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> Vodify &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">operator</span>&amp;(<span class="keyword">const</span> <span class="built_in">std</span>::ostream&amp;) &#123; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Vodify</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">operator</span>&amp;(<span class="keyword">const</span> <span class="built_in">std</span>::ostream&amp;) &#123; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 <p>Vodify类是一个辅助类，它只有一个空的operator&amp;方法，其作用仅仅是为了使问号表达式两个分支的返回值相同。由于前面一个分支的返回值是void，第二个分支的返回值也必须是void，否则编译不通过。</p>
 <p>一个提供了&lt;&lt;操作符的输出流对象必须放在最后面，这是为了接收后面的输出参数。在这里简单使用了std::cout对象。Vodify的operator&amp;方法必须能够接收这个对象的引用。</p>
 <p>现在，可以这样来使用DLOG：</p>

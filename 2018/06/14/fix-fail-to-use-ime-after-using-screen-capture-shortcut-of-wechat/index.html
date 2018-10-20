@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>修复微信快捷键截屏后无法使用输入法 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="修复微信快捷键截屏后无法使用输入法"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="修复微信快捷键截屏后无法使用输入法">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -67,7 +67,7 @@
         <p>你有没有遇到过不能使用输入法的问题？输入法明明切换出来了，也处于中文模式下，但无论如何也只能输入英文，非常令人恼火。此时不妨回想一下，在出现问题之前是否曾经使用微信的快捷键来截屏？</p>
 <a id="more"></a>
 <p>在某些系统下，使用微信的默认快捷键（ALT + A，或者ALT键与其它字符键的组合）截屏后有较大的概率会出现上述问题。微信似乎也意识到这个问题，在最新版本中作了修正。然而这个修正貌似治标不治本，只是降低了问题出现的概率，甚至没有作用——有些人仍然在截屏后几乎总是无法输入中文。</p>
-<p>作为用户，除了重启程序之外，还有更简单的方法来解决这个问题：按一下ALT键即可。原因是当我们按下ALT键时，是当前程序接收到按下事件；而在激活了微信截屏后，我们松开ALT键时，却是微信接收到松开事件。因此对于当前程序来说，ALT键一直处于按下状态，没有松开，这时我们按下的任何键实际上都变成了与ALT键的组合，除了无法使用输入法之外，还会导致CTRL + C、CTRL + V等快捷键失效。只要再按一下ALT键，重置这个键的状态，即可让程序恢复正常。当然，有个无法解释的问题是，为什么出现问题的时候，输入字符时不会触发与ALT键的组合快捷键？也许这与操作系统的实现方式有关，目前无从得知。</p>
+<p>作为用户，除了重启程序之外，还有更简单的方法来解决这个问题：按一下ALT键即可。造成这个问题的原因是当我们按下ALT键时，是当前程序接收到按下事件；而在激活了微信截屏后，我们松开ALT键时，却是微信接收到松开事件。因此对于当前程序来说，ALT键一直处于按下状态，没有松开，这时我们按下的任何键实际上都变成了与ALT键的组合，除了无法使用输入法之外，还会导致CTRL + C、CTRL + V等快捷键失效。只要再按一下ALT键，重置这个键的状态，即可让程序恢复正常。当然，有个无法解释的问题是，为什么出现问题的时候，输入字符时不会触发与ALT键的组合快捷键？也许这与操作系统的实现方式有关，目前无从得知。</p>
 <p>作为开发者，这个问题是需要解决的。虽然这是微信的缺陷，但问题却表现在我们的程序上，不明就里的用户肯定会以为是我们程序的问题。鉴于微信庞大的用户量，这个问题的影响还是挺大的。好在解决方法也简单：既然用户自己按一下ALT键就能恢复，那么我们在程序中检测出这种情况，再模拟按一下ALT键就好了。</p>
 <p>为了检测出这种情况，可以结合使用<code>GetKeyState</code>和<code>GetAsyncKeyState</code>函数。从MSDN文档描述可知，<code>GetKeyState</code>获取的按键状态是通过按键的消息事件来维护的，而<code>GetAsyncKeyState</code>获取的按键状态是键盘的实际状态。既然截屏时当前程序接收不到ALT键松开的事件，那么<code>GetKeyState</code>返回的状态自然也不对了。所以，如果发现<code>GetKeyState</code>返回了按下状态，而<code>GetAsyncKeyState</code>返回了非按下状态，那么就可以确定出现了问题。</p>
 <p>在截屏完成后，窗口焦点会从微信切换到当前程序，当前程序的窗口会收到<code>WM_ACTIVATEAPP</code>消息，这是进行上述检测的一个理想的时机。</p>

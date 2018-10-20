@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>在Visual Studio和XCode之间兼容性最好的文本编码 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="在Visual Studio和XCode之间兼容性最好的文本编码"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="在Visual Studio和XCode之间兼容性最好的文本编码">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -68,25 +68,25 @@
 <a id="more"></a>
 <ul>
 <li><p>在Visual Studio创建的代码文件，里面的中文注释在XCode下会显示成乱码：</p>
-<img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/1.png" alt="1.png" title="">
+<img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/1.png">
 </li>
 <li><p>在XCode创建的代码文件，如果里面包含中文注释，在Visual Studio中编译时可能会产生C4819警告：</p>
-<img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/2.png" alt="2.png" title="">
+<img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/2.png">
 </li>
 </ul>
 <p>产生这些问题的原因是两款IDE对文本编码的支持方式不一致。为了解决它们，需要弄清楚Visual Studio和XCode的异同。</p>
 <h2 id="Visual-Studio对文本编码的支持"><a href="#Visual-Studio对文本编码的支持" class="headerlink" title="Visual Studio对文本编码的支持"></a>Visual Studio对文本编码的支持</h2><p>Visual Studio的默认编码是ANSI，也就是Windows当前语言的编码。对于简体中文来说就是GB2312。默认编码无法设置。</p>
-<p>打开了一个文件之后，在Visual Studio的“文件” - “高级保存选项”菜单中可以修改当前文件的编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/3.png" alt="3.png" title=""></p>
-<p>在弹出的对话框中可以选择各种编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/4.png" alt="4.png" title=""></p>
+<p>打开了一个文件之后，在Visual Studio的“文件” - “高级保存选项”菜单中可以修改当前文件的编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/3.png"></p>
+<p>在弹出的对话框中可以选择各种编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/4.png"></p>
 <p>Visual Studio只能手动一个一个地转换文本编码，不能做到自动转换或者批量转换。</p>
 <p>虽然在上面的列表中可以找到UTF-8 without BOM编码，并且Visual Studio也确实能够正确显示这种编码的文件内容，但实测发现编译器并不能很好地支持这种编码。例如，当文件中含有奇数个中文字符时，编译的时候会出现上文说的C4819警告；而当含有偶数个中文字符时，则一切正常。</p>
-<h2 id="XCode对文本编码的支持"><a href="#XCode对文本编码的支持" class="headerlink" title="XCode对文本编码的支持"></a>XCode对文本编码的支持</h2><p>XCode的默认编码是UTF-8 without BOM，可以在Preferences中修改默认编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/5.png" alt="5.png" title=""></p>
-<p>在该选项中可以选择各种文本编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/6.png" alt="6.png" title=""></p>
+<h2 id="XCode对文本编码的支持"><a href="#XCode对文本编码的支持" class="headerlink" title="XCode对文本编码的支持"></a>XCode对文本编码的支持</h2><p>XCode的默认编码是UTF-8 without BOM，可以在Preferences中修改默认编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/5.png"></p>
+<p>在该选项中可以选择各种文本编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/6.png"></p>
 <p>然而实测发现这个选项没有什么用。修改之后，新建的文件仍然是UTF-8编码，打开的文件也不会使用指定编码。</p>
 <p>XCode并没有区分UTF-8 with BOM和UTF-8 without BOM，默认是UTF-8 without BOM，但它还是能够打开和编辑UTF-8 with BOM编码的文件。</p>
-<p>打开了一个文件后，在Utilities面板中可以查看和设置当前文件使用的编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/7.png" alt="7.png" title=""></p>
+<p>打开了一个文件后，在Utilities面板中可以查看和设置当前文件使用的编码：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/7.png"></p>
 <p>XCode的编码检测也不准确。例如，GB2312编码的文件会被检测为Western (Mac OS Roman)，导致中文显示成乱码。</p>
-<p>通过下拉列表修改了文本编码后，XCode会弹出以下的对话框，询问是要转换编码还是重新解析文件：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/8.png" alt="8.png" title=""></p>
+<p>通过下拉列表修改了文本编码后，XCode会弹出以下的对话框，询问是要转换编码还是重新解析文件：<br><img src="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/8.png"></p>
 <p>Convert选项会把当前文件转换成选择的编码；Reinterpret选项会以选择的编码重新解析当前文件。如果内容显示正常，只想改变编码的话，应该使用Convert；如果内容出现乱码，应该使用Reinterpret重新解析。</p>
 <h2 id="选择兼容性最好的文本编码"><a href="#选择兼容性最好的文本编码" class="headerlink" title="选择兼容性最好的文本编码"></a>选择兼容性最好的文本编码</h2><p>综合两款IDE对文本编码的支持情况，可以知道能够同时被Visual Studio和XCode支持的文本编码是：</p>
 <ul>

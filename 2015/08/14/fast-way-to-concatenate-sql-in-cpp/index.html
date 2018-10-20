@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>C++拼接SQL语句的高效方法 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="C++拼接SQL语句的高效方法"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="C++拼接SQL语句的高效方法">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -75,7 +75,7 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* <span class="built_in">string</span> = <span class="string">"Curlion is a C++ wrapper for libcurl’s multi socket interface."</span>;</span><br></pre></td></tr></table></figure>
 <p>也就是说，如果两个字符串字面量之间只包含空白字符，那么它们会被合并成一个。这个合并发生在编译时，不消耗运行时时间。</p>
 <p>为了使用这种拼接方式，我们首先要把表名和列名变量修改成用宏来定义：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserTableName <span class="string">"user"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserIdColumnName <span class="string">"id"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserNameColumnName <span class="string">"name"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserEmailColumnName <span class="string">"email"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserPhoneColumnName <span class="string">"phone"</span></span></span><br></pre></td></tr></table></figure>    
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserTableName <span class="meta-string">"user"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserIdColumnName <span class="meta-string">"id"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserNameColumnName <span class="meta-string">"name"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserEmailColumnName <span class="meta-string">"email"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kUserPhoneColumnName <span class="meta-string">"phone"</span></span></span><br></pre></td></tr></table></figure>    
 <p>然后就可以修改拼接方式了：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* sql = <span class="string">"select "</span></span><br><span class="line">                  kUserIdColumnName <span class="string">", "</span></span><br><span class="line">                  kUserNameColumnName <span class="string">", "</span></span><br><span class="line">                  kUserEmailColumnName <span class="string">", "</span></span><br><span class="line">                  kUserEmailColumnName <span class="string">", "</span></span><br><span class="line">                  kUserPhoneColumnName</span><br><span class="line">                  <span class="string">" from "</span> kUserTableName</span><br><span class="line">                  <span class="string">" where "</span> kUserIdColumnName <span class="string">" = ?;"</span>;</span><br></pre></td></tr></table></figure>    
 <p>这样一来，sql相当于一个常量，不需要初始化，完全不消耗运行时的性能。另外，这么做也有一个好处，就是使得SQL语句的可读性有了一定提高。使用format的方法经常要手工一个个地去匹配参数列表，很繁琐也容易出错。特别是那些有一串长长的参数列表的复杂语句，看起来很恐怖。现在这种方法则好得多，参数直接放在了它所在的位置，一目了然。</p>

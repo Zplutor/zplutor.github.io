@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>如何调试在std::thread子线程中抛出的C++异常 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何调试在std::thread子线程中抛出的C++异常"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="如何调试在std::thread子线程中抛出的C++异常">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -70,7 +70,7 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="built_in">std</span>::thread* g_thread;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ThreadEntry</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; v;</span><br><span class="line">    v.at(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    g_thread = <span class="keyword">new</span> <span class="built_in">std</span>::thread(ThreadEntry);</span><br><span class="line">    g_thread-&gt;join();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这段代码很简单，就是通过std::thread创建一个子线程，并且在这个子线程中访问一个空的std::vector中的元素，让它抛出C++异常。务必要使用Release配置来生成程序，不能使用Debug配置。</p>
 <p>接下来，在资源管理器中直接运行该程序，注意不要通过调试器来运行。一般会在第二次运行的时候，出现下面的Windows错误报告窗口：</p>
-<img src="/2015/10/11/how-to-debug-cpp-exception-thrown-within-std-thread/1.png" alt="1.png" title="">
+<img src="/2015/10/11/how-to-debug-cpp-exception-thrown-within-std-thread/1.png">
 <p>在详细信息中的C:\Users\Zplutor\AppData\Local\Temp\WERBF98.tmp.mdmp文件即是Windows错误报告为崩溃的程序生成的dump文件，里面包含了程序崩溃时的一些信息，例如函数调用栈。该文件在关闭了错误报告窗口时即被删除，所以要先把这个文件复制出来。</p>
 <p>最后，用WinDbg打开这个dump文件，先用.ecxr命令切换到异常环境，再用k命令显示调用栈，结果显示如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">0:002&gt; k</span><br><span class="line">  *** Stack trace for last set context - .thread/.cxr resets it</span><br><span class="line">ChildEBP RetAddr  </span><br><span class="line">0095f07c 6ba8dc5f msvcr120!abort+0x38 [f:\dd\vctools\crt\crtw32\misc\abort.c @ 90]</span><br><span class="line">0095f0ac 6b99f353 msvcr120!terminate+0x33 [f:\dd\vctools\crt\crtw32\eh\hooks.cpp @ 96]</span><br><span class="line">0095f8fc 6ba1c01d msvcp120!_Call_func+0x2e [f:\dd\vctools\crt\crtw32\stdcpp\thr\threadcall.cpp @ 35]</span><br><span class="line">0095f934 6ba1c001 msvcr120!_callthreadstartex+0x1b [f:\dd\vctools\crt\crtw32\startup\threadex.c @ 376]</span><br><span class="line">0095f940 7685ee6c msvcr120!_threadstartex+0x7c [f:\dd\vctools\crt\crtw32\startup\threadex.c @ 354]</span><br><span class="line">0095f94c 77053ab3 kernel32!BaseThreadInitThunk+0xe</span><br><span class="line">0095f98c 77053a86 ntdll!__RtlUserThreadStart+0x70</span><br><span class="line">0095f9a4 00000000 ntdll!_RtlUserThreadStart+0x1b</span><br></pre></td></tr></table></figure>

@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>如何设置libcurl的动态超时值 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何设置libcurl的动态超时值"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="如何设置libcurl的动态超时值">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -73,9 +73,9 @@
 <p>要注意的是，CURLOPT_LOW_SPEED_LIMIT的单位是字节/秒，CURLOPT_LOW_SPEED_TIME的单位是秒。这样一来，若在10秒内连接的速率都是低于1字节/秒（也就是无数据传输），它就被认为超时了。</p>
 <p>如何设置动态超时值的问题到这里就结束了。但是显然还有另一个问题值得深究：连接的速率是怎么计算的呢？官方文档并没有解释清楚，不过既然libcurl是开源的，那么可以从它的源代码中寻找答案。检查速率的代码位于speedcheck.c的Curl_speedcheck函数中；计算速率的代码位于progress.c的Curl_pgrsUpdate函数中。下面简单解释一下计算速率的过程。</p>
 <p>libcurl使用一个长度为5的循环数组来记录速率信息，速率信息包含了当前时间以及当前总数据量，总数据量取的是总下载数据量和总上传数据量的最大值。每隔一秒钟libcurl就会记录当前的速率信息；由于使用了循环数组，最旧的信息会被丢弃。例如，在第四秒时候，循环数组里的内容是这样的：</p>
-<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/1.png" alt="1.png" title="">
+<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/1.png">
 <p>第七秒的时候，循环数组里的内容是这样的：</p>
-<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/2.png" alt="2.png" title="">
+<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/2.png">
 <p>以此类推。接下来，会使用最新的速率信息和最旧的速率信息来计算速率。例如，在第四秒时，速率是这样算的：</p>
 <pre><code>(total4 - total1) / (time4 - time1)
 </code></pre><p>在第七秒时，速率是这样算的：</p>

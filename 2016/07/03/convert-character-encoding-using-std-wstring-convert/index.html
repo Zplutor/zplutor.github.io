@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
-  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
   <title>使用std::wstring_convert进行字符编码转换 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="使用std::wstring_convert进行字符编码转换"/>
-  <meta property="og:site_name" content="Zplutor&#39;s"/>
+  <meta property="og:title" content="使用std::wstring_convert进行字符编码转换">
+  <meta property="og:site_name" content="Zplutor&#39;s">
 
   
-    <meta property="og:image" content="undefined"/>
+    <meta property="og:image" content="undefined">
   
 
   <link href="/favicon.png" rel="icon">
@@ -28,7 +28,7 @@
   
 
 </head>
-
+</html>
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -72,7 +72,7 @@
 <p>来看一下std::wstring_convert其中一个构造函数：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wstring_convert(codecvt* pcvt = <span class="keyword">new</span> codecvt);</span><br></pre></td></tr></table></figure></p>
 <p>在构造std::wstring_convert对象的时候需要传入一个codecvt对象的指针，如果没有传入，则默认使用<code>new codecvt</code>来创建。std::wstring_convert自行维护codecvt对象的生命周期，它的析构函数会调用delete操作符来删除该对象。这就限制了只能使用通过new操作符来创建的codecvt，而不能使用从std::locale中获取的codecvt。</p>
 <p>在C++标准提供的codecvt中，能够直接用于std::wstring_convert的只有三个：std::codecvt_utf8，std::codecvt_utf16以及std::codecvt_utf8_utf16。可见，标准只支持UTF族的字符编码。为了获取其它字符编码的codecvt，需要使用std::codecvt_byname，这个类可以通过字符编码的名称来创建一个codecvt。这看起来挺不错，但遗憾的是，字符编码的名称并没有统一的标准，各个平台的支持情况都不一样。例如，在Windows下可以使用“chs”来创建简体中文编码的codecvt，在Mac OS X下则要使用“zh_cn.gb2312”；甚至在Mac OS X下，即使成功创建了这个codecvt，它也不能正常地转换。</p>
-<p>下面以Windows为例，说明如何将std::codecvt_byname用于std::wstring_convert。由于历史原因，std::codecvt_byname的析构函数是protected的，std::wstring_convert不能对它调用delete，所以首先要自行定义一个类来继承std::codecvt_byname：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> chs_codecvt : <span class="keyword">public</span> <span class="built_in">std</span>::codecvt_byname&lt;<span class="keyword">wchar_t</span>, <span class="keyword">char</span>, <span class="built_in">std</span>::<span class="keyword">mbstate_t</span>&gt; &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    chs_codecvt() : codecvt_byname(<span class="string">"chs"</span>) &#123; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>下面以Windows为例，说明如何将std::codecvt_byname用于std::wstring_convert。由于历史原因，std::codecvt_byname的析构函数是protected的，std::wstring_convert不能对它调用delete，所以首先要自行定义一个类来继承std::codecvt_byname：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">chs_codecvt</span> :</span> <span class="keyword">public</span> <span class="built_in">std</span>::codecvt_byname&lt;<span class="keyword">wchar_t</span>, <span class="keyword">char</span>, <span class="built_in">std</span>::<span class="keyword">mbstate_t</span>&gt; &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    chs_codecvt() : codecvt_byname(<span class="string">"chs"</span>) &#123; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>chs_codecvt的默认析构函数是public的，从而让std::wstring_convert可以删除它。为方便起见，在chs_codecvt的构造函数中，直接把“chs”传给了std::codecvt_byname。</p>
 <p>接下来的用法跟本文开头的例子基本一致：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::wstring_convert&lt;chs_codecvt&gt; converter;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="built_in">string</span> = converter.to_bytes(<span class="string">L"你好"</span>);</span><br><span class="line"><span class="built_in">std</span>::wstring wide_string = converter.from_bytes(<span class="string">"\xc4\xe3\xba\xc3”);  //字符串的内容为“你好”</span></span><br></pre></td></tr></table></figure></p>
 <p>综上所述，只有UTF编码的转换是完全符合C++标准并且真正能够跨平台的，使用这些国际化的字符编码能够减少很多不必要的麻烦。</p>
