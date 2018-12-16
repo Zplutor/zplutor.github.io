@@ -6,13 +6,15 @@
   <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
-  <title>Windowless RichEdit | Zplutor&#39;s</title>
+  <title>如何避免预创建的CEF浏览器抢夺焦点 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="现在越来越多程序使用CEF浏览器来展示界面内容，以Web页面模拟原生界面。这种程序的Web页面内容大部分都来源于本地，因此加载速度一般都会很快。但是，与加载内容形成明显对比的是，创建CEF浏览器很耗时，大约需要1~2秒，这对用户体验造成很大影响。">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
+  <meta property="og:title" content="如何避免预创建的CEF浏览器抢夺焦点">
   <meta property="og:site_name" content="Zplutor&#39;s">
 
   
@@ -46,37 +48,68 @@
 <div class="clearfix"></div>
 </header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper">
-<h2 class="archive-title tag">Windowless RichEdit</h2>
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2018-12-16T12:34:57.000Z"><a href="/2018/12/16/how-to-stop-precreated-cef-browser-stealing-focus/">2018-12-16</a></time>
+      
+      
+  
+    <h1 class="title">如何避免预创建的CEF浏览器抢夺焦点</h1>
+  
 
+    </header>
+    <div class="entry">
+      
+        <p>现在越来越多程序使用CEF浏览器来展示界面内容，以Web页面模拟原生界面。这种程序的Web页面内容大部分都来源于本地，因此加载速度一般都会很快。但是，与加载内容形成明显对比的是，创建CEF浏览器很耗时，大约需要1~2秒，这对用户体验造成很大影响。</p>
+<a id="more"></a>
+<p>解决这个问题的方法一般是采用预创建技术，即在展示Web页面之前，在后台预先创建好CEF浏览器，等到需要展示Web页面时，直接拿出这个浏览器使用，省去了创建的时间。</p>
+<p>不过，在实践中发现，使用了预创建之后，会带来另一个问题：在创建浏览器的那一刻，窗口焦点会被它抢夺走，前台的窗口会莫名其妙地突然失去焦点，用户体验也很糟糕。</p>
+<p>在CEF提供的接口中，有一个<code>CefFocusHandler</code>接口，其中有一个<code>OnSetFocus</code>方法，在浏览器窗口即将获取焦点之前会调用该方法，如果这个方法返回true，则可以阻止浏览器窗口获取焦点。这是在CEF中唯一跟焦点有关的接口，因此首先会想到利用这个方法来解决抢夺焦点问题。然而实践证明这个方法没有任何作用，因为它只处理“浏览器窗口”自身的焦点，而不处理父窗口的焦点。</p>
+<p>CEF浏览器一般是作为其它窗口的子窗口，因此在预创建浏览器时，也必须指定父窗口。通常会使用一个不可见的窗口来充当浏览器的父窗口。如果使用Spy++工具来观察窗口的消息流，会发现在<code>OnSetFocus</code>返回true的情况下，浏览器窗口的确不会再收到<code>WM_SETFOCUS</code>消息；但父窗口不受影响，总是会收到<code>WM_SETFOCUS</code>消息，从而抢夺了焦点。</p>
+<p>目前尚不清楚为什么父窗口会收到<code>WM_SETFOCUS</code>消息，可能是CEF有意将焦点设置到父窗口，也可能是CEF调用的某个API的副作用。既然不能通过CEF提供的接口解决，那只能使用其它变通方法。</p>
+<p>由于一个被禁用的窗口永远不能取得焦点，所以一个行之有效的方法是：把父窗口设置成禁用，即在创建父窗口的时候设置<code>WS_DISABLED</code>样式。经过验证，这样做可以正常创建CEF浏览器，并且不会引起其它副作用。</p>
 
-  <div class="archive">
-    
-      <article class="post">
-        <div class="post-content">
-          <header>
-            <div class="icon"></div>
-            <time datetime="2015-12-06T13:16:04.000Z"><a href="/2015/12/06/implement-an-editable-windowless-richedit/">2015-12-06</a></time>
-            
-              <h1 class="title"><a href="/2015/12/06/implement-an-editable-windowless-richedit/">实现一个可编辑的Windowless RichEdit</a></h1>
-            
-          </header>
-        </div>
-      </article>
-    
-      <article class="post">
-        <div class="post-content">
-          <header>
-            <div class="icon"></div>
-            <time datetime="2015-11-22T13:39:58.000Z"><a href="/2015/11/22/create-a-simplest-windowless-richedit/">2015-11-22</a></time>
-            
-              <h1 class="title"><a href="/2015/11/22/create-a-simplest-windowless-richedit/">创建一个最简单的Windowless RichEdit</a></h1>
-            
-          </header>
-        </div>
-      </article>
-    
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>
   </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2018/12/16/how-to-stop-precreated-cef-browser-stealing-focus/" data-title="如何避免预创建的CEF浏览器抢夺焦点" data-url="http://zplutor.github.io/2018/12/16/how-to-stop-precreated-cef-browser-stealing-focus/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
 </div></div>
     <aside id="sidebar" class="alignright">
   
