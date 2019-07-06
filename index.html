@@ -53,6 +53,42 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2019-07-06T08:44:21.000Z"><a href="/2019/07/06/why-the-owner-window-would-be-put-at-back-when-its-owned-window-hides/">2019-07-06</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2019/07/06/why-the-owner-window-would-be-put-at-back-when-its-owned-window-hides/">为什么隐藏Owned窗口时，Owner窗口会被后置</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近在开发的时候遇到一个怪异的问题：一个Owner窗口拥有多个Owned窗口，当关闭Owned窗口时，实际上会调用<code>ShowWindow</code>来隐藏该窗口。当最后一个Owned窗口隐藏时，理论上应该激活Owner窗口，然而实际上激活的是位于Owner窗口下面的另外一个窗口。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2019/07/06/why-the-owner-window-would-be-put-at-back-when-its-owned-window-hides/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2019-04-09T16:56:50.000Z"><a href="/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/">2019-04-10</a></time>
       
       
@@ -371,42 +407,6 @@
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2016-09-08T12:24:38.000Z"><a href="/2016/09/08/how-to-make-a-specified-application-crash/">2016-09-08</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2016/09/08/how-to-make-a-specified-application-crash/">如何让指定的程序崩溃</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>为了验证程序崩溃信息的收集和上报机制，需要让程序崩溃。为了达到这个目的，一般的做法是临时在程序中加入引发异常的代码。这种做法只在开发人员自己编译的版本中有效，在正式版本中无法进行验证。另外一种方法是加入一个隐藏开关，但这样会在正式版本中带上调试代码，也不理想。最好的方法是在不修改任何代码的前提下，也能够让程序崩溃。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2016/09/08/how-to-make-a-specified-application-crash/#more" class="more-link">阅读全文</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -455,7 +455,7 @@
   
     <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>20</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>21</small></li>
   
     <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
   

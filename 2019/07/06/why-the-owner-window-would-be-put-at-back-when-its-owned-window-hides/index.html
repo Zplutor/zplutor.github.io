@@ -1,0 +1,218 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+  <meta charset="utf-8">
+  
+  <title>为什么隐藏Owned窗口时，Owner窗口会被后置 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="最近在开发的时候遇到一个怪异的问题：一个Owner窗口拥有多个Owned窗口，当关闭Owned窗口时，实际上会调用ShowWindow来隐藏该窗口。当最后一个Owned窗口隐藏时，理论上应该激活Owner窗口，然而实际上激活的是位于Owner窗口下面的另外一个窗口。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="为什么隐藏Owned窗口时，Owner窗口会被后置">
+  <meta property="og:site_name" content="Zplutor&#39;s">
+
+  
+    <meta property="og:image" content="undefined">
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+</html>
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2019-07-06T08:44:21.000Z"><a href="/2019/07/06/why-the-owner-window-would-be-put-at-back-when-its-owned-window-hides/">2019-07-06</a></time>
+      
+      
+  
+    <h1 class="title">为什么隐藏Owned窗口时，Owner窗口会被后置</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近在开发的时候遇到一个怪异的问题：一个Owner窗口拥有多个Owned窗口，当关闭Owned窗口时，实际上会调用<code>ShowWindow</code>来隐藏该窗口。当最后一个Owned窗口隐藏时，理论上应该激活Owner窗口，然而实际上激活的是位于Owner窗口下面的另外一个窗口。</p>
+<a id="more"></a>
+<p>经过一番检查，最终发现问题的根源在于Owned窗口的样式：如果Owned窗口具有<code>WS_OVERLAPPED</code>样式，就会出现该问题；而把样式改成<code>WS_POPUP</code>之后，问题就会消失。</p>
+<p>可以用以下的代码来试验：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"Windows.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> WINAPI <span class="title">wWinMain</span><span class="params">(HINSTANCE instance, HINSTANCE, LPWSTR, <span class="keyword">int</span>)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//注册Owner窗口类</span></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建Owner窗口</span></span><br><span class="line">    HWND owner_window = CreateWindow(</span><br><span class="line">        <span class="string">L"OwnerWindowClass"</span>, </span><br><span class="line">        <span class="string">L"Owner"</span>, </span><br><span class="line">        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,</span><br><span class="line">        CW_USEDEFAULT, </span><br><span class="line">        CW_USEDEFAULT,</span><br><span class="line">        CW_USEDEFAULT,</span><br><span class="line">        CW_USEDEFAULT,</span><br><span class="line">        <span class="literal">nullptr</span>,</span><br><span class="line">        <span class="literal">nullptr</span>,</span><br><span class="line">        instance,</span><br><span class="line">        <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//注册Owned窗口类，使用OwnedWindowProcedure作为窗口过程函数</span></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建第一个Owned窗口</span></span><br><span class="line">    HWND owned_window1 = CreateWindow(</span><br><span class="line">        <span class="string">L"OwnedWindowClass"</span>, </span><br><span class="line">        <span class="string">L"Owned"</span>,</span><br><span class="line">        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,</span><br><span class="line">        <span class="number">0</span>, </span><br><span class="line">        <span class="number">0</span>, </span><br><span class="line">        <span class="number">500</span>,</span><br><span class="line">        <span class="number">500</span>,</span><br><span class="line">        owner_window,</span><br><span class="line">        <span class="literal">nullptr</span>,</span><br><span class="line">        instance,</span><br><span class="line">        <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建第二个Owned窗口</span></span><br><span class="line">    HWND owned_window2 = CreateWindow(</span><br><span class="line">        <span class="string">L"OwnedWindowClass"</span>,</span><br><span class="line">        <span class="string">L"Owned"</span>,</span><br><span class="line">        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,</span><br><span class="line">        <span class="number">0</span>,</span><br><span class="line">        <span class="number">0</span>,</span><br><span class="line">        <span class="number">500</span>,</span><br><span class="line">        <span class="number">500</span>,</span><br><span class="line">        owner_window,</span><br><span class="line">        <span class="literal">nullptr</span>,</span><br><span class="line">        instance,</span><br><span class="line">        <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    MSG message&#123;&#125;;</span><br><span class="line">    <span class="keyword">while</span> (GetMessage(&amp;message, <span class="literal">nullptr</span>, <span class="number">0</span>, <span class="number">0</span>)) &#123;</span><br><span class="line">        TranslateMessage(&amp;message);</span><br><span class="line">        DispatchMessage(&amp;message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">LRESULT CALLBACK <span class="title">OwnedWindowProcedure</span><span class="params">(HWND window_handle, UINT message, WPARAM wparam, LPARAM lparam)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//拦截关闭行为，改成隐藏</span></span><br><span class="line">    <span class="keyword">if</span> (message == WM_CLOSE) &#123;</span><br><span class="line">        ShowWindow(window_handle, SW_HIDE);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> DefWindowProc(window_handle, message, wparam, lparam);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>运行以上代码，会显示一个Owner窗口和两个Owned窗口。逐个关闭Owned窗口，在关闭最后一个窗口时，如果桌面上存在其它窗口，那么必然会激活其它窗口，而不是Owner窗口。把Owned窗口的样式改成<code>WS_POPUP</code>之后，就不会再出现这个现象了。</p>
+<p>从这个问题可以看出，Overlapped窗口和Popup窗口并不仅仅是默认有无边框的区别，在一些细节行为上，这两种窗口会有不同的表现。一般来说，<code>WS_OVERLAPPED</code>样式用于顶层的Owner窗口，而Owned窗口应尽量使用<code>WS_POPUP</code>样式，这样可以避免出现一些意料之外的表现。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2019/07/06/why-the-owner-window-would-be-put-at-back-when-its-owned-window-hides/" data-title="为什么隐藏Owned窗口时，Owner窗口会被后置" data-url="http://zplutor.github.io/2019/07/06/why-the-owner-window-would-be-put-at-back-when-its-owned-window-hides/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>14</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/STL/">STL</a><small>5</small></li>
+  
+    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>1</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>21</small></li>
+  
+    <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
+  
+    <li><a href="/tags/boost/">boost</a><small>4</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>2</small></li>
+  
+    <li><a href="/tags/macOS/">macOS</a><small>2</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>2</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>3</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>2</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>5</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>2</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2019 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
