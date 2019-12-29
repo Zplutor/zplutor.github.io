@@ -53,6 +53,42 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2016-11-20T14:35:41.000Z"><a href="/2016/11/20/a-trap-of-dynamic-timeout-in-libcurl/">2016-11-20</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2016/11/20/a-trap-of-dynamic-timeout-in-libcurl/">libcurl动态超时的陷阱</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在《<a href="http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/">如何设置libcurl的动态超时值</a>》中提到，动态超时值（通过<code>CURLOPT_LOW_SPEED_LIMIT</code>和<code>CURLOPT_LOW_SPEED_TIME</code>设置）比固定超时值（通过<code>CURLOPT_TIMEOUT</code>设置）更符合实际需要，所以我一般只设置动态超时值，而不设置固定超时值。然而，在实际使用中发现，有时网络请求会一直没有结束，也就是说设置的动态超时值在某些情况下会失效。在阅读了libcurl的源代码之后，我发现原来动态超时值存在一个陷阱。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2016/11/20/a-trap-of-dynamic-timeout-in-libcurl/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2016-09-08T12:24:38.000Z"><a href="/2016/09/08/how-to-make-a-specified-application-crash/">2016-09-08</a></time>
       
       
@@ -371,42 +407,6 @@
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2016-02-04T13:51:05.000Z"><a href="/2016/02/04/implement-singleton-application-with-kernal-object/">2016-02-04</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2016/02/04/implement-singleton-application-with-kernal-object/">使用内核对象实现单例程序</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>对于有些程序来说，运行多个实例没有意义，甚至会出现异常，所以有必要把程序实现成单例。有多种方法可以做到这一点，比较好的方法是使用内核对象。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2016/02/04/implement-singleton-application-with-kernal-object/#more" class="more-link">阅读全文</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -425,7 +425,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>14</small></li>
+    <li><a href="/tags/C/">C++</a><small>15</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -449,7 +449,7 @@
   
     <li><a href="/tags/STL/">STL</a><small>5</small></li>
   
-    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>1</small></li>
+    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>2</small></li>
   
     <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
   
@@ -457,7 +457,7 @@
   
     <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>21</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>22</small></li>
   
     <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
   

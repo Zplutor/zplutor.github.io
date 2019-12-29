@@ -6,13 +6,15 @@
   <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
-  <title>macOS | Zplutor&#39;s</title>
+  <title>Visual Studio并行编译失效的原因 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="对于大型C++项目来说，并行编译开关/MP是必不可少的编译器选项，它能显著提高项目的编译速度。但是，当我在自己所在的项目中开启了这个选项之后，发现没有什么效果，只有少数文件可以并行编译，大多数文件仍然是串行编译的，编译时CPU使用率只有30%~40%。这个问题困扰了我们项目组很久。">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
+  <meta property="og:title" content="Visual Studio并行编译失效的原因">
   <meta property="og:site_name" content="Zplutor&#39;s">
 
   
@@ -46,37 +48,69 @@
 <div class="clearfix"></div>
 </header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper">
-<h2 class="archive-title tag">macOS</h2>
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2019-12-29T12:48:44.000Z"><a href="/2019/12/29/why-multi-processor-compile-option-not-work/">2019-12-29</a></time>
+      
+      
+  
+    <h1 class="title">Visual Studio并行编译失效的原因</h1>
+  
 
+    </header>
+    <div class="entry">
+      
+        <p>对于大型C++项目来说，并行编译开关<code>/MP</code>是必不可少的编译器选项，它能显著提高项目的编译速度。但是，当我在自己所在的项目中开启了这个选项之后，发现没有什么效果，只有少数文件可以并行编译，大多数文件仍然是串行编译的，编译时CPU使用率只有30%~40%。这个问题困扰了我们项目组很久。</p>
+<a id="more"></a>
+<p>最近，我在Visual Studio的社区里发现了一个反馈，内容是说当显式指定了.obj文件的输出文件名时，<code>/MP</code>选项会失效。而Visual Studio的官方团队也解释说这确实是编译器的缺陷，因为编译器是以传递给编译器的参数来决定编译单元是否能并行编译的，只有编译参数一模一样的编译单元才能够并行。</p>
+<p>于是我立即查看我们工程的设置，发现.obj文件的输出文件名确实被修改了，如下图所示：</p>
+<img src="/2019/12/29/why-multi-processor-compile-option-not-work/1.png">
+<p>这个值的意思是，按照源文件的相对路径来输出.obj文件。默认情况下，工程里所有源文件编译后的.obj文件都会输出到同一个目录中，一旦在不同目录下存在名字相同的源文件，它们输出的.obj文件就会相互覆盖，在大型工程里这个问题很容易遇到。所以，为了避免这个问题，我们在这个设置项加上了<code>%(RelativeDir)</code>。</p>
+<p>这样一来，虽然解决了名字冲突的问题，却带来了并行编译失效的问题。由于<code>%(RelativeDir)</code>的值是随着源文件所在目录而改变的，所以不同目录下的源文件其编译参数都不一样，它们就无法并行编译了。只有同一个目录下的源文件才能并行编译。</p>
+<p>去掉了这个设置之后，<code>/MP</code>选项终于恢复了该有的效率，在编译时CPU使用率一直在90%以上，整个工程的编译时间缩短了一半。当然，代价是必须逐个处理名字冲突的源文件，要么改名字，要么改.obj文件的输出路径。</p>
+<p>在上述的反馈中，Visual Studio团队已经在着手修复这个问题，希望在不久的将来能恢复使用<code>%(RelativeDir)</code>。</p>
 
-  <div class="archive">
-    
-      <article class="post">
-        <div class="post-content">
-          <header>
-            <div class="icon"></div>
-            <time datetime="2017-04-02T06:42:04.000Z"><a href="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/">2017-04-02</a></time>
-            
-              <h1 class="title"><a href="/2017/04/02/the-most-compatible-text-encoding-between-visual-studio-and-xcode/">在Visual Studio和XCode之间兼容性最好的文本编码</a></h1>
-            
-          </header>
-        </div>
-      </article>
-    
-      <article class="post">
-        <div class="post-content">
-          <header>
-            <div class="icon"></div>
-            <time datetime="2015-11-28T05:20:30.000Z"><a href="/2015/11/28/keywindow-0-1-2/">2015-11-28</a></time>
-            
-              <h1 class="title"><a href="/2015/11/28/keywindow-0-1-2/">KeyWindow 0.1.2</a></h1>
-            
-          </header>
-        </div>
-      </article>
-    
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/C/">C++</a>, <a href="/tags/Visual-Studio/">Visual Studio</a>
   </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2019/12/29/why-multi-processor-compile-option-not-work/" data-title="Visual Studio并行编译失效的原因" data-url="http://zplutor.github.io/2019/12/29/why-multi-processor-compile-option-not-work/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
 </div></div>
     <aside id="sidebar" class="alignright">
   
