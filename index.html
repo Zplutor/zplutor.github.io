@@ -53,6 +53,42 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2020-11-21T14:21:23.000Z"><a href="/2020/11/21/how-to-check-if-a-type-is-comparable/">2020-11-21</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2020/11/21/how-to-check-if-a-type-is-comparable/">how to check if a type is comparable</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>对于一个用户定义类型，如果定义了<code>operator==</code>或者<code>operator&lt;</code>等比较函数，那么这个类型就是可比较的。在实现一些工具库的时候，可能需要知道某个类型是否可比较，例如，想要知道是否可以使用<code>==</code>操作符来比较两个类对象是否相等，那么可以使用下面的模板类来判断：</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2020/11/21/how-to-check-if-a-type-is-comparable/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2019-12-29T12:48:44.000Z"><a href="/2019/12/29/why-multi-processor-compile-option-not-work/">2019-12-29</a></time>
       
       
@@ -99,7 +135,7 @@
     </header>
     <div class="entry">
       
-        <p>最近在开发的时候遇到一个怪异的问题：一个Owner窗口拥有多个Owned窗口，当关闭Owned窗口时，实际上会调用<code>ShowWindow</code>来隐藏该窗口。当最后一个Owned窗口隐藏时，理论上应该激活Owner窗口，然而实际上激活的是位于Owner窗口下面的另外一个窗口。</p>
+        <p>最近在开发的时候遇到一个怪异的问题，问题背景：在程序中，有一个Owner窗口拥有多个Owned窗口，当关闭Owned窗口时，会调用<code>ShowWindow</code>来隐藏该窗口，而不是真正的关闭。当最后一个Owned窗口隐藏时，理论上应该要激活Owner窗口，然而实际上激活的是位于Owner窗口下面的另外一个窗口。</p>
       
     </div>
     <footer>
@@ -371,42 +407,6 @@
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-03-14T15:41:16.000Z"><a href="/2017/03/14/binary-search-in-stl/">2017-03-14</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/03/14/binary-search-in-stl/">STL中的二分查找</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>二分查找是重要且常用的算法，在STL中自然少不了它的身影。本文介绍一下在STL中与二分查找有关的函数。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/03/14/binary-search-in-stl/#more" class="more-link">阅读全文</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -423,7 +423,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>15</small></li>
+    <li><a href="/tags/C/">C++</a><small>16</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -515,7 +515,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2019 Zplutor
+  &copy; 2020 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

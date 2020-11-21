@@ -2,16 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://zplutor.github.io/2019/12/29/why-multi-processor-compile-option-not-work/</loc>
+    <loc>http://zplutor.github.io/2020/11/21/how-to-check-if-a-type-is-comparable/</loc>
     
-    <lastmod>2019-12-29T12:52:13.154Z</lastmod>
+    <lastmod>2020-11-21T14:24:58.514Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://zplutor.github.io/2019/07/06/why-the-owner-window-would-be-put-at-back-when-its-owned-window-hides/</loc>
     
-    <lastmod>2019-07-06T08:46:08.920Z</lastmod>
+    <lastmod>2020-11-21T14:20:22.313Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://zplutor.github.io/2019/12/29/why-multi-processor-compile-option-not-work/</loc>
+    
+    <lastmod>2019-12-29T12:52:13.154Z</lastmod>
     
   </url>
   
