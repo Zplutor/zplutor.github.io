@@ -6,7 +6,7 @@
   <meta name="baidu-site-verification" content="GDPyw3Yidj">
   <meta charset="utf-8">
   
-  <title>how to check if a type is comparable | Zplutor&#39;s</title>
+  <title>如何判断一个类型是否可比较 | Zplutor&#39;s</title>
   <meta name="author" content="Zplutor">
   
   <meta name="description" content="对于一个用户定义类型，如果定义了operator==或者operator&amp;lt;等比较函数，那么这个类型就是可比较的。在实现一些工具库的时候，可能需要知道某个类型是否可比较，例如，想要知道是否可以使用==操作符来比较两个类对象是否相等，那么可以使用下面的模板类来判断：">
@@ -14,7 +14,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="how to check if a type is comparable">
+  <meta property="og:title" content="如何判断一个类型是否可比较">
   <meta property="og:site_name" content="Zplutor&#39;s">
 
   
@@ -58,7 +58,7 @@
       
       
   
-    <h1 class="title">how to check if a type is comparable</h1>
+    <h1 class="title">如何判断一个类型是否可比较</h1>
   
 
     </header>
@@ -68,10 +68,10 @@
 <a id="more"></a>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IsEqualityComparable</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> K&gt;</span><br><span class="line">    static constexpr auto Test(K*) -&gt; decltype(std::declval&lt;K&gt;() == std::declval&lt;K&gt;());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> K&gt;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keyword">int</span> <span class="title">Test</span><span class="params">(...)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keyword">bool</span> Value = <span class="built_in">std</span>::is_same_v&lt;<span class="keyword">bool</span>, <span class="keyword">decltype</span>(Test&lt;T&gt;(<span class="literal">nullptr</span>))&gt;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 <p>使用方式：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//内置类型和标准库类型</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; IsEqualityComparable&lt;<span class="keyword">int</span>&gt;::Value;    <span class="comment">// true</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; IsEqualityComparable&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt;::Value; <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//有比较操作符的自定义类型</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ComaprableObject</span> &#123;</span></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>==(<span class="keyword">const</span> ComaprableObject&amp; o1, <span class="keyword">const</span> ComaprableObject&amp; o2) &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; IsEqualityComparable&lt;ComaprableObject&gt;::Value <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//没有比较操作符的自定义类型</span></span><br><span class="line">class UncomparableObject &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; IsEqualityComparable&lt;ComaprableObject&gt;::Value <span class="comment">// false</span></span><br></pre></td></tr></table></figure></p>
-<p>这个模板类型基于C++的SFINAE特性，关于这个特性的解释，可以参考之前的文章<a href="http://zplutor.github.io/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/">《如何判断一个容器是否关联容器》</a>，在这片文章里，也基于SFINAE特性实现了一个判断某类型是否关联容器的模板类。</p>
+<p>这个模板类型基于C++的SFINAE特性，关于这个特性的解释，可以参考之前的文章<a href="http://zplutor.github.io/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/">《如何判断一个容器是否关联容器》</a>，在这篇文章里，也基于SFINAE特性实现了一个判断某类型是否关联容器的模板类。</p>
 <p><code>IsEqualityComparable</code>使用了<code>std::is_same_v</code>来推导结果，它检查<code>Test&lt;T&gt;(nullptr)</code>这个函数调用表达式的返回值类型是否<code>bool</code>，如果是，则<code>T</code>可以用<code>==</code>进行比较，如果不是则不可以比较。</p>
 <p>为了让<code>Test&lt;T&gt;(nullptr)</code>这个表达式对不同类型有不同的返回值，这里定义了两个重载的<code>Test</code>模板方法，其中第一个的声明如下所示：<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> K&gt;</span><br><span class="line">static constexpr auto Test(K*) -&gt; decltype(std::declval&lt;K&gt;() == std::declval&lt;K&gt;());</span><br></pre></td></tr></table></figure></p>
-<p>这个方法的返回值通过<code>decltype</code>来推导，而推导的来源正是模板类型<code>K</code>的<code>==</code>表达式，如果<code>K</code>可以比较，那么这个方法是有效的；如果<code>K</code>不可以比较，那么根据SFINAE，这个方法会被删除，就像从未存在过一样。注意<code>std::declval</code>的使用，这个函数可以在不调用构造函数的前提下生成一个<code>K</code>的引用，以便使用者直接访问<code>K</code>的接口。这意味着使用者不需要知道如何构造<code>K</code>的对象，因为<code>==</code>只能作用于对象上，在比较之前必须先有对象，为了创建对象，使用者要调用<code>K</code>的构造方法。由于每个类型的构造方法都不一样，这里就没办法做到广泛适用。而<code>std::declval</code>绕过了构造方法，避免了这个问题。</p>
+<p>这个方法的返回值类型通过<code>decltype</code>来推导，而推导的来源正是模板类型<code>K</code>的<code>==</code>表达式，如果<code>K</code>可以比较，那么这个方法是有效的，返回值类型是<code>bool</code>；如果<code>K</code>不可以比较，那么根据SFINAE，这个方法会被删除，就像从未存在过一样。注意<code>std::declval</code>的使用，这个函数可以在不调用构造函数的前提下生成一个<code>K</code>的引用，以便使用者直接访问<code>K</code>的接口。这意味着使用者不需要知道如何构造<code>K</code>的对象，因为<code>==</code>只能作用于对象上，在比较之前必须先有对象，为了创建对象，使用者要调用<code>K</code>的构造方法。由于每个类型的构造方法都不一样，这里就没办法做到广泛适用。而<code>std::declval</code>绕过了构造方法，避免了这个问题。</p>
 <p>第二个重载的<code>Test</code>模板方法如下所示：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> K&gt;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keyword">int</span> <span class="title">Test</span><span class="params">(...)</span></span>;</span><br></pre></td></tr></table></figure></p>
 <p>这个方法是“没有选择时的最后选择“。如果第一个模板方法被删除了，那么<code>Test&lt;T&gt;(nullptr)</code>这个表达式就会匹配到这个模板方法，表达式的返回值类型是<code>int</code>；如果第一个模板方法有效，那么表达式会优先匹配第一个方法，因为参数为<code>...</code>的重载方法优先级是最低的，此时表达式的返回值类型是<code>bool</code>。</p>
 
@@ -97,7 +97,7 @@
 <section id="comment">
   <h1 class="title">留言</h1>
 
-  <div class="ds-thread" data-thread-key="2020/11/21/how-to-check-if-a-type-is-comparable/" data-title="how to check if a type is comparable" data-url="http://zplutor.github.io/2020/11/21/how-to-check-if-a-type-is-comparable/"></div>
+  <div class="ds-thread" data-thread-key="2020/11/21/how-to-check-if-a-type-is-comparable/" data-title="如何判断一个类型是否可比较" data-url="http://zplutor.github.io/2020/11/21/how-to-check-if-a-type-is-comparable/"></div>
 
   <script type="text/javascript">
     var duoshuoQuery = {short_name:"zplutor"};
