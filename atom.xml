@@ -763,11 +763,11 @@
     
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
-      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
+    
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
       <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
@@ -819,9 +819,9 @@
     </summary>
     
     
-      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
       <category term="流式输出" scheme="http://zplutor.github.io/tags/%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/"/>
     
