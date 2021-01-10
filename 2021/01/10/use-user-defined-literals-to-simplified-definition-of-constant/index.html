@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
+  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+  <meta charset="utf-8">
+  
+  <title>使用自定义字面量简化常量的定义 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="在涉及文件大小的代码中，经常要写出判断大小的代码。例如，在上传文件之前，要判断文件的大小是否超出了可支持的范围：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="使用自定义字面量简化常量的定义">
+  <meta property="og:site_name" content="Zplutor&#39;s">
+
+  
+    <meta property="og:image" content="undefined">
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+</html>
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2021-01-10T07:49:30.000Z"><a href="/2021/01/10/use-user-defined-literals-to-simplified-definition-of-constant/">2021-01-10</a></time>
+      
+      
+  
+    <h1 class="title">使用自定义字面量简化常量的定义</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在涉及文件大小的代码中，经常要写出判断大小的代码。例如，在上传文件之前，要判断文件的大小是否超出了可支持的范围：</p>
+<a id="more"></a>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (file_size &gt; <span class="number">4</span> * <span class="number">1024</span> * <span class="number">1024</span> * <span class="number">1024</span>) &#123; </span><br><span class="line">    <span class="comment">//超出可支持范围</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里出现了好几个1024，阅读这段代码的人首先要心算一遍之后才能理解“哦，原来这里的文件大小上限是4GB”。对程序员来说这种计算都是小菜一碟，即便如此，这段代码的可读性也是不高的，因为它没有直截了当地表达出它的意图。</p>
+<p>有几种方法可以优化这段代码，例如抽取出一个<code>GB()</code>函数。这里要介绍的是另一种表达更自然的方法，C++11引入的新特性：自定义字面量。</p>
+<p>字面量是指在代码中写下的数字、字符串等值，例如：</p>
+<ul>
+<li>整数，如<code>1024</code>。</li>
+<li>浮点数，如<code>3.14</code>。</li>
+<li>字符，如<code>&#39;a&#39;</code>。</li>
+<li>字符串，如<code>&quot;abc&quot;</code>。</li>
+</ul>
+<p>如果在字面量后面加上特定后缀，可以调用对应的转换函数，将这个字面量转成特定类型。例如，在<code>&lt;string&gt;</code>中定义了<code>s</code>后缀，可以将一个字符串字面量转换成<code>std::string</code>类型：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//将std::literals名称空间引入当前作用域，才能使用C++内置的自定义字面量</span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>::literals;</span><br><span class="line"></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> str = <span class="string">"This is a std::string."</span>s;</span><br></pre></td></tr></table></figure>
+<p>我们也可以定义自己的字面量后缀和转换函数，方法是定义一个字面量操作符函数。该函数的语法如下：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ReturnType <span class="keyword">operator</span><span class="string">""</span> _Suffix(Parameters);</span><br></pre></td></tr></table></figure></p>
+<p><code>ReturnType</code>是这个转换函数的返回值。<code>_Suffix</code>是字面量的后缀，要注意的是，开发者自定义字面量的后缀必须以<code>_</code>字符开头，否则会编译失败，因为不带这个字符开头的后缀是预留给C++的。<code>Parameters</code>是转换函数的参数列表，可以从以下几种参数列表中选择：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//整数字面量</span></span><br><span class="line">(<span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">long</span>) </span><br><span class="line"></span><br><span class="line"><span class="comment">//浮点数字面量</span></span><br><span class="line">(<span class="keyword">long</span> <span class="keyword">double</span>) </span><br><span class="line"></span><br><span class="line"><span class="comment">//字符字面量</span></span><br><span class="line">(<span class="keyword">char</span>) </span><br><span class="line">(<span class="keyword">wchar_t</span>) </span><br><span class="line">(<span class="keyword">char16_t</span>)</span><br><span class="line">(<span class="keyword">char32_t</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">//字符串字面量</span></span><br><span class="line">(<span class="keyword">const</span> <span class="keyword">char</span>*, <span class="keyword">size_t</span>) </span><br><span class="line">(<span class="keyword">const</span> <span class="keyword">wchar_t</span>*, <span class="keyword">size_t</span>) </span><br><span class="line">(<span class="keyword">const</span> <span class="keyword">char16_t</span>*, <span class="keyword">size_t</span>)</span><br><span class="line">(<span class="keyword">const</span> <span class="keyword">char32_t</span>*, <span class="keyword">size_t</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">//原始字面量</span></span><br><span class="line">(<span class="keyword">const</span> <span class="keyword">char</span>*)</span><br></pre></td></tr></table></figure>
+<p>具体选择哪种参数列表，根据你的需求而定。如果你希望只支持整数，那么只需要定义一个参数列表是<code>(unsigned long long)</code>的操作符函数即可；如果你希望同时支持整数和浮点数，那么就要定义两个操作符函数，参数列表分别是<code>(unsigned long long)</code>和<code>(long double)</code>。</p>
+<p>你只能从上面的参数列表中选择，不能使用别的参数列表，否则编译会失败。例如，即使你只需要一个<code>int</code>类型的整数字面量，也必须把参数定义成<code>unsigned long long</code>。编译器总是把字面量的值以可表示范围最大的类型传给你，具体怎么使用这个值由你自己决定。</p>
+<p>由于C++中存在四种字符类型，所以字符字面量和字符串字面量都分别有四种参数类型。在字符串字面量的参数列表中，第二个<code>size_t</code>类型的参数表示字符串的长度。</p>
+<p>如果字面量操作符函数的参数列表定义成<code>const char*</code>，那么它是一个原始字面量操作符函数。原始字面量操作符只能用在整数或浮点数字面量上，它的参数指向整数或浮点数的字符串。它提供了一种方法，让我们可以以自定义的规则来解析整数或浮点数字面量。</p>
+<p>回到本文开头的问题，我们可以定义下面的字面量操作符函数来简化文件大小常量的定义：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">constexpr</span> <span class="built_in">std</span>::<span class="keyword">int64_t</span> <span class="keyword">operator</span><span class="string">""</span> _GB(<span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">long</span> value) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">static_cast</span>&lt;<span class="built_in">std</span>::<span class="keyword">int64_t</span>&gt;(value * <span class="number">1024</span> * <span class="number">1024</span> * <span class="number">1024</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>替换使用这个自定义字面量之后，代码含义一目了然，大大提高了可读性：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (file_size &gt; <span class="number">4</span>_GB) &#123; </span><br><span class="line">    <span class="comment">//超出可支持范围</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2021/01/10/use-user-defined-literals-to-simplified-definition-of-constant/" data-title="使用自定义字面量简化常量的定义" data-url="http://zplutor.github.io/2021/01/10/use-user-defined-literals-to-simplified-definition-of-constant/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>17</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/STL/">STL</a><small>5</small></li>
+  
+    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>2</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>23</small></li>
+  
+    <li><a href="/tags/Windows-Performance-Toolkit/">Windows Performance Toolkit</a><small>1</small></li>
+  
+    <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
+  
+    <li><a href="/tags/boost/">boost</a><small>4</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>2</small></li>
+  
+    <li><a href="/tags/macOS/">macOS</a><small>2</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>2</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>3</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>3</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>6</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>2</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2021 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
