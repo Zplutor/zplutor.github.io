@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zplutor.github.io/"/>
-  <updated>2021-01-10T07:56:51.734Z</updated>
+  <updated>2021-02-04T03:24:40.833Z</updated>
   <id>http://zplutor.github.io/</id>
   
   <author>
@@ -15,6 +15,26 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>为什么可以重命名一个正在运行的exe文件</title>
+    <link href="http://zplutor.github.io/2021/02/04/why-can-a-running-exe-file-be-renamed/"/>
+    <id>http://zplutor.github.io/2021/02/04/why-can-a-running-exe-file-be-renamed/</id>
+    <published>2021-02-04T03:22:18.000Z</published>
+    <updated>2021-02-04T03:24:40.833Z</updated>
+    
+    <content type="html"><![CDATA[<p>我们都知道，当一个exe文件正在运行的时候，是不能被修改，也不能被删除的。然而，似乎有悖常理的是，这个文件却是可以被重命名的。这背后的原理是什么呢？</p><a id="more"></a><p>在运行一个exe文件之前，首先要打开它。打开文件的基础API是<code>CreateFile</code>函数，在它的参数中，与文件共享方式相关的参数是<code>dwShareMode</code>，它可以指定打开的文件是否允许被其它访问者读（<code>FILE_SHARE_READ</code>）、写（<code>FILE_SHARE_WRITE</code>）或删除（<code>FILE_SHARE_DELETE</code>）。于是自然有这样的猜想：系统在打开exe文件的时候使用了某种共享方式的组合，以致于出现这种行为。</p><p>可是，当使用不同组合的共享方式来调用<code>CreateFile</code>，尝试还原出这种行为时，却是怎么也行不通。API的文档明确指出，在指定了<code>FILE_SHARE_DELETE</code>的时候既可以删除文件，也可以重命名文件，但就是没有“不能删除，只能重命名”这种选项。</p><p>为了弄清楚这个问题，我们可以使用ProcessMonitor来观察系统在运行exe之前是如何打开文件的。首先写一个简单的程序，在程序中调用<code>CreateProcess</code>函数来启动另外一个进程，然后在ProcessMonitor中查看这个程序运行时产生的文件操作记录。这里额外写一个程序来启动进程的目的是为了减少干扰信息——直接在资源管理器中运行exe会产生很多文件操作记录，无法确定哪些才是真正运行所需的。</p><p>ProcessMonitor显示的结果如下，这是在ConsoleApplication.exe进程里启动了Application.exe进程的记录。</p><img src="/2021/02/04/why-can-a-running-exe-file-be-renamed/1.png"><p>打开第一条“CreateFile”的记录，可以看到exe文件是以<code>FILE_SHARE_READ</code>和<code>FILE_SHARE_DELETE</code>方式打开的：</p><img src="/2021/02/04/why-can-a-running-exe-file-be-renamed/2.png"><p>显然这并不能作出合理的解释，因为这种组合的共享方式已经尝试过是没有效果的，况且ProcessMonitor里的最后一条操作记录是“CloseFile”，文件已经被关闭了，打开文件的影响已经是不存在的。再看一下文件操作记录，在“CreateFile”之后有一次“CreateFileMapping”操作，也许这就是关键点。</p><p>让我们再稍微深入一下程序的启动流程。在打开了exe文件之后，系统需要读取文件的内容来运行，这是通过内存映射文件来实现的。系统在打开后的exe文件上创建了一个内存映射文件，把它映射到了进程的虚拟地址空间中，然后直接访问虚拟地址来读取文件的内容。对虚拟地址的访问触发了内存管理器的缺页机制，它发现内存页面中没有exe文件的内容，便从硬盘上对应的位置读取，加载到内存中。</p><p>由于内存映射文件的存在，exe文件的内容必须完整保留在硬盘上，以便系统在程序运行过程中随时读取，所以exe文件是不能删除的。而当程序运行起来之后，exe的文件名已经没有用处了，并且文件名不属于文件内容，它只是文件夹目录项中的一个属性，修改文件名实际上修改的是目录项，而不是文件内容，因此修改exe的文件名并不会影响程序运行。</p><p>我们可以写一个程序来验证上述论述：先打开一个文件，然后在这个文件上创建一个内存映射文件，再把先前打开的文件句柄关闭，保持程序不退出。此时这个文件的行为就跟正在运行的exe文件一样了，可以重命名但是不能删除。</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;我们都知道，当一个exe文件正在运行的时候，是不能被修改，也不能被删除的。然而，似乎有悖常理的是，这个文件却是可以被重命名的。这背后的原理是什么呢？&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
+    
+  </entry>
   
   <entry>
     <title>使用自定义字面量简化常量的定义</title>
@@ -783,11 +803,11 @@
     
       <category term="Windows" scheme="http://zplutor.github.io/tags/Windows/"/>
     
-      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
     
       <category term="STL" scheme="http://zplutor.github.io/tags/STL/"/>
+    
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
       <category term="线程" scheme="http://zplutor.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
     
@@ -839,9 +859,9 @@
     </summary>
     
     
-      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
-    
       <category term="C++" scheme="http://zplutor.github.io/tags/C/"/>
+    
+      <category term="调试" scheme="http://zplutor.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
       <category term="流式输出" scheme="http://zplutor.github.io/tags/%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/"/>
     
