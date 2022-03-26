@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>使用ProcDump捕获程序崩溃信息 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="使用ProcDump捕获程序崩溃信息">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="使用ProcDump捕获程序崩溃信息"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,14 +65,17 @@
     <div class="entry">
       
         <p>当程序崩溃的时候，捕获崩溃信息并进行上报对提升产品质量有很大帮助，它能发现很多在开发和测试阶段发现不了的问题。Windows的WER（Windows Error Reporting）组件在系统级别上提供了捕获崩溃信息的能力，它能够在程序崩溃时生成一个内存转储文件（即dump文件），该文件包含了引发崩溃的异常信息。然而，这个功能仅在Windows Vista SP1及更高的版本中存在，而且它是可配置的，用户可以阻止WER生成dump文件。这意味着我们不能依赖系统来捕获崩溃信息，而是要通过别的途径。</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>其中一个可选的方案是使用Sysinternals出品的ProcDump。ProcDump是一个命令行工具，它其中的一个功能就是用来捕获程序的崩溃信息。该方案的流程如下：</p>
 <ul>
 <li>在程序开始执行的时候，启动ProcDump，并且把自己的进程ID传递给它，让它一直监视该进程。</li>
 <li>ProcDump一直在后台运行，直到程序正常退出，或者发生崩溃。在后一种情况下，ProcDump会在指定的目录生成dump文件。</li>
 <li>程序下一次启动时，发现存在dump文件，进行上报。</li>
 </ul>
-<p>可见，这种方案非常简单，只要用正确的参数启动ProcDump即可。假设我们的程序安装在<code>C:\MyApp</code>，进程ID是<code>10032</code>，则启动ProcDump的命令行如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;C:\MyApp\bin\procdump.exe&quot; -accepteula -e 10032 &quot;C:\MyApp\dump&quot;</span><br></pre></td></tr></table></figure></p>
+<p>可见，这种方案非常简单，只要用正确的参数启动ProcDump即可。假设我们的程序安装在<code>C:\MyApp</code>，进程ID是<code>10032</code>，则启动ProcDump的命令行如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;C:\MyApp\bin\procdump.exe&quot; -accepteula -e 10032 &quot;C:\MyApp\dump&quot;</span><br></pre></td></tr></table></figure>
+
 <p>启动ProcDump时最好指定<code>procdump.exe</code>的绝对路径，避免进程工作目录改变带来的问题。第一个参数<code>-accepteula</code>表示接受Sysinternals的最终用户许可协议。Sysinternals的工具在首次使用的时候都会弹出最终用户许可协议对话框，使用这个参数可以防止对话框弹出。第二个参数<code>-e</code>表示在进程发生未处理异常（也就是崩溃）时生成dump文件。第四个参数是进程ID，表示让ProcDump监视哪个进程。最后一个参数指定dump文件存放的文件夹路径，要注意的是，这个文件夹必须要预先创建，否则ProcDump会认为这是一个文件路径，并向这个路径写数据，导致异常行为。</p>
 <p>最后，程序需要在启动的时候拼接好上述命令行，并调用<code>CreateProcess</code>来启动该命令行。要记得在调用时给<code>dwCreationFlags</code>参数传入<code>CREATE_NO_WINDOW</code>，防止出现控制台窗口。</p>
 <p>这个方案实现简单，学习成本低，即使不了解异常相关的机理也可以快速实现崩溃信息收集。但它有一个弊端：ProcDump是以调试器的的身份附加到指定进程上的，进程中发生的调试事件（例如线程的创建和销毁）会导致进程间通信开销，这会稍微影响程序的性能。如果这些性能开销不可接受，则要考虑其它的方案。</p>
@@ -123,7 +126,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -217,7 +220,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

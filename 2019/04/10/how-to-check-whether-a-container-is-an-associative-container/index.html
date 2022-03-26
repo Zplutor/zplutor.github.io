@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>如何判断一个容器是否关联容器 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何判断一个容器是否关联容器">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="如何判断一个容器是否关联容器"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,10 +65,15 @@
     <div class="entry">
       
         <p>如果你正在编写一个C++工具库，那么有可能需要知道一个容器是否关联容器。例如，你要写一个<code>Contain()</code>工具函数，该函数用来判断元素是否在容器中。而且你希望对于不同的容器，总是使用性能最优的查找方式，也就是说，对于关联容器，使用<code>find()</code>成员函数；而对于非关联容器，则使用<code>std::find()</code>函数。</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>此时，你也许需要使用模板元编程。在STL中，所有关联容器都有一个特征：定义了<code>key_type</code>成员类型，根据这个特征即可判断某个类型是否关联容器。</p>
-<p>进行这个判断的模板元类型如下所示：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> C&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">IsAssociativeContainer</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keyword">bool</span> <span class="title">Test</span><span class="params">(<span class="keyword">typename</span> T::key_type*)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keyword">bool</span> <span class="title">Test</span><span class="params">(...)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keyword">bool</span> Value = Test&lt;C&gt;(<span class="literal">nullptr</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
-<p>使用方式：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; IsAssociativeContainer&lt;<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;::Value;    <span class="comment">// false</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; IsAssociativeContainer&lt;<span class="built_in">std</span>::<span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt;&gt;::Value;      <span class="comment">// false</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; IsAssociativeContainer&lt;<span class="built_in">std</span>::<span class="built_in">set</span>&lt;<span class="keyword">int</span>&gt;&gt;::Value;       <span class="comment">// true</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; IsAssociativeContainer&lt;<span class="built_in">std</span>::<span class="built_in">map</span>&lt;<span class="keyword">int</span>, <span class="keyword">int</span>&gt;&gt;::Value;  <span class="comment">// true</span></span><br></pre></td></tr></table></figure></p>
+<p>进行这个判断的模板元类型如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> C&gt;</span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">IsAssociativeContainer</span> &#123;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function">    <span class="type">static</span> <span class="keyword">constexpr</span> <span class="type">bool</span> <span class="title">Test</span><span class="params">(<span class="keyword">typename</span> T::key_type*)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function">    <span class="type">static</span> <span class="keyword">constexpr</span> <span class="type">bool</span> <span class="title">Test</span><span class="params">(...)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="type">static</span> <span class="keyword">constexpr</span> <span class="type">bool</span> Value = <span class="built_in">Test</span>&lt;C&gt;(<span class="literal">nullptr</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>使用方式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::cout &lt;&lt; IsAssociativeContainer&lt;std::vector&lt;<span class="type">int</span>&gt;&gt;::Value;    <span class="comment">// false</span></span><br><span class="line">std::cout &lt;&lt; IsAssociativeContainer&lt;std::list&lt;<span class="type">int</span>&gt;&gt;::Value;      <span class="comment">// false</span></span><br><span class="line">std::cout &lt;&lt; IsAssociativeContainer&lt;std::set&lt;<span class="type">int</span>&gt;&gt;::Value;       <span class="comment">// true</span></span><br><span class="line">std::cout &lt;&lt; IsAssociativeContainer&lt;std::map&lt;<span class="type">int</span>, <span class="type">int</span>&gt;&gt;::Value;  <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
 <p><code>IsAssociativeContainer</code>的实现使用了C++模板的SFINAE技术，全称为“Substitution Failure Is Not An Error”，它的意思是：当编译器试图在多个重载的模板函数中查找最佳匹配时，如果某个函数的模板参数推导失败，那么这个函数会被丢弃，而不会出现编译错误。</p>
 <p>首先，在<code>IsAssociativeContainer</code>内部，定义了两个重载的<code>Test()</code>模板函数，第一个重载带有<code>T::key_type*</code>参数，对应关联容器类型，该函数返回<code>true</code>；第二个重载接受可变参数，对应非关联容器类型，该函数返回<code>false</code>。</p>
 <p>然后，在定义静态常量<code>Value</code>时，使用<code>Test&lt;C&gt;(nullptr)</code>对其赋值。这里正是C++魔法起作用的时刻：编译器要在两个<code>Test()</code>重载函数中找到最佳匹配，使用它的返回值作为<code>Value</code>的值。假如模板类型<code>C</code>不是关联容器，它没有<code>key_type</code>成员类型，那么编译器在推导第一个重载的时候会失败，这个重载函数随即被丢弃，就像它从来没有出现过那样，所以编译器只能选择第二个重载。假如<code>C</code>是关联容器，它具有<code>key_type</code>成员类型，那么两个重载函数都能推导成功，此时编译器会优先选择第一个重载，因为接受可变参数的重载函数优先级是最低的。这种只接受可变参数的模板函数经常与SFINAE一起使用。</p>
@@ -119,7 +124,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -213,7 +218,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

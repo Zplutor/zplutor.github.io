@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>如何设置libcurl的动态超时值 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何设置libcurl的动态超时值">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="如何设置libcurl的动态超时值"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,22 +65,27 @@
     <div class="entry">
       
         <p>针对连接超时，libcurl提供了两个设置选项，分别是CURLOPT_CONNECTTIMEOUT和CURLOPT_TIMEOUT。CURLOPT_CONNECTTIMEOUT设置的是连接阶段的超时值，而CURLOPT_TIMEOUT设置的是整个连接从开始到结束的超时值。libcurl把连接阶段的超时独立出来是好事，它给予了调用者更多的控制权，提高灵活性。但让人不解的是，libcurl没有提供动态超时值的设置，而只能设置固定的超时值。</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>所谓动态超时值，指的是允许连接空闲的最大时间值，也就是说，只有当连接没有数据传输的时候才开始计算超时时间。这也是平常说的超时的含义。正如上文所说，libcurl对超时的定义是允许连接执行的时间，这个定义在实际应用中会带来问题。例如，每个连接要传输的数据量是不一样的，为了让所有连接都能够正常执行，需要在执行之前计算出确切的超时值。然而这几乎不可能做到，因为网络环境时刻在变化，前一刻计算出来的超时值很快就不合适了。虽然固定超时值也有它特有的用途，但在绝大部分情况下它都不是我们想要的。</p>
 <p>好在libcurl提供了很高的灵活性，我们可以借助另外两个设置选项，变通地实现动态超时值。这两个设置选项是CURLOPT_LOW_SPEED_LIMIT和CURLOPT_LOW_SPEED_TIME，它们的含义是：当连接以低于CURLOPT_LOW_SPEED_LIMIT的速率执行了CURLOPT_LOW_SPEED_TIME的时间时，它就会被终止。一个微妙的地方是，当连接由于这个原因被终止时，它的错误码是CURLE_OPERATION_TIMEOUT。与其说是巧合，倒不如说这是libcurl特意为动态超时值提供的一个更灵活的接口。</p>
 <p>通过这两个设置选项，可以这样来设置动态超时值：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_LIMIT, <span class="number">1</span>);</span><br><span class="line">curl_easy_setopt(curl_handle, CURLOPT_LOW_SPEED_TIME, <span class="number">10</span>);</span><br></pre></td></tr></table></figure>
-<p>要注意的是，CURLOPT_LOW_SPEED_LIMIT的单位是字节/秒，CURLOPT_LOW_SPEED_TIME的单位是秒。这样一来，若在10秒内连接的速率都是低于1字节/秒（也就是无数据传输），它就被认为超时了。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">curl_easy_setopt</span>(curl_handle, CURLOPT_LOW_SPEED_LIMIT, <span class="number">1</span>);</span><br><span class="line"><span class="built_in">curl_easy_setopt</span>(curl_handle, CURLOPT_LOW_SPEED_TIME, <span class="number">10</span>);</span><br></pre></td></tr></table></figure>
+<p>要注意的是，CURLOPT_LOW_SPEED_LIMIT的单位是字节&#x2F;秒，CURLOPT_LOW_SPEED_TIME的单位是秒。这样一来，若在10秒内连接的速率都是低于1字节&#x2F;秒（也就是无数据传输），它就被认为超时了。</p>
 <p>如何设置动态超时值的问题到这里就结束了。但是显然还有另一个问题值得深究：连接的速率是怎么计算的呢？官方文档并没有解释清楚，不过既然libcurl是开源的，那么可以从它的源代码中寻找答案。检查速率的代码位于speedcheck.c的Curl_speedcheck函数中；计算速率的代码位于progress.c的Curl_pgrsUpdate函数中。下面简单解释一下计算速率的过程。</p>
 <p>libcurl使用一个长度为5的循环数组来记录速率信息，速率信息包含了当前时间以及当前总数据量，总数据量取的是总下载数据量和总上传数据量的最大值。每隔一秒钟libcurl就会记录当前的速率信息；由于使用了循环数组，最旧的信息会被丢弃。例如，在第四秒时候，循环数组里的内容是这样的：</p>
-<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/1.png">
+<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/1.png" class="">
+
 <p>第七秒的时候，循环数组里的内容是这样的：</p>
-<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/2.png">
+<img src="/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/2.png" class="">
+
 <p>以此类推。接下来，会使用最新的速率信息和最旧的速率信息来计算速率。例如，在第四秒时，速率是这样算的：</p>
 <pre><code>(total4 - total1) / (time4 - time1)
-</code></pre><p>在第七秒时，速率是这样算的：</p>
+</code></pre>
+<p>在第七秒时，速率是这样算的：</p>
 <pre><code>(total7 - total3) / (time7 - time3)
-</code></pre><p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
+</code></pre>
+<p>总之，连接的速率指的是在最近至多五秒内的平均速率。</p>
 
       
     </div>
@@ -128,7 +133,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -222,7 +227,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>libcurl动态超时的陷阱 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="libcurl动态超时的陷阱">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="libcurl动态超时的陷阱"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,10 +65,12 @@
     <div class="entry">
       
         <p>在《<a href="http://zplutor.github.io/2015/05/22/how-to-set-dynamic-timeout-for-libcurl/">如何设置libcurl的动态超时值</a>》中提到，动态超时值（通过<code>CURLOPT_LOW_SPEED_LIMIT</code>和<code>CURLOPT_LOW_SPEED_TIME</code>设置）比固定超时值（通过<code>CURLOPT_TIMEOUT</code>设置）更符合实际需要，所以我一般只设置动态超时值，而不设置固定超时值。然而，在实际使用中发现，有时网络请求会一直没有结束，也就是说设置的动态超时值在某些情况下会失效。在阅读了libcurl的源代码之后，我发现原来动态超时值存在一个陷阱。</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>简单地说，libcurl只在下载响应数据阶段才会检测动态超时，如果网络请求一直没有进入这个阶段，那么动态超时值就没有作用了。下面我们从libcurl的内部机制分析一下这个陷阱。</p>
 <p>在libcurl内部，网络请求由Session对象表示，而Session对象由Multi对象管理。Multi对象是一个管理器，它自身维护一个定时器，每隔一段时间触发一次Session对象执行。也就是说，Session本身不会主动执行，而是由Multi来驱动执行， 如下图所示：</p>
-<img src="/2016/11/20/a-trap-of-dynamic-timeout-in-libcurl/1.png">
+<img src="/2016/11/20/a-trap-of-dynamic-timeout-in-libcurl/1.png" class="">
+
 <p>Session的实现是一个状态机，从请求开始到结束，大致要经过以下状态（这是一份精简过的状态，实际状态比这个复杂）：</p>
 <ul>
 <li>Init，初始化状态。</li>
@@ -129,7 +131,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -223,7 +225,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

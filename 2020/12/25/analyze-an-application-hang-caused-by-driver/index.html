@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>分析一个驱动程序导致程序无响应的案例 | Zplutor&#39;s</title>
@@ -18,11 +18,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="分析一个驱动程序导致程序无响应的案例">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="分析一个驱动程序导致程序无响应的案例"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -31,8 +31,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -74,11 +74,14 @@
 <li>如果一直放着不干预，一分钟左右程序是能恢复正常的。</li>
 <li>从转储文件看，程序是在调用<code>ReadFile</code>读取文件内容时出现无响应的，部分的堆栈如下所示：</li>
 </ol>
-<a id="more"></a>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">ntdll!KiFastSystemCallRet</span><br><span class="line">ntdll!NtReadFile+0xc</span><br><span class="line">KERNELBASE!ReadFile+0xaa</span><br><span class="line">kernel32!ReadFileImplementation+0xf0</span><br><span class="line">MyApp!winRead+0xc6</span><br><span class="line">MyApp!sqlite3OsRead+0x2c</span><br><span class="line">MyApp!sqlite3WalReadFrame+0x45</span><br><span class="line">MyApp!readDbPage+0x94</span><br><span class="line">MyApp!getPageNormal+0x1a4</span><br><span class="line">MyApp!sqlite3PagerGet+0x13</span><br><span class="line">MyApp!getAndInitPage+0x72</span><br><span class="line">MyApp!moveToChild+0x7f</span><br><span class="line">MyApp!sqlite3BtreeMovetoUnpacked+0x3c5</span><br><span class="line">MyApp!sqlite3VdbeExec+0x2b31</span><br><span class="line">MyApp!sqlite3Step+0xee</span><br><span class="line">MyApp!sqlite3_step+0x98</span><br></pre></td></tr></table></figure>
+<span id="more"></span>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">ntdll!KiFastSystemCallRet</span><br><span class="line">ntdll!NtReadFile+0xc</span><br><span class="line">KERNELBASE!ReadFile+0xaa</span><br><span class="line">kernel32!ReadFileImplementation+0xf0</span><br><span class="line">MyApp!winRead+0xc6</span><br><span class="line">MyApp!sqlite3OsRead+0x2c</span><br><span class="line">MyApp!sqlite3WalReadFrame+0x45</span><br><span class="line">MyApp!readDbPage+0x94</span><br><span class="line">MyApp!getPageNormal+0x1a4</span><br><span class="line">MyApp!sqlite3PagerGet+0x13</span><br><span class="line">MyApp!getAndInitPage+0x72</span><br><span class="line">MyApp!moveToChild+0x7f</span><br><span class="line">MyApp!sqlite3BtreeMovetoUnpacked+0x3c5</span><br><span class="line">MyApp!sqlite3VdbeExec+0x2b31</span><br><span class="line">MyApp!sqlite3Step+0xee</span><br><span class="line">MyApp!sqlite3_step+0x98</span><br></pre></td></tr></table></figure>
+
 <p>根据这些现象，我猜测可能是某个实现不好的驱动程序拦截了<code>ReadFile</code>这个API导致的。为了进一步排查，需要更详尽的信息，于是我在客户的电脑上使用Windows Performance Recorder录制性能数据，从无响应开始，一直录制到恢复正常，然后使用Windows Performance Analyzer对这个性能数据进行分析。下面是分析过程。</p>
 <p>在这里主要用到的是Windows Performance Analyzer的“CPU Usage (Precise)”图表，这个图表的数据与线程的状态切换息息相关。简单来说，在线程的生命周期中，会在以下几种状态之间切换：</p>
-<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/1.png">
+<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/1.png" class="">
+
 <ul>
 <li>等待，线程要执行的条件未被满足，正在等待这些条件。例如，线程在等待一个互斥锁被释放。</li>
 <li>就绪，线程要执行的所有条件均已满足，随时可以调度给CPU执行。例如，一个线程释放了互斥锁，另外一个正在等待锁的线程会进入就绪状态。</li>
@@ -87,18 +90,22 @@
 <p>Windows Performance Recorder记录了系统中所有线程每一次状态切换的信息，包括就绪之前等待的时长、哪个线程让另一个线程就绪、导致线程进入等待状态的堆栈等等，这些信息均通过CPU Usage (Precise)图表来呈现。</p>
 <p>回到本文要分析的问题，“程序在一分钟左右能恢复正常”是一个很关键的信息，它表明了导致程序无响应的一个可能原因：主线程在等待某个条件，经过一分钟左右该条件得到满足，主线程得以继续执行，于是程序恢复正常。为了证实这个猜想，需要从CPU Usage (Precise)图表中找到证据。</p>
 <p>在打开了CPU Usage (Precise)图表之后，先对这个表格的列做一些调整，如下所示：</p>
-<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/2.png">
+<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/2.png" class="">
+
 <p>这里把表格黄色分割线左侧的列，依次设置成了“New Process” - “New Thread Id” - “New Thread Stack”，这几个带有“New”前缀的列表示切换到执行状态的线程的相关信息，例如New Process表示线程所在进程的名字，New Thread Id即该线程的ID，New Thread Stack表示切换到执行状态之后，线程开始执行时代码位置的堆栈，这通常也是线程进入等待状态时的堆栈。经过这样设置之后，表格的数据会依次按照进程-线程-堆栈来聚合，方便筛选和查看。</p>
 <p>然后是表格蓝色分割线右侧的列设置成了“Waits”的最大值，顾名思义，Waits这个数据的含义是线程在切换到就绪状态之前等待的时长。注意这不是切换到执行状态之前的等待时长。从就绪状态切换到执行状态之间也有一段时间，这段时间不会计算在内，而且通常这段时间都很短，相比在等待状态的时长，可以忽略不计。</p>
 <p>接下来，将表格按照Waits列倒序排列，并且根据进程名字和主线程ID进行筛选，即可找到等待时长最大的线程状态切换数据，从这个数据的堆栈，能看出来一些端倪，如下所示：</p>
-<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/3.png">
+<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/3.png" class="">
+
 <p>从图中可以看到，主线程在这一次切换到执行状态之前等待了大约77秒，符合程序无响应的感官时长，而且图中展示的堆栈与转储文件中的堆栈是一致的，所以基本可以确定这里就是问题产生的根源。相比用户态的转储文件，Windows Performance Analyzer的一个优势是可以看到内核态的堆栈，可以看到调用<code>ReadFile</code>之后发生的事情。这里有一个可疑的驱动程序<code>cwNep.sys</code>，它没有符号信息，并且网上搜索的结果表明，它显然是一个第三方的驱动程序。这个驱动程序调用了<code>FltSendMessage</code>，该函数使主线程进入了等待状态。</p>
 <p>查阅<code>FltSendMessage</code>的文档，可以知道这个API是内核态的驱动程序向用户态的应用程序发消息时使用的，并且它是一个阻塞式的同步调用，如果应用程序没有调用<code>FilterGetMessage</code>来接收消息，驱动程序就会一直等待，直到消息被接收或者超时。</p>
 <p>至此，问题的原因已经很清楚了，<code>cwNep.sys</code>驱动程序拦截了<code>ReadFile</code>调用，并且向用户态的应用程序发消息，而该应用程序没有及时接收这个消息，导致调用线程进入长时间的等待状态。</p>
 <p>既然已经找到了肇事的驱动程序，那么可以继续找一下是哪个应用程序没有及时接收消息。基于程序可以从无响应中恢复的现象，可以确定要找的应用程序最终是成功调用了<code>FilterGetMessage</code>。从文档可知，<code>FilterGetMessage</code>既可以同步调用也可以异步调用，暂且假设它是被同步调用的，那么调用这个函数的线程，在接收到驱动程序的消息之后，必然会从等待状态切换到就绪状态，继而切换到执行状态，并且它开始执行的堆栈也是在<code>FilterGetMessage</code>内部。所以，可以在New Thread Stack这一列中查找<code>FilterGetMessage</code>关键字，如下所示：</p>
-<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/4.png">
+<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/4.png" class="">
+
 <p>在这个案例中，运气不错，很快找到了唯一一个调用了<code>FilterGetMessage</code>的线程，如下所示：</p>
-<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/5.png">
+<img src="/2020/12/25/analyze-an-application-hang-caused-by-driver/5.png" class="">
+
 <p>由此确定这个没有及时接收消息的应用程序是<code>wepsvc.exe</code>。</p>
 
       
@@ -147,7 +154,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -241,7 +248,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

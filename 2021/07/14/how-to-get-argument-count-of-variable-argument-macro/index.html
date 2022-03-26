@@ -1,0 +1,264 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>如何获取可变参数宏实参的数量 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="在阅读一些开源代码的时候，可能会看到类似下面这种神秘的宏：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="如何获取可变参数宏实参的数量"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2021-07-13T18:02:18.000Z"><a href="/2021/07/14/how-to-get-argument-count-of-variable-argument-macro/">2021-07-14</a></time>
+      
+      
+  
+    <h1 class="title">如何获取可变参数宏实参的数量</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在阅读一些开源代码的时候，可能会看到类似下面这种神秘的宏：</p>
+<span id="more"></span>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ARG_N(                                     \ </span></span><br><span class="line">_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9,  _10,  \</span><br><span class="line">_11, _12, _13, _14, _15, _16, _17, _18, _19, _20,  \</span><br><span class="line">_21, _22, _23, _24, _25, _26, _27, _28, _29, _30,  \</span><br><span class="line">_31, _32, _33, _34, _35, _36, _37, _38, _39, _40,  \</span><br><span class="line">_41, _42, _43, _44, _45, _46, _47, _48, _49, _50,  \</span><br><span class="line">_51, _52, _53, _54, _55, _56, _57, _58, _59, _60,  \</span><br><span class="line">_61, _62, _63,   N, ...)                           \</span><br><span class="line">N</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> RSEQ_N                           \</span></span><br><span class="line"><span class="meta">63, 62, 61, 60,                          \</span></span><br><span class="line"><span class="meta">59, 58, 57, 56, 55, 54, 53, 52, 51, 50,  \</span></span><br><span class="line"><span class="meta">49, 48, 47, 46, 45, 44, 43, 42, 41, 40,  \</span></span><br><span class="line"><span class="meta">39, 38, 37, 36, 35, 34, 33, 32, 31, 30,  \</span></span><br><span class="line"><span class="meta">29, 28, 27, 26, 25, 24, 23, 22, 21, 20,  \</span></span><br><span class="line"><span class="meta">19, 18, 17, 16, 15, 14, 13, 12, 11, 10,  \</span></span><br><span class="line"><span class="meta"> 9,  8,  7,  6,  5,  4,  3,  2,  1,  0</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NARG_(...) ARG_N(__VA_ARGS__)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NARG(...) NARG_(__VA_ARGS__, RSEQ_N)</span></span><br></pre></td></tr></table></figure>
+
+<p>这些宏的作用是获取可变参数宏的实参数量。在调用 <code>NARG</code> 时，传入若干个参数，就会返回这些参数的数量，例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> i = <span class="built_in">NARG</span>(a);        <span class="comment">//i = 1</span></span><br><span class="line"><span class="type">int</span> j = <span class="built_in">NARG</span>(a, b);     <span class="comment">//j = 2</span></span><br><span class="line"><span class="type">int</span> k = <span class="built_in">NARG</span>(a, b, c);  <span class="comment">//k = 3</span></span><br></pre></td></tr></table></figure>
+
+<p>这些宏使用了精妙的技巧来实现这个功能。了解其实现原理的最好方法是将宏一步步展开，在这个过程中观察它究竟施展了什么样的“魔法”。为了方便理解，这里将 <code>ARG_N</code> 和 <code>RSEQ_N</code> 定义的数字数量精简成这样：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ARG_N(_1, _2, _3, N, ...) N</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> RSEQ_N 3, 2, 1, 0</span></span><br></pre></td></tr></table></figure>
+
+<p>以 <code>NARG(a, b, c)</code> 为例，这个宏调用会被替换成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NARG_</span>(a, b, c, RSEQ_N)</span><br></pre></td></tr></table></figure>
+
+<p>再把 <code>RSEQ_N</code> 展开，变成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NARG_</span>(a, b, c, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>再被替换成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ARG_N</span>(a, b, c, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>对照参考 <code>ARG_N</code> 的定义，它总是会被替换成第4个参数，所以这个宏被替换成了3：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ARG_N(_1, _2, _3, N, ...    ) N</span></span><br><span class="line"><span class="comment">//      ARG_N( a,  b,  c, 3, 2, 1, 0) 3</span></span><br></pre></td></tr></table></figure>
+
+<p>再以两个参数的调用 <code>NARG(a, b)</code> 为例，这个宏会被替换成2：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ARG_N(_1, _2, _3, N, ... ) N</span></span><br><span class="line"><span class="comment">//      ARG_N( a,  b,  3, 2, 1, 0) 2</span></span><br></pre></td></tr></table></figure>
+
+<p>以此类推，可以总结出它的实现原理：将输入参数与一个倒序的数字序列拼接成新的参数序列，传递给 <code>ARG_N</code> 宏，这个宏输出固定位置的参数，这个位置上的数字刚好等于输入参数的个数。</p>
+<p>这种方法有一定的局限性，比如它支持的最大参数数量是有限的，依赖 <code>ARG_N</code> 和 <code>RSEQ_N</code> 中定义的数量。在本文开头的例子中，它最多支持64个宏参数，假如要支持更多的参数，就需要在这两个宏里添加更多的数字。<code>ARG_N</code> 和 <code>RSEQ_N</code> 里的数字数量一定要精确匹配，否则这套机制就失效了。另外也顺带一提，<code>ARG_N</code> 里的 <code>_1</code> 、<code>_2</code>、<code>_3</code> 等标示符只是一个参数占位符，没有其它作用，即使写成别的名字也是可以的，写成数字是为了更方便与<code>RSEQ_N</code> 里的数字对齐。</p>
+<p>另外一个局限是，它不能支持0个参数，即使在<code>RSEQ_N</code> 里定义了0这个数字。原因是宏展开时只是单纯的文本替换，例如 <code>NARG()</code> 这个宏调用，会被展开成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NARG_</span>(, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>即使没有输入参数，在它后面的逗号还是保留着的，所以实际上相当于有1个参数。在最后调用 <code>ARG_N</code> 的时候，会被替换成1：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ARG_N(_1, _2, _3, N, ... ) N</span></span><br><span class="line"><span class="comment">//      ARG_N(  ,  3,  2, 1, 0   ) 1</span></span><br></pre></td></tr></table></figure>
+
+<p>最后，在使用MSVC编译器时，如果使用默认的编译选项，这套方法是不生效的，因为MSVC的宏参数展开规则不符合标准。简单地说，在MSVC中，当一个宏将它的可变参数传递给另外一个宏时，这些参数被作为一个整体来传递，而不是拆分成多个传递，所以对于另外一个宏来说，只接收到一个参数。例如， <code>NARG(a, b, c)</code> 这个宏调用，虽然从字面上它也会被展开成 <code>ARG_N(a, b, c, 3, 2, 1, 0)</code> ，但从语义上它却是这样的：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ARG_N(                  _1, _2, _3, N, ... ) N</span></span><br><span class="line"><span class="comment">//      ARG_N(a, b, c, 3,  2, 1, 0                 ) </span></span><br></pre></td></tr></table></figure>
+
+<p>传递给 <code>ARG_N</code> 的参数，都一起被视为第一个参数了。所以在MSVC下编译会出现<code>ARG_N</code> 参数不足的警告，并且得到空的结果。</p>
+<p>在MSVC添加 <code>/Zc:preprocessor</code> 编译选项，可以解决这个问题。这个编译选项改变了编译器展开宏的规则，使其更符合标准。在Visual Studio的项目设置中也可以修改这个选项：</p>
+<img src="/2021/07/14/how-to-get-argument-count-of-variable-argument-macro/1.png" class="">
+
+<p>除了修改编译器选项，还有另外一种取巧的方法，即在调用 <code>ARG_N</code> 之前，增加一个中间层调用，如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> EXPAND(x) x</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NARG_(...) EXPAND( ARG_N(__VA_ARGS__) )</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NARG(...) NARG_(__VA_ARGS__, RSEQ_N)</span></span><br></pre></td></tr></table></figure>
+
+<p>这里增加了一个新的 <code>EXPAND</code> 宏，这个宏从字面上没有实际用途，只是把参数原样保留。但是从语义上来说，这个宏改变了展开的行为。</p>
+<p>仍然以 <code>NARG(a, b, c)</code> 为例，它的展开过程如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NARG_</span>(a, b, c, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>)            <span class="comment">// 1</span></span><br><span class="line"><span class="built_in">EXPAND</span>( <span class="built_in">ARG_N</span>(a, b, c, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>) )  <span class="comment">// 2</span></span><br><span class="line"><span class="built_in">ARG_N</span>(a, b, c, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>)            <span class="comment">// 3</span></span><br></pre></td></tr></table></figure>
+
+<p>从第2步到第3步这个过程可以看出来，宏调用跟函数调用不一样，宏调用只是文本替换， <code>EXPAND</code> 只把 <code>ARG_N(a, b, c, 3, 2, 1, 0)</code> 原样保留，而不是先展开 <code>ARG_N</code> 再调用 <code>EXPAND</code>。这是关键的地方，在第2步的时候，虽然 <code>a, b, c, 3, 2, 1, 0</code> 这些参数还是一个整体，但由于这时候还没有去展开 <code>ARG_N</code> ，所以不会像之前那样全部都当作第一个参数，它们只作为文本被保留下来。到了第3步，这时候就是正常的宏展开，参数可以一一对应。</p>
+<p>增加 <code>EXPAND</code> 中间层对其它编译器没有影响，所以如果要编写跨平台的代码，应该使用这个方法。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2021/07/14/how-to-get-argument-count-of-variable-argument-macro/" data-title="如何获取可变参数宏实参的数量" data-url="http://zplutor.github.io/2021/07/14/how-to-get-argument-count-of-variable-argument-macro/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>3</small></li>
+  
+    <li><a href="/tags/ITextHost/">ITextHost</a><small>2</small></li>
+  
+    <li><a href="/tags/ITextService/">ITextService</a><small>2</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/STL/">STL</a><small>5</small></li>
+  
+    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>2</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windowless-RichEdit/">Windowless RichEdit</a><small>2</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>24</small></li>
+  
+    <li><a href="/tags/Windows-Performance-Toolkit/">Windows Performance Toolkit</a><small>1</small></li>
+  
+    <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
+  
+    <li><a href="/tags/boost/">boost</a><small>4</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>2</small></li>
+  
+    <li><a href="/tags/macOS/">macOS</a><small>2</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>2</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>3</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>3</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>6</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>2</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2022 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>

@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>调用boost::filesystem::unique_path可能会失败 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="调用boost::filesystem::unique_path可能会失败">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="调用boost::filesystem::unique_path可能会失败"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,7 +65,8 @@
     <div class="entry">
       
         <p>假如你的程序需要在指定目录下生成一个唯一的临时文件，而且恰好引入了boost库，那么你可能会选择使用boost::filesystem::unique_path来生成文件名，因为该函数似乎正是为了此目的而生的。但是要小心，该函数在某些环境下可能会失败，抛出“拒绝访问”的异常。</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>这里失败的原因并不是由于访问文件系统导致的，而是由于访问了Windows中与密码学相关的API。查看unique_path的源码，可以发现它内部调用了CryptAcquireContext和CryptGenRandom来生成随机数据，然后基于这些随机数据来生成文件名。由于未知的原因，在某些Windows系统上需要管理员权限才能成功调用CryptAcquireContext（正常情况下并不需要管理员权限），从而导致了unique_path失败。</p>
 <p>所以，为了避免不必要的麻烦，直接使用GUID或者其它唯一性强的标识作为临时文件名即可。只有在涉及安全问题的情况下才应该考虑使用unique_path——此时就需要弄清楚为什么需要管理员权限才能调用CryptAcquireContext了。</p>
 
@@ -115,7 +116,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -209,7 +210,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>文件的共享模式和访问权限 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="文件的共享模式和访问权限">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="文件的共享模式和访问权限"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,10 +65,12 @@
     <div class="entry">
       
         <p>有用户反馈了这样一个问题：当Word或者Excel打开了一个文件时，无法用我们的程序打开该文件，而用其它程序却能够正常打开。经检查，这是由于在打开文件时<code>CreateFile</code>函数失败了，错误码是32，“另一个程序正在使用此文件，进程无法访问”。 </p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>我检查了一遍代码，“看上去”似乎一切正常。但是为什么其它程序可以正常打开，就只有我们的程序不行呢？为了对比两者在打开文件上的差异，我使用ProcessMonitor来观察分别用Notepad++和我们程序打开同一个文件的过程。</p>
 <p>经过对比，可以发现两者在执行CreateFile操作时，共享模式（ShareMode）的值明显不一样，如下所示：</p>
-<img src="/2018/08/26/file-share-mode-and-access-rights/1.png">
+<img src="/2018/08/26/file-share-mode-and-access-rights/1.png" class="">
+
 <p>左图是Notepad++的CreateFile操作，ShareMode包含了Read和Write，操作结果为SUCCESS；右图是我们程序的CreateFile操作，ShareMode只有Read，操作结果为SHARING_VIOLATION。显然，问题出在调用<code>CreateFile</code>函数时传入的<code>dwShareMode</code>参数上，我们对该参数只传入了<code>FILE_SHARE_READ</code>。尝试加上<code>FILE_SHARE_WRITE</code>之后，问题解决了。</p>
 <p>我又仔细阅读了一遍文档，发现一直以来我对共享模式的理解都不够全面（通过与其他人的交流，可以肯定不止我一个人是这样）。</p>
 <p>共享模式实际上是用来与文件的访问权限进行校验的。假设进程A要打开一个文件，而该文件已经被进程B打开了，那么系统会进行以下校验：</p>
@@ -131,7 +133,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -225,7 +227,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

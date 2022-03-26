@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>如何避免预创建的CEF浏览器抢夺焦点 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何避免预创建的CEF浏览器抢夺焦点">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="如何避免预创建的CEF浏览器抢夺焦点"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,7 +65,8 @@
     <div class="entry">
       
         <p>现在越来越多程序使用CEF浏览器来展示界面内容，以Web页面模拟原生界面。这种程序的Web页面内容大部分都来源于本地，因此加载速度一般都会很快。但是，与加载内容形成明显对比的是，创建CEF浏览器很耗时，大约需要1~2秒，这对用户体验造成很大影响。</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>解决这个问题的方法一般是采用预创建技术，即在展示Web页面之前，在后台预先创建好CEF浏览器，等到需要展示Web页面时，直接拿出这个浏览器使用，省去了创建的时间。</p>
 <p>不过，在实践中发现，使用了预创建之后，会带来另一个问题：在创建浏览器的那一刻，窗口焦点会被它抢夺走，前台的窗口会莫名其妙地突然失去焦点，用户体验也很糟糕。</p>
 <p>在CEF提供的接口中，有一个<code>CefFocusHandler</code>接口，其中有一个<code>OnSetFocus</code>方法，在浏览器窗口即将获取焦点之前会调用该方法，如果这个方法返回true，则可以阻止浏览器窗口获取焦点。这是在CEF中唯一跟焦点有关的接口，因此首先会想到利用这个方法来解决抢夺焦点问题。然而实践证明这个方法没有任何作用，因为它只处理“浏览器窗口”自身的焦点，而不处理父窗口的焦点。</p>
@@ -119,7 +120,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -213,7 +214,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>为什么std::tolower不能用于std::transform | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="为什么std::tolower不能用于std::transform">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="为什么std::tolower不能用于std::transform"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,21 +65,28 @@
     <div class="entry">
       
         <p>在C++中，std::tolower和std::toupper函数（在本文中都用std::tolower指代两者）用于对一个字符进行大小写转换，将其与std::transform函数结合则可以对整个字符串进行大小写转换，如下所示：</p>
-<a id="more"></a>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="built_in">string</span> = <span class="string">"ABCDEF"</span>;</span><br><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">tolower</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<span id="more"></span>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">std::string string = <span class="string">&quot;ABCDEF&quot;</span>;</span><br><span class="line">std::<span class="built_in">transform</span>(</span><br><span class="line">    string.<span class="built_in">begin</span>(), </span><br><span class="line">    string.<span class="built_in">end</span>(), </span><br><span class="line">    string.<span class="built_in">begin</span>(), </span><br><span class="line">    std::tolower</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
 <p>以上代码在Visual C++下能编译成功，但是在XCode下却编译失败，错误信息为<code>No matching function for call to &#39;transform&#39;</code>。这是因为std::tolower函数存在两个重载，第一个定义于头文件cctype，声明如下：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tolower</span><span class="params">(<span class="keyword">int</span> ch)</span></span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">tolower</span><span class="params">(<span class="type">int</span> ch)</span></span>;</span><br></pre></td></tr></table></figure>
+
 <p>第二个定义于头文件locale，声明如下：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">charT</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">charT</span> <span class="title">tolower</span>(<span class="title">charT</span> <span class="title">ch</span>, <span class="title">const</span> <span class="title">locale</span>&amp; <span class="title">loc</span>);</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">class</span> charT&gt;</span></span><br><span class="line"><span class="function">charT <span class="title">tolower</span><span class="params">(charT ch, <span class="type">const</span> locale&amp; loc)</span></span>;</span><br></pre></td></tr></table></figure>
+
 <p>cctype和locale都是很基础的模块，会被其它头文件引用，因此这两个重载通常都会同时出现。XCode的编译器由于不知道该选择哪个重载而报错。</p>
 <p>然而，从理论上来说，编译器是可以知道如何选择的。std::transform在XCode中的源码如下：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">InputIterator</span>, <span class="title">class</span> _<span class="title">OutputIterator</span>, <span class="title">class</span> _<span class="title">UnaryOperation</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">inline</span> _<span class="title">LIBCPP_INLINE_VISIBILITY</span></span></span><br><span class="line"><span class="class">_<span class="title">OutputIterator</span></span></span><br><span class="line"><span class="class"><span class="title">transform</span>(_<span class="title">InputIterator</span> __<span class="title">first</span>, _<span class="title">InputIterator</span> __<span class="title">last</span>, _<span class="title">OutputIterator</span> __<span class="title">result</span>, _<span class="title">UnaryOperation</span> __<span class="title">op</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">for</span> (; __first != __last; ++__first, (<span class="keyword">void</span>) ++__result)</span><br><span class="line">        *__result = __op(*__first);</span><br><span class="line">    <span class="keyword">return</span> __result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_InputIterator</span>, <span class="keyword">class</span> <span class="title class_">_OutputIterator</span>, <span class="keyword">class</span> <span class="title class_">_UnaryOperation</span>&gt;</span><br><span class="line"><span class="function"><span class="keyword">inline</span> _LIBCPP_INLINE_VISIBILITY</span></span><br><span class="line"><span class="function">_OutputIterator</span></span><br><span class="line"><span class="function"><span class="title">transform</span><span class="params">(_InputIterator __first, _InputIterator __last, _OutputIterator __result, _UnaryOperation __op)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (; __first != __last; ++__first, (<span class="type">void</span>) ++__result)</span><br><span class="line">        *__result = __op(*__first);</span><br><span class="line">    <span class="keyword">return</span> __result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 <p>在第七行，可以看到调用<code>__op</code>的时候只传了一个参数，因此无论如何只能选择std::tolower的第一个重载，编译器完全有能力做出这个推导。如果把上述std::transform的源码转移到Visual C++并且以同样的方式来调用，可以编译成功，可见这个推导是可行的。那为什么XCode的编译器没有这么做呢？一个可能的原因是效率问题，类型推导越精确会耗费越多编译时间。从这一点或许可以解释为什么Visual C++的编译速度这么慢。</p>
 <p>那么，应该如何解决这个问题呢？有两种方法，第一种方法是把std::tolower换成::tolower，如下所示：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    ::<span class="built_in">tolower</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">std::<span class="built_in">transform</span>(</span><br><span class="line">    string.<span class="built_in">begin</span>(), </span><br><span class="line">    string.<span class="built_in">end</span>(), </span><br><span class="line">    string.<span class="built_in">begin</span>(), </span><br><span class="line">    ::tolower</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
 <p>默认情况下，在全局名称空间中，tolower只有一种声明形式，因此没有问题。但前提是没有使用<code>using namespace</code>语句把std名称空间的内容导入全局名称空间——然而这种用法很常见，因此使用::tolower并不一定有效。</p>
 <p>第二种方法是显式指定使用std::tolower的第一个重载，如下所示：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::transform(</span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="built_in">string</span>.end(), </span><br><span class="line">    <span class="built_in">string</span>.begin(), </span><br><span class="line">    <span class="keyword">static_cast</span>&lt;<span class="keyword">int</span>(*)(<span class="keyword">int</span>)&gt;(<span class="built_in">std</span>::<span class="built_in">tolower</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">std::<span class="built_in">transform</span>(</span><br><span class="line">    string.<span class="built_in">begin</span>(), </span><br><span class="line">    string.<span class="built_in">end</span>(), </span><br><span class="line">    string.<span class="built_in">begin</span>(), </span><br><span class="line">    <span class="built_in">static_cast</span>&lt;<span class="built_in">int</span>(*)(<span class="type">int</span>)&gt;(std::tolower)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
 <p>这种做法带来了编码负担，因为每次使用的时候都要回忆一下std::tolower的声明形式，并且要输入更多字符。所以最好用一个函数把它封装起来，一劳永逸。</p>
 
       
@@ -128,7 +135,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -222,7 +229,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

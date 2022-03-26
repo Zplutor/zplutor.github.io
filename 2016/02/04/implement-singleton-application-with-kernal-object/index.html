@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>使用内核对象实现单例程序 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="使用内核对象实现单例程序">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="使用内核对象实现单例程序"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,11 +65,13 @@
     <div class="entry">
       
         <p>对于有些程序来说，运行多个实例没有意义，甚至会出现异常，所以有必要把程序实现成单例。有多种方法可以做到这一点，比较好的方法是使用内核对象。</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>内核对象是指存在于系统内核中的对象，而不仅仅存在于程序内部，这样多个程序实例之间就可以共享这些对象了。使用内核对象的思路很简单：程序启动之后检查一下是否存在特定的内核对象，如果不存在，说明这是第一个实例，可以正常运行；如果已存在，说明已经有实例在运行了，当前的实例要退出。内核对象在这里只是作为一个标识，标识是否有实例正在运行，至于它是哪一种内核对象则不重要。习惯上会使用Mutex内核对象，主要是因为它的名称与这里的用途相吻合，而且它的用法也很简单。</p>
 <p>内核对象有具名和匿名之分。具名的内核对象与一个字符串关联，通过这个字符串可以找到对应的内核对象；匿名的内核对象则不具备这个特点。显然这里应该使用具名内核对象。</p>
 <p>可以在程序的入口点来检查内核对象。下面是检查Mutex内核对象的例子：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HANDLE mutex = CreateMutex(<span class="literal">NULL</span>, FALSE, <span class="string">L"SingletonApplication"</span>);</span><br><span class="line"><span class="keyword">if</span> ( (mutex == <span class="literal">NULL</span>) || (GetLastError() == ERROR_ALREADY_EXISTS) ) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//退出程序</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//正常启动程序</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HANDLE mutex = <span class="built_in">CreateMutex</span>(<span class="literal">NULL</span>, FALSE, <span class="string">L&quot;SingletonApplication&quot;</span>);</span><br><span class="line"><span class="keyword">if</span> ( (mutex == <span class="literal">NULL</span>) || (<span class="built_in">GetLastError</span>() == ERROR_ALREADY_EXISTS) ) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//退出程序</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//正常启动程序</span></span><br></pre></td></tr></table></figure>
+
 <p>CreateMutex同时提供了创建和打开Mutex内核对象的功能。第三个参数指明了内核对象的名称，如果名为<code>SingletonApplication</code>的Mutex内核对象不存在，那么CreateMutex会创建一个新的对象，并返回它的句柄；如果已经存在这个内核对象，那么CreateMutex会打开它，并返回它的句柄，同时GetLastError会返回<code>ERROR_ALREADY_EXISTS</code>。在实际的应用中，应该把<code>SingletonApplication</code>替换成尽量不会与其它程序冲突的名称。</p>
 <p>CreateMutex的第一个和第二个参数在这里的使用场景中并不重要，分别传入NULL和FALSE即可。CreateMutex如果失败会返回NULL，这种情况几乎不会发生，但基于完整性考虑这里还是要判断一下返回值是否为NULL。</p>
 <p>在程序的实例退出之前，理论上来说是需要调用CloseHandle把内核对象关闭的。但实即使不这么做也不会有问题，因为进程结束的时候操作系统会把这个进程所有的资源回收，该内核对象自然会被关闭。</p>
@@ -121,7 +123,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -215,7 +217,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

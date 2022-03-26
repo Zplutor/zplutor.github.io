@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>boost::thread_specific_ptr在Windows下可能导致内存泄露 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="boost::thread_specific_ptr在Windows下可能导致内存泄露">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="boost::thread_specific_ptr在Windows下可能导致内存泄露"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,7 +65,8 @@
     <div class="entry">
       
         <p>boost::thread_specific_ptr用于定义线程局部变量，根据这个类的定义，当一个线程结束的时候，与之相关的变量都会被释放。然而，这个规则并不是在所有情况下都适用。在boost::thread_specific_ptr的文档中有这么一句话：</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <blockquote>
 <p>Note: on some platforms, cleanup of thread-specific data is not performed for threads created with the platform’s native API. On those platforms such cleanup is only done for threads that are started with boost::thread unless boost::on_thread_exit() is called manually from that thread.</p>
 </blockquote>
@@ -119,7 +120,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -213,7 +214,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

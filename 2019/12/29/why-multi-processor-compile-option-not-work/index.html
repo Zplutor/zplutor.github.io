@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>Visual Studio并行编译失效的原因 | Zplutor&#39;s</title>
@@ -14,11 +14,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="Visual Studio并行编译失效的原因">
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:title" content="Visual Studio并行编译失效的原因"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -27,8 +27,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -65,10 +65,12 @@
     <div class="entry">
       
         <p>对于大型C++项目来说，并行编译开关<code>/MP</code>是必不可少的编译器选项，它能显著提高项目的编译速度。但是，当我在自己所在的项目中开启了这个选项之后，发现没有什么效果，只有少数文件可以并行编译，大多数文件仍然是串行编译的，编译时CPU使用率只有30%~40%。这个问题困扰了我们项目组很久。</p>
-<a id="more"></a>
+<span id="more"></span>
+
 <p>最近，我在Visual Studio的社区里发现了一个反馈，内容是说当显式指定了.obj文件的输出文件名时，<code>/MP</code>选项会失效。而Visual Studio的官方团队也解释说这确实是编译器的缺陷，因为编译器是以传递给编译器的参数来决定编译单元是否能并行编译的，只有编译参数一模一样的编译单元才能够并行。</p>
 <p>于是我立即查看我们工程的设置，发现.obj文件的输出文件名确实被修改了，如下图所示：</p>
-<img src="/2019/12/29/why-multi-processor-compile-option-not-work/1.png">
+<img src="/2019/12/29/why-multi-processor-compile-option-not-work/1.png" class="">
+
 <p>这个值的意思是，按照源文件的相对路径来输出.obj文件。默认情况下，工程里所有源文件编译后的.obj文件都会输出到同一个目录中，一旦在不同目录下存在名字相同的源文件，它们输出的.obj文件就会相互覆盖，在大型工程里这个问题很容易遇到。所以，为了避免这个问题，我们在这个设置项加上了<code>%(RelativeDir)</code>。</p>
 <p>这样一来，虽然解决了名字冲突的问题，却带来了并行编译失效的问题。由于<code>%(RelativeDir)</code>的值是随着源文件所在目录而改变的，所以不同目录下的源文件其编译参数都不一样，它们就无法并行编译了。只有同一个目录下的源文件才能并行编译。</p>
 <p>去掉了这个设置之后，<code>/MP</code>选项终于恢复了该有的效率，在编译时CPU使用率一直在90%以上，整个工程的编译时间缩短了一半。当然，代价是必须逐个处理名字冲突的源文件，要么改名字，要么改.obj文件的输出路径。</p>
@@ -120,7 +122,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -214,7 +216,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>

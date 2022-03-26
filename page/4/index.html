@@ -1,9 +1,9 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw">
-  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E">
-  <meta name="baidu-site-verification" content="GDPyw3Yidj">
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
   <meta charset="utf-8">
   
   <title>第 4 页 | Zplutor&#39;s</title>
@@ -13,10 +13,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   
-  <meta property="og:site_name" content="Zplutor&#39;s">
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
 
   
-    <meta property="og:image" content="undefined">
+    <meta property="og:image" content=""/>
   
 
   <link href="/favicon.png" rel="icon">
@@ -25,8 +25,8 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
 
-</head>
-</html>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
@@ -47,6 +47,78 @@
 </header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-11-24T16:26:09.000Z"><a href="/2015/11/25/RAND-poll-function-s-issues-on-Windows/">2015-11-25</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/11/25/RAND-poll-function-s-issues-on-Windows/">RAND_poll函数在Windows下存在的问题</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>RAND_poll函数是OpenSSL中用于初始化伪随机数生成器的函数，当首次调用诸如RAND_bytes等需要生成随机数的函数时，会先调用该函数进行初始化。在实际使用中发现，RAND_poll函数在Windows下存在一些问题，需要小心提放，否则可能会对程序造成不良影响。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2015/11/25/RAND-poll-function-s-issues-on-Windows/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-11-22T13:39:58.000Z"><a href="/2015/11/22/create-a-simplest-windowless-richedit/">2015-11-22</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/11/22/create-a-simplest-windowless-richedit/">创建一个最简单的Windowless RichEdit</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>RichEdit是Windows上很常用的富文本控件，它有一个无窗口化的版本，即Windowless RichEdit，关于它的介绍，可以参考官方文档：<a target="_blank" rel="noopener" href="https://msdn.microsoft.com/en-us/library/windows/desktop/bb787609(v=vs.85).aspx">https://msdn.microsoft.com/en-us/library/windows/desktop/bb787609(v=vs.85).aspx</a> 。Windowless RichEdit与普通RichEdit在行为表现上毫无二致，但是在使用方法上却有较大的差异；而且Windowless RichEdit的官方文档少之又少，说明不够全面，甚至连一个完整的示例也没有；更甚者，在不同的Windows平台和开发环境下，Windowless RichEdit的用法都有差异。这让初次接触Windowless RichEdit的人举步维艰，处处碰壁，正应了“万事开头难”这句话。因此，本文聚焦于“开头”，介绍一下创建一个最简单的Windowless RichEdit需要做哪些事情。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2015/11/22/create-a-simplest-windowless-richedit/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article class="post">
   
   <div class="post-content">
@@ -171,7 +243,7 @@
     </header>
     <div class="entry">
       
-        <h2 id="什么是预编译头"><a href="#什么是预编译头" class="headerlink" title="什么是预编译头"></a>什么是预编译头</h2><p>在介绍预编译头之前，有必要了解一下C/C++的编译方式。C/C++的编译单元是源文件（带有.c、.cc、.cpp等扩展名的文件），在编译一个源文件之前，预处理器会把这个源文件中所有通过#include指令包含进来的头文件递归地展开，也就是把所有直接或间接包含的头文件原封不动地插入进来。当这个过程结束之后，才开始编译。</p>
+        <h2 id="什么是预编译头"><a href="#什么是预编译头" class="headerlink" title="什么是预编译头"></a>什么是预编译头</h2><p>在介绍预编译头之前，有必要了解一下C&#x2F;C++的编译方式。C&#x2F;C++的编译单元是源文件（带有.c、.cc、.cpp等扩展名的文件），在编译一个源文件之前，预处理器会把这个源文件中所有通过#include指令包含进来的头文件递归地展开，也就是把所有直接或间接包含的头文件原封不动地插入进来。当这个过程结束之后，才开始编译。</p>
       
     </div>
     <footer>
@@ -315,7 +387,7 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/C/">C++</a><small>17</small></li>
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
   
     <li><a href="/tags/COM/">COM</a><small>3</small></li>
   
@@ -409,7 +481,7 @@
   </div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2021 Zplutor
+  &copy; 2022 Zplutor
   
 </div>
 <div class="clearfix"></div></footer>
