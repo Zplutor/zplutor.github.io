@@ -1,3 +1,6 @@
+http://zplutor.github.io/2015/11/22/create-a-simplest-windowless-richedit/
+http://zplutor.github.io/2015/12/06/implement-an-editable-windowless-richedit/
+http://zplutor.github.io/2023/04/15/insert-ole-object-into-windowless-rich-edit/
 http://zplutor.github.io/2022/03/25/cpp-coroutine-beginner/
 http://zplutor.github.io/2021/07/14/how-to-get-argument-count-of-variable-argument-macro/
 http://zplutor.github.io/2021/02/04/why-can-a-running-exe-file-be-renamed/
@@ -32,8 +35,6 @@ http://zplutor.github.io/2015/08/29/write-debug-log-streamly/
 http://zplutor.github.io/2015/08/14/fast-way-to-concatenate-sql-in-cpp/
 http://zplutor.github.io/2015/09/28/use-precompiled-header-to-speed-up-compilation/
 http://zplutor.github.io/2015/11/09/whether-WM-TIMER-message-would-accumulate-in-message-queue/
-http://zplutor.github.io/2015/11/22/create-a-simplest-windowless-richedit/
-http://zplutor.github.io/2015/12/06/implement-an-editable-windowless-richedit/
 http://zplutor.github.io/2016/02/04/implement-singleton-application-with-kernal-object/
 http://zplutor.github.io/2016/02/24/reason-and-solution-for-c4250-warning/
 http://zplutor.github.io/2015/11/25/RAND-poll-function-s-issues-on-Windows/
@@ -63,10 +64,7 @@ http://zplutor.github.io/tags/IUnknown/
 http://zplutor.github.io/tags/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/
 http://zplutor.github.io/tags/%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0/
 http://zplutor.github.io/tags/COM/
-http://zplutor.github.io/tags/Windowless-RichEdit/
 http://zplutor.github.io/tags/RichEdit/
-http://zplutor.github.io/tags/ITextHost/
-http://zplutor.github.io/tags/ITextService/
 http://zplutor.github.io/tags/%E5%8D%95%E4%BE%8B/
 http://zplutor.github.io/tags/%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1/
 http://zplutor.github.io/tags/KeyWindow/

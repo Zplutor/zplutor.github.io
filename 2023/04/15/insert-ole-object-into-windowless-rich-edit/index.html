@@ -1,0 +1,285 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>在Windowless RichEdit中插入OLE对象 | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="RichEdit支持在文本中插入OLE对象，OLE对象中可以显示任意自定义的内容，从而达到丰富的显示效果，例如文字和图片在同一行中混合显示。本文在《实现一个可编辑的Windowless RichEdit》一本的基础上，介绍如何在Windowless RichEdit中插入OLE对象。完整的示例代码可以在 WindowlessRichEdit-Example 获得。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="在Windowless RichEdit中插入OLE对象"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2023-04-15T12:38:53.000Z"><a href="/2023/04/15/insert-ole-object-into-windowless-rich-edit/">2023-04-15</a></time>
+      
+      
+  
+    <h1 class="title">在Windowless RichEdit中插入OLE对象</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>RichEdit支持在文本中插入OLE对象，OLE对象中可以显示任意自定义的内容，从而达到丰富的显示效果，例如文字和图片在同一行中混合显示。本文在<a href="http://zplutor.github.io/2015/12/06/implement-an-editable-windowless-richedit/">《实现一个可编辑的Windowless RichEdit》</a>一本的基础上，介绍如何在Windowless RichEdit中插入OLE对象。完整的示例代码可以在 <a target="_blank" rel="noopener" href="https://github.com/Zplutor/WindowlessRichEdit-Example">WindowlessRichEdit-Example</a> 获得。</p>
+<span id="more"></span>
+
+<h2 id="实现自定义的OLE对象"><a href="#实现自定义的OLE对象" class="headerlink" title="实现自定义的OLE对象"></a>实现自定义的OLE对象</h2><p>在插入OLE对象之前，我们首先要实现一个自定义的OLE对象。这个对象必须实现以下两个COM接口：</p>
+<ul>
+<li><code>IOleObject</code>，所有OLE对象都需要实现的基础接口。</li>
+<li><code>IViewObject</code>，用于显示OLE对象的接口。</li>
+</ul>
+<p><code>IOleObject</code> 有不少虚函数需要实现，但其实所有函数都可以不实现，全都返回 <code>E_NOTIMPL</code> 也是可以的。在本文的例子中，OLE对象仅用于显示，没有任何行为，所以对于<code>IOleObject</code>的所有函数都返回了 <code>E_NOTIMPL</code>。</p>
+<p><code>IViewObject</code> 只有一个 <code>Draw()</code> 函数需要实现，用来绘制OLE对象的内容。其它函数都可以不实现，返回 <code>E_NOTIMPL</code> 即可。 <code>Draw()</code> 的参数列表比较长：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">HRESULT <span class="title">Draw</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    DWORD dwDrawAspect,</span></span></span><br><span class="line"><span class="params"><span class="function">    LONG lindex,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">void</span>* pvAspect,</span></span></span><br><span class="line"><span class="params"><span class="function">    DVTARGETDEVICE* ptd,</span></span></span><br><span class="line"><span class="params"><span class="function">    HDC hdcTargetDev,</span></span></span><br><span class="line"><span class="params"><span class="function">    HDC hdcDraw,</span></span></span><br><span class="line"><span class="params"><span class="function">    LPCRECTL lprcBounds,</span></span></span><br><span class="line"><span class="params"><span class="function">    LPCRECTL lprcWBounds,</span></span></span><br><span class="line"><span class="params"><span class="function">    BOOL(*pfnContinue)(ULONG_PTR dwContinue),</span></span></span><br><span class="line"><span class="params"><span class="function">    ULONG_PTR dwContinue</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>大部分参数用于复杂的OLE对象或者特殊的绘制场景（例如打印机），对于简单的OLE对象，通常只需要关注 <code>hdcDraw</code> 和 <code>lprcBounds</code> 这两个参数就可以了。<code>hdcDraw</code> 表示用于绘制的设备句柄， <code>lprcBounds</code> 表示OLE对象在 <code>hdcDraw</code> 中的绘制区域，我们只能在这个区域中进行绘制。</p>
+<p>在这个示例的OLE对象中，我们只是简单地将OLE对象填充成蓝色，以显示它的存在。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyOLEObject</span> : <span class="keyword">public</span> IOleObject, <span class="keyword">public</span> IViewObject &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function">HRESULT <span class="title">Draw</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        DWORD dwDrawAspect,</span></span></span><br><span class="line"><span class="params"><span class="function">        LONG lindex,</span></span></span><br><span class="line"><span class="params"><span class="function">        <span class="type">void</span>* pvAspect,</span></span></span><br><span class="line"><span class="params"><span class="function">        DVTARGETDEVICE* ptd,</span></span></span><br><span class="line"><span class="params"><span class="function">        HDC hdcTargetDev,</span></span></span><br><span class="line"><span class="params"><span class="function">        HDC hdcDraw,</span></span></span><br><span class="line"><span class="params"><span class="function">        LPCRECTL lprcBounds,</span></span></span><br><span class="line"><span class="params"><span class="function">        LPCRECTL lprcWBounds,</span></span></span><br><span class="line"><span class="params"><span class="function">        BOOL(*pfnContinue)(ULONG_PTR dwContinue),</span></span></span><br><span class="line"><span class="params"><span class="function">        ULONG_PTR dwContinue)</span> <span class="keyword">override</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        HBRUSH brush = <span class="built_in">CreateSolidBrush</span>(<span class="built_in">RGB</span>(<span class="number">0xaa</span>, <span class="number">0xcc</span>, <span class="number">0xee</span>));</span><br><span class="line">        <span class="built_in">FillRect</span>(hdcDraw, <span class="built_in">reinterpret_cast</span>&lt;<span class="type">const</span> RECT*&gt;(lprcBounds), brush);</span><br><span class="line">        <span class="built_in">DeleteObject</span>(brush);</span><br><span class="line">        <span class="keyword">return</span> S_OK;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//其它函数实现...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>注意， <code>lprcBounds</code> 的类型是 <code>RECTL</code> 指针，而 <code>FillRect</code> 的参数类型是 <code>RECT</code> 指针，虽然两者的类型不一样，但内存布局实际上是一样的，所以可以直接将 <code>lprcBounds</code> 转成 <code>RECT</code> 指针。</p>
+<p>此外，我们要给这个OLE对象定义一个类ID，在插入的时候要用到：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">constexpr</span> GUID CLSID_MyOLEObject = &#123; </span><br><span class="line">    <span class="number">0xe16f8acd</span>, </span><br><span class="line">    <span class="number">0x5b3a</span>, </span><br><span class="line">    <span class="number">0x4167</span>, </span><br><span class="line">    &#123; <span class="number">0xa4</span>, <span class="number">0x49</span>, <span class="number">0xdc</span>, <span class="number">0x57</span>, <span class="number">0xd</span>, <span class="number">0xd4</span>, <span class="number">0x44</span>, <span class="number">0x59</span> &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="插入OLE对象"><a href="#插入OLE对象" class="headerlink" title="插入OLE对象"></a>插入OLE对象</h2><p>接下来，就可以往RichEdit中插入这个OLE对象了。插入OLE对象大致上需要两步：</p>
+<ul>
+<li>给RichEdit发送 <code>EM_GETOLEINTERFACE</code> 消息，获取 <code>IRichEditOle</code> 接口，这个接口提供了一系列用于操作OLE对象的函数。</li>
+<li>调用 <code>IRichEditOle</code> 的 <code>InsertObject()</code> 函数，插入OLE对象。</li>
+</ul>
+<p><code>InsertObject</code> 的参数是一个 <code>REOBJECT</code> 结构，我们需要填充这个结构的字段：</p>
+<ul>
+<li><code>cbStruct</code> ，结构的大小，填 <code>sizeof(REOBJECT)</code> 即可。</li>
+<li><code>cp</code> ，OLE对象的插入位置，填0插入到文本第一个字符的位置，填1插入到第二字符的位置，以此类推。可以填常量 <code>REO_CP_SELECTION</code> ，表示插入到当前光标选中的位置。</li>
+<li><code>clsid</code> ，OLE对象的类ID，填上文中定义的 <code>CLSID_MyOLEObject</code> 。</li>
+<li><code>poleobj</code> ，要插入的OLE对象的指针。注意，OLE对象插入后，RichEdit会调用 <code>AddRef()</code> 来增加它的引用计数，所以在插入之后我们要调用 <code>Release()</code> 来减少引用计数，避免内存泄露。</li>
+<li><code>pstg</code> ， <code>IStorage</code> 接口的指针，一般不需要设置，传 <code>nullptr</code> 即可。</li>
+<li><code>polesite</code> ， <code>IOleClientSite</code> 接口的指针，用于OLE对象与其所在的容器进行交互。调用 <code>IRichEditOle</code> 的 <code>GetClientSite()</code> 函数获取这个指针并传入即可。</li>
+<li><code>sizel</code>，OLE对象的大小，注意这个大小是以HIMETRIC为单位，即0.01毫米。可以使用 <code>AtlPixelToHiMetric()</code> 函数将像素大小转换成HIMETRIC大小。</li>
+<li><code>dvaspect</code> ，使用哪个“外表”来绘制OLE对象，一个OLE对象可能有多个外表，例如缩略图、图标等。普通的OLE对象通常只有一个默认的外表，填 <code>DVASPECT_CONTENT</code> 即可。</li>
+<li><code>dwFlags</code>，OLE对象的一些属性设置。常用的有两个：<ul>
+<li><code>REO_BELOWBASELINE</code> 表示OLE对象的底部与文字的底部对齐。如果没有这个设置，OLE对象的底部会与文字基线对齐，这会导致OLE对象的位置偏上。</li>
+<li><code>REO_OWNERDRAWSELECT</code> 表示OLE对象的选中态由自己来绘制。如果没有这个设置，OLE对象在被选中的时候，会以反色来显示（如白变黑），这通常不是我们想要的效果，所以要加上这个设置，我们自己来绘制被选中时的样式。</li>
+</ul>
+</li>
+<li><code>dwUser</code> ，一个自定义的数值，跟当前插入的OLE对象绑定，一般用不到。</li>
+</ul>
+<p>以下是插入OLE对象的代码片段：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//从TextService取出IRichEditOle接口</span></span><br><span class="line">CComPtr&lt;IRichEditOle&gt; rich_edit_ole&#123;&#125;;</span><br><span class="line">g_text_service-&gt;<span class="built_in">TxSendMessage</span>(EM_GETOLEINTERFACE, <span class="number">0</span>, (LPARAM)&amp;rich_edit_ole, <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//取出IOleClientSite接口</span></span><br><span class="line">CComPtr&lt;IOleClientSite&gt; client_site&#123;&#125;;</span><br><span class="line">rich_edit_ole-&gt;<span class="built_in">GetClientSite</span>(&amp;client_site);</span><br><span class="line"></span><br><span class="line"><span class="comment">//创建要插入的OLE对象</span></span><br><span class="line">CComPtr&lt;MyOLEObject&gt; ole_object;</span><br><span class="line">ole_object.<span class="built_in">Attach</span>(<span class="keyword">new</span> <span class="built_in">MyOLEObject</span>(g_text_service));</span><br><span class="line"></span><br><span class="line"><span class="comment">//填充REOBJECT的字段</span></span><br><span class="line">REOBJECT object_info&#123;&#125;;</span><br><span class="line">object_info.cbStruct = <span class="built_in">sizeof</span>(object_info);</span><br><span class="line">object_info.clsid = CLSID_MyOLEObject;</span><br><span class="line">object_info.poleobj = ole_object;</span><br><span class="line">object_info.polesite = client_site;</span><br><span class="line">object_info.pstg = <span class="literal">nullptr</span>;</span><br><span class="line">object_info.dvaspect = DVASPECT_CONTENT;</span><br><span class="line">object_info.cp = REO_CP_SELECTION;</span><br><span class="line">object_info.dwFlags = REO_BELOWBASELINE | REO_OWNERDRAWSELECT;</span><br><span class="line"></span><br><span class="line">SIZEL size_in_pixels&#123;&#125;;</span><br><span class="line">size_in_pixels.cx = MyOLEObject::Width;</span><br><span class="line">size_in_pixels.cy = MyOLEObject::Height;</span><br><span class="line"><span class="built_in">AtlPixelToHiMetric</span>(&amp;size_in_pixels, &amp;object_info.sizel);</span><br><span class="line"></span><br><span class="line"><span class="comment">//插入OLE对象</span></span><br><span class="line">rich_edit_ole-&gt;<span class="built_in">InsertObject</span>(&amp;object_info);</span><br></pre></td></tr></table></figure>
+
+<h2 id="判断OLE对象是否被选中"><a href="#判断OLE对象是否被选中" class="headerlink" title="判断OLE对象是否被选中"></a>判断OLE对象是否被选中</h2><p>我们在插入OLE对象的时候指定了 <code>REO_OWNERDRAWSELECT</code> 设置，意味着我们需要自己来绘制OLE对象的选中态。现在，不论该OLE对象是否被选中，都显示同样的蓝色，没有区分度。所以，接下来要修改 <code>Draw()</code> 函数的实现，在OLE对象被选中时显示不同的颜色。</p>
+<p>RichEdit没有任何接口或者通知可以直接告诉我们OLE对象是否被选中，所以我们只能自己去判断。判断的方法如下：</p>
+<ul>
+<li>给RichEdit发送 <code>EM_EXGETSEL</code> 消息，获取当前选中的范围。</li>
+<li>调用 <code>IRichEditOle</code> 的 <code>GetObjectCount()</code> 和 <code>GetObject()</code> 函数，遍历取出每一个OLE对象的位置，如果遍历到的OLE对象就是当前对象，再看看是否在选中的范围中。</li>
+</ul>
+<p>以下是判断OLE对象是否被选中的函数：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">bool</span> <span class="title">MyOLEObject::IsSelected</span><span class="params">()</span> <span class="type">const</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//取出选中的范围</span></span><br><span class="line">    CHARRANGE select_range&#123;&#125;;</span><br><span class="line">    text_service_-&gt;<span class="built_in">TxSendMessage</span>(EM_EXGETSEL, <span class="number">0</span>, <span class="built_in">reinterpret_cast</span>&lt;LPARAM&gt;(&amp;select_range), <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//没有选中范围，当前对象自然也没有被选中</span></span><br><span class="line">    <span class="keyword">if</span> (select_range.cpMin == select_range.cpMax) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    CComPtr&lt;IRichEditOle&gt; rich_edit_ole&#123;&#125;;</span><br><span class="line">    text_service_-&gt;<span class="built_in">TxSendMessage</span>(EM_GETOLEINTERFACE, <span class="number">0</span>, (LPARAM)&amp;rich_edit_ole, <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//遍历所有OLE对象</span></span><br><span class="line">    <span class="keyword">auto</span> object_count = rich_edit_ole-&gt;<span class="built_in">GetObjectCount</span>();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> index = <span class="number">0</span>; index &lt; object_count; ++index) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//取出OLE对象</span></span><br><span class="line">        REOBJECT object_info&#123;&#125;;</span><br><span class="line">        object_info.cbStruct = <span class="built_in">sizeof</span>(object_info);</span><br><span class="line">        HRESULT hresult = rich_edit_ole-&gt;<span class="built_in">GetObject</span>(index, &amp;object_info, REO_GETOBJ_POLEOBJ);</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">FAILED</span>(hresult)) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//OLE对象取出来之后需要释放它的引用计数，这里使用CComPtr来自动释放</span></span><br><span class="line">        CComPtr&lt;IOleObject&gt; ole_object;</span><br><span class="line">        ole_object.<span class="built_in">Attach</span>(object_info.poleobj);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//找到当前OLE对象了</span></span><br><span class="line">        <span class="keyword">if</span> (ole_object.p == <span class="keyword">this</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//当前OLE对象的位置在选中范围内，也就意味着它被选中了</span></span><br><span class="line">            <span class="keyword">if</span> ((select_range.cpMin == <span class="number">0</span> &amp;&amp; select_range.cpMax == <span class="number">-1</span>) ||</span><br><span class="line">                (select_range.cpMin &lt;= object_info.cp &amp;&amp; object_info.cp &lt; select_range.cpMax)) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//在选中范围外，没被选中</span></span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//没找到当前的OLE对象</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>IRichEditOle</code> 的 <code>GetObject()</code> 也需要传入 <code>REOBJECT</code> 结构，不过此时只需要设置 <code>cbStruct</code> 字段即可，其它字段都由该函数来填充。调用成功后， <code>REOBJECT</code> 的 <code>cp</code> 字段表示OLE对象在文本中的位置，将其与选中范围比较即可知道它是否被选中了。如果文本被全选了， <code>CHARRANGE</code> 的 <code>cpMin</code> 是0， <code>cpMax</code> 是-1，所以比较的时候要区分两种场景。</p>
+<p>虽然 <code>REOBJECT</code> 的 <code>dwFlags</code> 字段有一个 <code>REO_SELECTED</code> 的值，似乎可以用来判断OLE对象是否被选中，但这个值只有在OLE对象被单独选中的时候才会设置，如果选中的是一段文字和OLE对象，则不会设置，所以不能依赖这个值。</p>
+<p>调用 <code>GetObject()</code> 的时候，最后一个参数传入 <code>REO_GETOBJ_POLEOBJ</code> ， <code>REOBJECT</code> 中才会填充 <code>poleobj</code> 字段。这个指针是增加了引用计数的，所以用完之后我们要手动地减少它的引用计数。在上面的代码中，使用了 <code>CComPtr</code> 来自动释放。</p>
+<p>以下是修改后的 <code>Draw()</code> 函数实现：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">HRESULT <span class="title">MyOLEObject::Draw</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    DWORD dwDrawAspect,</span></span></span><br><span class="line"><span class="params"><span class="function">    LONG lindex,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">void</span>* pvAspect,</span></span></span><br><span class="line"><span class="params"><span class="function">    DVTARGETDEVICE* ptd,</span></span></span><br><span class="line"><span class="params"><span class="function">    HDC hdcTargetDev,</span></span></span><br><span class="line"><span class="params"><span class="function">    HDC hdcDraw,</span></span></span><br><span class="line"><span class="params"><span class="function">    LPCRECTL lprcBounds,</span></span></span><br><span class="line"><span class="params"><span class="function">    LPCRECTL lprcWBounds,</span></span></span><br><span class="line"><span class="params"><span class="function">    BOOL(*pfnContinue)(ULONG_PTR dwContinue),</span></span></span><br><span class="line"><span class="params"><span class="function">    ULONG_PTR dwContinue)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> background_color = <span class="built_in">IsSelected</span>() ? <span class="built_in">RGB</span>(<span class="number">0x88</span>, <span class="number">0xaa</span>, <span class="number">0xcc</span>) : <span class="built_in">RGB</span>(<span class="number">0xaa</span>, <span class="number">0xcc</span>, <span class="number">0xee</span>);</span><br><span class="line">    HBRUSH brush = <span class="built_in">CreateSolidBrush</span>(background_color);</span><br><span class="line">    <span class="built_in">FillRect</span>(hdcDraw, <span class="built_in">reinterpret_cast</span>&lt;<span class="type">const</span> RECT*&gt;(lprcBounds), brush);</span><br><span class="line">    <span class="built_in">DeleteObject</span>(brush);</span><br><span class="line">    <span class="keyword">return</span> S_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="修改鼠标光标的样式"><a href="#修改鼠标光标的样式" class="headerlink" title="修改鼠标光标的样式"></a>修改鼠标光标的样式</h2><p>OLE对象并不是文字，但RichEdit在某些时候仍然会将它当做文字来对待。例如，当鼠标移动到OLE对象之上时，光标仍然会显示成 <code>I</code> 样式，但在大部分情况下我们希望它显示成默认的箭头样式。</p>
+<p>为了修改鼠标光标在OLE对象上的样式，我们要在处理 <code>WM_SETCURSOR</code> 消息，在调用 <code>ITextServices</code> 的 <code>OnTxSetCursor()</code> 之前（详情可参考<a href="http://zplutor.github.io/2015/12/06/implement-an-editable-windowless-richedit/">《实现一个可编辑的Windowless RichEdit》</a>），判断鼠标是否位于OLE对象之上。判断的方法如下：</p>
+<ul>
+<li>调用 <code>IRichEditOle</code> 的 <code>QueryInterface()</code> 函数，取出它的 <code>ITextDocument</code> 接口。</li>
+<li>调用 <code>ITextDocument</code> 的 <code>RangeFromPoint()</code> 函数，根据鼠标位置取出最接近的文本，返回的是 <code>ITextRange</code> 接口。</li>
+<li>调用 <code>ITextRange</code> 的 <code>GetEmbeddedObject()</code> 函数，取出OLE对象。如果返回空指针，则说明鼠标不在OLE对象上，反之则在OLE对象上。</li>
+</ul>
+<p>以下是获取鼠标位置之下的OLE对象的函数：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">CComPtr&lt;MyOLEObject&gt; <span class="title">GetOLEObjectAtMouseCursor</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//获取鼠标在屏幕上的位置</span></span><br><span class="line">    POINT position&#123;&#125;;</span><br><span class="line">    <span class="built_in">GetCursorPos</span>(&amp;position);</span><br><span class="line"></span><br><span class="line">    CComPtr&lt;IRichEditOle&gt; rich_edit_ole;</span><br><span class="line">    g_text_service-&gt;<span class="built_in">TxSendMessage</span>(EM_GETOLEINTERFACE, <span class="number">0</span>, (LPARAM)&amp;rich_edit_ole, <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//取出ITextDocument接口</span></span><br><span class="line">    CComPtr&lt;ITextDocument&gt; text_document;</span><br><span class="line">    HRESULT hresult = rich_edit_ole-&gt;<span class="built_in">QueryInterface</span>(IID_ITextDocument, <span class="built_in">reinterpret_cast</span>&lt;<span class="type">void</span>**&gt;(&amp;text_document));</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">FAILED</span>(hresult)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//取出最接近鼠标的文本</span></span><br><span class="line">    CComPtr&lt;ITextRange&gt; text_range;</span><br><span class="line">    hresult = text_document-&gt;<span class="built_in">RangeFromPoint</span>(position.x, position.y, &amp;text_range);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">FAILED</span>(hresult)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//取出文本中的OLE对象</span></span><br><span class="line">    CComPtr&lt;IUnknown&gt; ole_object;</span><br><span class="line">    hresult = text_range-&gt;<span class="built_in">GetEmbeddedObject</span>(&amp;ole_object);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">FAILED</span>(hresult)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">CComPtr&lt;MyOLEObject&gt; <span class="title">my_ole_object</span><span class="params">(<span class="keyword">dynamic_cast</span>&lt;MyOLEObject*&gt;(ole_object.p))</span></span>;</span><br><span class="line">    <span class="keyword">return</span> my_ole_object;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> <code>ITextDocument</code> 的 <code>RangeFromPoint()</code> 函数使用的是屏幕坐标，调用 <code>GetCursorPos()</code> 来拿鼠标位置刚刚好。此外，RichEdit会调用 <code>ITextHost</code> 的 <code>TxScreenToClient()</code> 函数来将屏幕坐标转换成客户区坐标，所以我们也要实现这个函数，简单地调用 <code>ScreenToClient()</code> 即可：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">BOOL <span class="title">MyTextHost::TxScreenToClient</span><span class="params">(LPPOINT lppt)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">ScreenToClient</span>(hwnd_, lppt);</span><br><span class="line">    <span class="keyword">return</span> TRUE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>要注意，<code>RangeFromPoint()</code> 函数在旧版本的RichEdit中存在bug，取到的文本不准。具体表现是：当坐标位于OLE对象的后半部分时，取到的是下一个位置的文本；只有坐标位于OLE对象的前半部分时才能取到正确的文本。最新的RichEdit 4.0没有这个问题，所以建议尽可能使用新版本的RichEdit。只要在调用 <code>LoadLibrary()</code> 的时候指定 <code>msftedit.dll</code> 即可使用最新版本的RichEdit：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用最新版本的RichEdit</span></span><br><span class="line">HMODULE module_handle = <span class="built_in">LoadLibrary</span>(<span class="string">L&quot;msftedit.dll&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//使用旧版本的RichEdit</span></span><br><span class="line">HMODULE module_handel = <span class="built_in">LoadLibrary</span>(<span class="string">L&quot;riched20.dll&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>可参考 <a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/controls/about-rich-edit-controls">About Rich Edit Controls</a> 以获取更多关于RichEdit版本的信息。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/COM/">COM</a>, <a href="/tags/RichEdit/">RichEdit</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2023/04/15/insert-ole-object-into-windowless-rich-edit/" data-title="在Windowless RichEdit中插入OLE对象" data-url="http://zplutor.github.io/2023/04/15/insert-ole-object-into-windowless-rich-edit/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>4</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>3</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/STL/">STL</a><small>5</small></li>
+  
+    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>2</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>25</small></li>
+  
+    <li><a href="/tags/Windows-Performance-Toolkit/">Windows Performance Toolkit</a><small>1</small></li>
+  
+    <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
+  
+    <li><a href="/tags/boost/">boost</a><small>4</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>2</small></li>
+  
+    <li><a href="/tags/macOS/">macOS</a><small>2</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>2</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>3</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>3</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>6</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>2</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2023 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
