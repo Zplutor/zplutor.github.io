@@ -85,10 +85,10 @@
 <p>这是一个菱形的继承结构，在这个结构下 <code>MyOLEObject</code> 对象的内存布局是这样的：</p>
 <img src="/2023/05/02/how-to-properly-implement-queryinterface/3.png" class="">
 
-<p>绿色部分是继承自 <code>IOleObject</code> 的数据，蓝色部分是继承自 <code>IViewObject</code> 的数据，白色部分是 <code>MyOLEObject</code> 自己的数据。由于基类都是COM接口，所以绿色和蓝色每个格子的数据实际上只含一个虚函数表指针。</p>
+<p>绿色部分是继承自 <code>IOleObject</code> 的数据，蓝色部分是继承自 <code>IViewObject</code> 的数据，白色部分是 <code>MyOLEObject</code> 自己的数据。由于基类都是COM接口，不包含任何成员变量，所以绿色和蓝色的数据实际上都只包含一个虚函数表指针（绿色的 <code>IUnknown</code> 和 <code>IOleObject</code> 共用一个虚函数表，蓝色的 <code>IUnknown</code> 和 <code>IViewObject</code> 共用一个虚函数表）。</p>
 <p>从图中可以看出，this和 <code>IOleObject*</code> 都指向相同的绿色部分，所以在 <code>QueryInterface()</code> 内，如果 <code>riid</code> 是这个接口的ID，可以直接返回this。但是 <code>IViewObject*</code> 指向的是蓝色部分，跟this不一样，所以不能直接返回this。在一开始错误的实现中，我把this强制转型成 <code>void*</code> 返回，返回的是绿色部分的数据，即把 <code>IOleObject</code> 错当成了 <code>IViewObject</code> 返回。当外部调用 <code>IViewObject</code> 的函数时，就会错误地调用到了 <code>IOleObject</code> 的函数，所以参数的值都是错乱的。</p>
 <p>而在正确的实现中，我通过 <code>static_cast</code> 将this转换成 <code>IViewObject*</code> ，编译器会正确地取出指向蓝色部分的指针。</p>
-<p>最后再提一下 <code>IUnknown</code> 。由于 <code>IOleObject</code> 和 <code>IViewObject</code> 各自继承了 <code>IUnknown</code> ，所以在最终的对象内存在两份 <code>IUnknown</code> 的数据，即有两个 <code>IUnknown</code> 的虚函数表指针，它们其实都指向同一份函数实现，所以理论上在 <code>QueryInterface()</code> 内返回任意一个 <code>IUnknown*</code> 都是可以的。但是要注意以下写法会导致编译失败：</p>
+<p>最后再提一下 <code>IUnknown</code> 。由于 <code>IOleObject</code> 和 <code>IViewObject</code> 各自继承了 <code>IUnknown</code> ，所以在最终的对象内有两个 <code>IUnknown</code> 的虚函数表指针，它们其实都指向同一份函数实现，所以理论上在 <code>QueryInterface()</code> 内返回任意一个 <code>IUnknown*</code> 都是可以的。但是要注意以下写法会导致编译失败：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*ppvObj = <span class="built_in">static_cast</span>&lt;IUnknown*&gt;(<span class="keyword">this</span>);</span><br></pre></td></tr></table></figure>
 
 <p>因为编译器不知道应该使用哪一份 <code>IUnknown</code> 数据，我们必须显式地指定，要么用 <code>IOleObject</code> 的，要么用 <code>IViewObject</code> 的。</p>
