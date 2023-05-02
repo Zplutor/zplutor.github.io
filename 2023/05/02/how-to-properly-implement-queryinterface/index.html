@@ -83,7 +83,7 @@
 <img src="/2023/05/02/how-to-properly-implement-queryinterface/2.png" class="">
 
 <p>这是一个菱形的继承结构，在这个结构下 <code>MyOLEObject</code> 对象的内存布局是这样的：</p>
-<img src="/2023/05/02/how-to-properly-implement-queryinterface/3.png" class="">
+<img src="/2023/05/02/how-to-properly-implement-queryinterface/4.png" class="">
 
 <p>绿色部分是继承自 <code>IOleObject</code> 的数据，蓝色部分是继承自 <code>IViewObject</code> 的数据，白色部分是 <code>MyOLEObject</code> 自己的数据。由于基类都是COM接口，不包含任何成员变量，所以绿色和蓝色的数据实际上都只包含一个虚函数表指针（绿色的 <code>IUnknown</code> 和 <code>IOleObject</code> 共用一个虚函数表，蓝色的 <code>IUnknown</code> 和 <code>IViewObject</code> 共用一个虚函数表）。</p>
 <p>从图中可以看出，this和 <code>IOleObject*</code> 都指向相同的绿色部分，所以在 <code>QueryInterface()</code> 内，如果 <code>riid</code> 是这个接口的ID，可以直接返回this。但是 <code>IViewObject*</code> 指向的是蓝色部分，跟this不一样，所以不能直接返回this。在一开始错误的实现中，我把this强制转型成 <code>void*</code> 返回，返回的是绿色部分的数据，即把 <code>IOleObject</code> 错当成了 <code>IViewObject</code> 返回。当外部调用 <code>IViewObject</code> 的函数时，就会错误地调用到了 <code>IOleObject</code> 的函数，所以参数的值都是错乱的。</p>
