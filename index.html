@@ -53,6 +53,42 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2023-05-02T07:49:24.000Z"><a href="/2023/05/02/how-to-properly-implement-queryinterface/">2023-05-02</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2023/05/02/how-to-properly-implement-queryinterface/">如何正确地实现QueryInterface</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在Windows编程中，在与系统组件打交道时，我们会经常用到COM接口，对于 <code>QueryInterface()</code> 函数不会感到陌生。相较之下，实现COM接口的需求少得多，一旦需要我们自己来实现COM接口，缺乏经验者很可能会在一些平时不会注意到的问题上碰壁。我最近就在实现 <code>QueryInterface()</code> 的时候遇到了一点麻烦，花了不少时间来排查，最终发现起因原来只是一个低级错误。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2023/05/02/how-to-properly-implement-queryinterface/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2023-04-15T12:38:53.000Z"><a href="/2023/04/15/insert-ole-object-into-windowless-rich-edit/">2023-04-15</a></time>
       
       
@@ -376,42 +412,6 @@
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2019-04-09T16:56:50.000Z"><a href="/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/">2019-04-10</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/">如何判断一个容器是否关联容器</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>如果你正在编写一个C++工具库，那么有可能需要知道一个容器是否关联容器。例如，你要写一个<code>Contain()</code>工具函数，该函数用来判断元素是否在容器中。而且你希望对于不同的容器，总是使用性能最优的查找方式，也就是说，对于关联容器，使用<code>find()</code>成员函数；而对于非关联容器，则使用<code>std::find()</code>函数。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/#more" class="more-link">阅读全文</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -430,7 +430,7 @@
   
     <li><a href="/tags/C/">C++</a><small>19</small></li>
   
-    <li><a href="/tags/COM/">COM</a><small>4</small></li>
+    <li><a href="/tags/COM/">COM</a><small>5</small></li>
   
     <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
   
@@ -454,7 +454,7 @@
   
     <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>25</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>26</small></li>
   
     <li><a href="/tags/Windows-Performance-Toolkit/">Windows Performance Toolkit</a><small>1</small></li>
   

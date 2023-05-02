@@ -53,6 +53,42 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2019-04-09T16:56:50.000Z"><a href="/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/">2019-04-10</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/">如何判断一个容器是否关联容器</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>如果你正在编写一个C++工具库，那么有可能需要知道一个容器是否关联容器。例如，你要写一个<code>Contain()</code>工具函数，该函数用来判断元素是否在容器中。而且你希望对于不同的容器，总是使用性能最优的查找方式，也就是说，对于关联容器，使用<code>find()</code>成员函数；而对于非关联容器，则使用<code>std::find()</code>函数。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2019/04/10/how-to-check-whether-a-container-is-an-associative-container/#more" class="more-link">阅读全文</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2018-12-16T12:34:57.000Z"><a href="/2018/12/16/how-to-stop-precreated-cef-browser-stealing-focus/">2018-12-16</a></time>
       
       
@@ -371,42 +407,6 @@
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2016-08-15T14:04:57.000Z"><a href="/2016/08/15/catch-application-crashing-information-with-procdump/">2016-08-15</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2016/08/15/catch-application-crashing-information-with-procdump/">使用ProcDump捕获程序崩溃信息</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>当程序崩溃的时候，捕获崩溃信息并进行上报对提升产品质量有很大帮助，它能发现很多在开发和测试阶段发现不了的问题。Windows的WER（Windows Error Reporting）组件在系统级别上提供了捕获崩溃信息的能力，它能够在程序崩溃时生成一个内存转储文件（即dump文件），该文件包含了引发崩溃的异常信息。然而，这个功能仅在Windows Vista SP1及更高的版本中存在，而且它是可配置的，用户可以阻止WER生成dump文件。这意味着我们不能依赖系统来捕获崩溃信息，而是要通过别的途径。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2016/08/15/catch-application-crashing-information-with-procdump/#more" class="more-link">阅读全文</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -427,7 +427,7 @@
   
     <li><a href="/tags/C/">C++</a><small>19</small></li>
   
-    <li><a href="/tags/COM/">COM</a><small>4</small></li>
+    <li><a href="/tags/COM/">COM</a><small>5</small></li>
   
     <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
   
@@ -451,7 +451,7 @@
   
     <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
   
-    <li><a href="/tags/Windows/">Windows</a><small>25</small></li>
+    <li><a href="/tags/Windows/">Windows</a><small>26</small></li>
   
     <li><a href="/tags/Windows-Performance-Toolkit/">Windows Performance Toolkit</a><small>1</small></li>
   

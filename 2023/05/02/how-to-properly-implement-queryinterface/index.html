@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="google-site-verification" content="C99UqEDEOWXxRodhn8sWg1NRTdOgYZPbS0mgBURT9Pw" />
+  <meta name="msvalidate.01" content="86FFF123B293617931E24F9B61CA5E1E" />
+  <meta name="baidu-site-verification" content="GDPyw3Yidj" />
+  <meta charset="utf-8">
+  
+  <title>如何正确地实现QueryInterface | Zplutor&#39;s</title>
+  <meta name="author" content="Zplutor">
+  
+  <meta name="description" content="在Windows编程中，在与系统组件打交道时，我们会经常用到COM接口，对于 QueryInterface() 函数不会感到陌生。相较之下，实现COM接口的需求少得多，一旦需要我们自己来实现COM接口，缺乏经验者很可能会在一些平时不会注意到的问题上碰壁。我最近就在实现 QueryInterface() 的时候遇到了一点麻烦，花了不少时间来排查，最终发现起因原来只是一个低级错误。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="如何正确地实现QueryInterface"/>
+  <meta property="og:site_name" content="Zplutor&#39;s"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Zplutor&#39;s" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Zplutor&#39;s</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/atom.xml">Feed</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2023-05-02T07:49:24.000Z"><a href="/2023/05/02/how-to-properly-implement-queryinterface/">2023-05-02</a></time>
+      
+      
+  
+    <h1 class="title">如何正确地实现QueryInterface</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在Windows编程中，在与系统组件打交道时，我们会经常用到COM接口，对于 <code>QueryInterface()</code> 函数不会感到陌生。相较之下，实现COM接口的需求少得多，一旦需要我们自己来实现COM接口，缺乏经验者很可能会在一些平时不会注意到的问题上碰壁。我最近就在实现 <code>QueryInterface()</code> 的时候遇到了一点麻烦，花了不少时间来排查，最终发现起因原来只是一个低级错误。</p>
+<span id="more"></span>
+
+<p>事情的背景是这样的：我要往RichEdit中插入一个OLE对象，需要实现一个自定义的类，这个类要实现 <code>IOleObject</code> 和 <code>IViewObject</code> 两个COM接口。我仿照从其它地方找到的示例，实现了这样的 <code>QueryInterface()</code> ：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyOLEObject</span> : <span class="keyword">public</span> IOleObject, <span class="keyword">public</span> IViewObject &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function">HRESULT <span class="title">QueryInterface</span><span class="params">(REFIID riid, LPVOID* ppvObj)</span> <span class="keyword">override</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!ppvObj) &#123;</span><br><span class="line">            <span class="keyword">return</span> E_INVALIDARG;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (riid == IID_IUnknown || </span><br><span class="line">            riid == IID_IOleObject || </span><br><span class="line">            riid == IID_IViewObject) &#123;</span><br><span class="line"></span><br><span class="line">            *ppvObj = (<span class="type">void</span>*)<span class="keyword">this</span>;</span><br><span class="line">            <span class="built_in">AddRef</span>();</span><br><span class="line">            <span class="keyword">return</span> S_OK;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        *ppvObj = <span class="literal">nullptr</span>;</span><br><span class="line">        <span class="keyword">return</span> E_NOINTERFACE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这个实现看上去没什么问题， <code>MyOLEObject</code> 仅支持 <code>IUnknown</code> 、 <code>IOleObject</code> 和 <code>IViewObject</code> 三个COM接口，所以判断 <code>riid</code> 是这三个接口的ID就返回this，很合理。</p>
+<p>但是程序一运行起来就出现奇怪的问题，每当插入这个OLE对象的时候， <code>IOleObject</code> 的 <code>SetClientSite()</code> 函数会被调用，传进来的指针的值居然是1，导致我一用到这个指针，程序就崩溃了。 </p>
+<img src="/2023/05/02/how-to-properly-implement-queryinterface/1.png" class="">
+
+<p>我百思不得其解，排查了很久之后才发现是 <code>QueryInterface()</code> 的实现错了，正确的实现应该是下面这样：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyOLEObject</span> : <span class="keyword">public</span> IOleObject, <span class="keyword">public</span> IViewObject &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function">HRESULT <span class="title">QueryInterface</span><span class="params">(REFIID riid, LPVOID* ppvObj)</span> <span class="keyword">override</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!ppvObj) &#123;</span><br><span class="line">            <span class="keyword">return</span> E_INVALIDARG;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (riid == IID_IUnknown || riid == IID_IOleObject) &#123;</span><br><span class="line">            *ppvObj = <span class="built_in">static_cast</span>&lt;IOleObject*&gt;(<span class="keyword">this</span>);</span><br><span class="line">            <span class="built_in">AddRef</span>();</span><br><span class="line">            <span class="keyword">return</span> S_OK;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (riid == IID_IViewObject) &#123;</span><br><span class="line">            *ppvObj = <span class="built_in">static_cast</span>&lt;IViewObject*&gt;(<span class="keyword">this</span>);</span><br><span class="line">            <span class="built_in">AddRef</span>();</span><br><span class="line">            <span class="keyword">return</span> S_OK;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        *ppvObj = <span class="literal">nullptr</span>;</span><br><span class="line">        <span class="keyword">return</span> E_NOINTERFACE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这个实现把 <code>IViewObject</code> 的判断单独分离出来，并且先把this转换成了 <code>IViewObject*</code> 再返回。</p>
+<p>这背后的原因是：多重继承导致类对象的内存布局发生变化，this并不等于 <code>IViewObject*</code> ，所以不能直接将this作为 <code>IViewObject*</code> 返回。</p>
+<p>我们先来看一下 <code>MyOLEObject</code> 的继承关系图：</p>
+<img src="/2023/05/02/how-to-properly-implement-queryinterface/2.png" class="">
+
+<p>这是一个菱形的继承结构，在这个结构下 <code>MyOLEObject</code> 对象的内存布局是这样的：</p>
+<img src="/2023/05/02/how-to-properly-implement-queryinterface/3.png" class="">
+
+<p>绿色部分是继承自 <code>IOleObject</code> 的数据，蓝色部分是继承自 <code>IViewObject</code> 的数据，白色部分是 <code>MyOLEObject</code> 自己的数据。由于基类都是COM接口，所以绿色和蓝色每个格子的数据实际上只含一个虚函数表指针。</p>
+<p>从图中可以看出，this和 <code>IOleObject*</code> 都指向相同的绿色部分，所以在 <code>QueryInterface()</code> 内，如果 <code>riid</code> 是这个接口的ID，可以直接返回this。但是 <code>IViewObject*</code> 指向的是蓝色部分，跟this不一样，所以不能直接返回this。在一开始错误的实现中，我把this强制转型成 <code>void*</code> 返回，返回的是绿色部分的数据，即把 <code>IOleObject</code> 错当成了 <code>IViewObject</code> 返回。当外部调用 <code>IViewObject</code> 的函数时，就会错误地调用到了 <code>IOleObject</code> 的函数，所以参数的值都是错乱的。</p>
+<p>而在正确的实现中，我通过 <code>static_cast</code> 将this转换成 <code>IViewObject*</code> ，编译器会正确地取出指向蓝色部分的指针。</p>
+<p>最后再提一下 <code>IUnknown</code> 。由于 <code>IOleObject</code> 和 <code>IViewObject</code> 各自继承了 <code>IUnknown</code> ，所以在最终的对象内存在两份 <code>IUnknown</code> 的数据，即有两个 <code>IUnknown</code> 的虚函数表指针，它们其实都指向同一份函数实现，所以理论上在 <code>QueryInterface()</code> 内返回任意一个 <code>IUnknown*</code> 都是可以的。但是要注意以下写法会导致编译失败：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*ppvObj = <span class="built_in">static_cast</span>&lt;IUnknown*&gt;(<span class="keyword">this</span>);</span><br></pre></td></tr></table></figure>
+
+<p>因为编译器不知道应该使用哪一份 <code>IUnknown</code> 数据，我们必须显式地指定，要么用 <code>IOleObject</code> 的，要么用 <code>IViewObject</code> 的。</p>
+<p>综上所述，当我们在实现 <code>QueryInterface()</code> 函数的时候，正确的做法是依次将this转型成对应的COM接口指针再返回，而不是一刀切地强制转型成 <code>void*</code> 来返回。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/Windows/">Windows</a>, <a href="/tags/COM/">COM</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  <div class="ds-thread" data-thread-key="2023/05/02/how-to-properly-implement-queryinterface/" data-title="如何正确地实现QueryInterface" data-url="http://zplutor.github.io/2023/05/02/how-to-properly-implement-queryinterface/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zplutor"};
+	  (function() {
+		 var ds = document.createElement('script');
+		 ds.type = 'text/javascript';ds.async = true;
+		 ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		 ds.charset = 'UTF-8';
+		 (document.getElementsByTagName('head')[0] 
+		  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+  </script>
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>19</small></li>
+  
+    <li><a href="/tags/COM/">COM</a><small>5</small></li>
+  
+    <li><a href="/tags/IUnknown/">IUnknown</a><small>1</small></li>
+  
+    <li><a href="/tags/KeyWindow/">KeyWindow</a><small>1</small></li>
+  
+    <li><a href="/tags/OpenSSL/">OpenSSL</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-bytes/">RAND_bytes</a><small>1</small></li>
+  
+    <li><a href="/tags/RAND-poll/">RAND_poll</a><small>1</small></li>
+  
+    <li><a href="/tags/RichEdit/">RichEdit</a><small>3</small></li>
+  
+    <li><a href="/tags/SQL/">SQL</a><small>1</small></li>
+  
+    <li><a href="/tags/STL/">STL</a><small>5</small></li>
+  
+    <li><a href="/tags/Visual-Studio/">Visual Studio</a><small>2</small></li>
+  
+    <li><a href="/tags/WM-TIMER/">WM_TIMER</a><small>1</small></li>
+  
+    <li><a href="/tags/WinDbg/">WinDbg</a><small>1</small></li>
+  
+    <li><a href="/tags/Windows/">Windows</a><small>26</small></li>
+  
+    <li><a href="/tags/Windows-Performance-Toolkit/">Windows Performance Toolkit</a><small>1</small></li>
+  
+    <li><a href="/tags/XCode/">XCode</a><small>1</small></li>
+  
+    <li><a href="/tags/boost/">boost</a><small>4</small></li>
+  
+    <li><a href="/tags/libcurl/">libcurl</a><small>2</small></li>
+  
+    <li><a href="/tags/macOS/">macOS</a><small>2</small></li>
+  
+    <li><a href="/tags/procdump/">procdump</a><small>1</small></li>
+  
+    <li><a href="/tags/内存泄露/">内存泄露</a><small>1</small></li>
+  
+    <li><a href="/tags/内核对象/">内核对象</a><small>1</small></li>
+  
+    <li><a href="/tags/单例/">单例</a><small>1</small></li>
+  
+    <li><a href="/tags/字符串/">字符串</a><small>4</small></li>
+  
+    <li><a href="/tags/字符编码/">字符编码</a><small>2</small></li>
+  
+    <li><a href="/tags/定时器/">定时器</a><small>2</small></li>
+  
+    <li><a href="/tags/异常/">异常</a><small>3</small></li>
+  
+    <li><a href="/tags/引用计数/">引用计数</a><small>1</small></li>
+  
+    <li><a href="/tags/性能/">性能</a><small>3</small></li>
+  
+    <li><a href="/tags/日志/">日志</a><small>1</small></li>
+  
+    <li><a href="/tags/智能指针/">智能指针</a><small>1</small></li>
+  
+    <li><a href="/tags/死锁/">死锁</a><small>1</small></li>
+  
+    <li><a href="/tags/流式输出/">流式输出</a><small>1</small></li>
+  
+    <li><a href="/tags/消息队列/">消息队列</a><small>1</small></li>
+  
+    <li><a href="/tags/线程/">线程</a><small>2</small></li>
+  
+    <li><a href="/tags/继承/">继承</a><small>1</small></li>
+  
+    <li><a href="/tags/编译/">编译</a><small>1</small></li>
+  
+    <li><a href="/tags/调试/">调试</a><small>6</small></li>
+  
+    <li><a href="/tags/超时/">超时</a><small>2</small></li>
+  
+    <li><a href="/tags/预编译头/">预编译头</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2023 Zplutor
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+</body>
+</html>
