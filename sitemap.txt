@@ -1,3 +1,4 @@
+http://zplutor.github.io/2023/12/12/how-to-get-parse-error-index-using-boost-json/
 http://zplutor.github.io/2023/05/02/how-to-properly-implement-queryinterface/
 http://zplutor.github.io/2015/11/22/create-a-simplest-windowless-richedit/
 http://zplutor.github.io/2015/12/06/implement-an-editable-windowless-richedit/
